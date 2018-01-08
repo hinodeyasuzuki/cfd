@@ -1,95 +1,95 @@
-//CFDŒvZƒƒCƒ“ƒƒWƒbƒN
-//–{‘Ì‚©‚çworker‚Æ‚µ‚ÄŒÄ‚Ño‚·
+//CFDè¨ˆç®—ãƒ¡ã‚¤ãƒ³ãƒ­ã‚¸ãƒƒã‚¯
+//æœ¬ä½“ã‹ã‚‰workerã¨ã—ã¦å‘¼ã³å‡ºã™
 // copyright(C) 2015-2017  Hinodeya Insititute for Ecolife co.ltd. Yausufumi Suzuki
 //
-//@‚Æ‚¤‚Æ‚¤‚ ‚È‚½‚ÍŒ©‚Ä‚µ‚Ü‚¢‚Ü‚µ‚½‚ËBŒ©‚½‚©‚ç‚É‚Í‰ü‘P‚Ì‹¦—Í‚ğ‚¨Šè‚¢‚µ‚Ü‚·B
+//ã€€ã¨ã†ã¨ã†ã‚ãªãŸã¯è¦‹ã¦ã—ã¾ã„ã¾ã—ãŸã­ã€‚è¦‹ãŸã‹ã‚‰ã«ã¯æ”¹å–„ã®å”åŠ›ã‚’ãŠé¡˜ã„ã—ã¾ã™ã€‚
 //
-//@E3D@ƒŒƒMƒ…ƒ‰[ŠiqAƒtƒ‰ƒNƒVƒ‡ƒiƒ‹ƒXƒeƒbƒvACIPg‚í‚¸•—ã·•ª
-//@EƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ““àŠÔ‚Å1•b‚²‚Æ‚Éƒf[ƒ^‚ğ•Ô‚µAÅ‘åŠÔ‚ÅI—¹
+//ã€€ãƒ»3Dã€€ãƒ¬ã‚®ãƒ¥ãƒ©ãƒ¼æ ¼å­ã€ãƒ•ãƒ©ã‚¯ã‚·ãƒ§ãƒŠãƒ«ã‚¹ãƒ†ãƒƒãƒ—ã€CIPä½¿ã‚ãšé¢¨ä¸Šå·®åˆ†
+//ã€€ãƒ»ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³å†…æ™‚é–“ã§1ç§’ã”ã¨ã«ãƒ‡ãƒ¼ã‚¿ã‚’è¿”ã—ã€æœ€å¤§æ™‚é–“ã§çµ‚äº†
 //
-//‰Û‘è
-// @Prsˆ³—Í‚ª‹É’[‚É‘å‚«‚­‚È‚Á‚Ä‚¢‚­->‰ğŒˆ
-// @•Ç–Ê‚Æ‚’¼•ûŒü‚Ì‘¬“x‚ª¶‚Ü‚ê‚Ä‚µ‚Ü‚¤->‹­§“I‚Éƒ[ƒ‚É‚·‚éBƒGƒAƒRƒ“‚Í•Ç‚©‚ç—£‚·
+//èª²é¡Œ
+// ã€€Prsåœ§åŠ›ãŒæ¥µç«¯ã«å¤§ãããªã£ã¦ã„ã->è§£æ±º
+// ã€€å£é¢ã¨å‚ç›´æ–¹å‘ã®é€Ÿåº¦ãŒç”Ÿã¾ã‚Œã¦ã—ã¾ã†->å¼·åˆ¶çš„ã«ã‚¼ãƒ­ã«ã™ã‚‹ã€‚ã‚¨ã‚¢ã‚³ãƒ³ã¯å£ã‹ã‚‰é›¢ã™
 //
 //
-// packer‚Åmin‚É‚µ‚Ä‚©‚çƒ[ƒh
+// packerã§minã«ã—ã¦ã‹ã‚‰ãƒ­ãƒ¼ãƒ‰
 //
 
-var fgAround = 2;				//1:•‚—Í‚ÅüˆÍ‚Ì‰·“x‚ğg‚¤ 2:•½‹Ï‰·“x‚ğg‚¤
-var Re = 1000.0;				//ƒŒƒCƒmƒ‹ƒY”
-var fgCalcTempAround = 2;		//‰·“xŒvZ@1:ˆêŸ¸“x 2:•—ã·•ª‚Å‚Ì•]‰¿
-var acv = 1;					//ƒGƒAƒRƒ“—¬‘¬ m/si‰¼İ’èj
-var act = 5;					//ƒGƒAƒRƒ“ ‰Á‰·i—¬—Ê‚ÅÄŒvZj
-var dir = 0.3;					//ƒGƒAƒRƒ“Šp“x
-var delta_t = 0.01;			//ƒ^ƒCƒ€ƒXƒeƒbƒv s  10‚È‚ç0.5,20‚Å0.1(©“®•Ï“®j
+var fgAround = 2;				//1:æµ®åŠ›ã§å‘¨å›²ã®æ¸©åº¦ã‚’ä½¿ã† 2:å¹³å‡æ¸©åº¦ã‚’ä½¿ã†
+var Re = 1000.0;				//ãƒ¬ã‚¤ãƒãƒ«ã‚ºæ•°
+var fgCalcTempAround = 2;		//æ¸©åº¦è¨ˆç®—ã€€1:ä¸€æ¬¡ç²¾åº¦ 2:é¢¨ä¸Šå·®åˆ†ã§ã®è©•ä¾¡
+var acv = 1;					//ã‚¨ã‚¢ã‚³ãƒ³æµé€Ÿ m/sï¼ˆä»®è¨­å®šï¼‰
+var act = 5;					//ã‚¨ã‚¢ã‚³ãƒ³ åŠ æ¸©â„ƒï¼ˆæµé‡ã§å†è¨ˆç®—ï¼‰
+var dir = 0.3;					//ã‚¨ã‚¢ã‚³ãƒ³è§’åº¦
+var delta_t = 0.01;			//ã‚¿ã‚¤ãƒ ã‚¹ãƒ†ãƒƒãƒ— s  10â„ƒãªã‚‰0.5,20â„ƒã§0.1(è‡ªå‹•å¤‰å‹•ï¼‰
 
-var addair = true;				//ƒGƒAƒRƒ“‚É‚æ‚é‰Á‰· ’Êí‚Í true
-var fix_coulant = true;		//coulantğŒ‚É‚æ‚é©“®ƒ^ƒCƒ€ƒXƒeƒbƒv•ÏX ’Êí‚Ítrue
-var coulant_min = 0.7;			//@Å¬Šî€
-var coulant_max = 0.8;			//  Å‘åŠî€@1‚Å”­U
+var addair = true;				//ã‚¨ã‚¢ã‚³ãƒ³ã«ã‚ˆã‚‹åŠ æ¸© é€šå¸¸ã¯ true
+var fix_coulant = true;		//coulantæ¡ä»¶ã«ã‚ˆã‚‹è‡ªå‹•ã‚¿ã‚¤ãƒ ã‚¹ãƒ†ãƒƒãƒ—å¤‰æ›´ é€šå¸¸ã¯true
+var coulant_min = 0.7;			//ã€€æœ€å°åŸºæº–
+var coulant_max = 0.8;			//  æœ€å¤§åŸºæº–ã€€1ã§ç™ºæ•£
 
 
-var iteration = 100;		//Å‘å•â³ŒJ‚è•Ô‚µ‰ñ”
-var tolerance = 0.001;		//‹–—eŒë·
+var iteration = 100;		//æœ€å¤§è£œæ­£ç¹°ã‚Šè¿”ã—å›æ•°
+var tolerance = 0.001;		//è¨±å®¹èª¤å·®
 
-var totaltime = 0;			//Œo‰ßŠÔ
-var acheatsum = 0;			//ƒGƒAƒRƒ“o—Í(W)
-var acheatcount = 0;		//ƒGƒAƒRƒ“o—Í(W)
+var totaltime = 0;			//çµŒéæ™‚é–“
+var acheatsum = 0;			//ã‚¨ã‚¢ã‚³ãƒ³å‡ºåŠ›(W)
+var acheatcount = 0;		//ã‚¨ã‚¢ã‚³ãƒ³å‡ºåŠ›(W)
 var sumheatleft = 0;		// left window heat loss
 var sumheatfront = 0;		// front window heat loss
 var heatleftcount = 0;
 
-var Riw = 0.11;				//º“à‘¤”M“`“±’ïR@•Ç	‡uEK^W
-var Rif = 0.15;				//º“à‘¤”M“`“±’ïR@°
-var Ric = 0.09;				//º“à‘¤”M“`“±’ïR@“Vˆä
+var Riw = 0.11;				//å®¤å†…å´ç†±ä¼å°æŠµæŠ—ã€€å£	ã¡ãƒ»Kï¼W
+var Rif = 0.15;				//å®¤å†…å´ç†±ä¼å°æŠµæŠ—ã€€åºŠ
+var Ric = 0.09;				//å®¤å†…å´ç†±ä¼å°æŠµæŠ—ã€€å¤©äº•
 
-var sh_air = 1.006;				//”ä”M@‹ó‹CJ/gK
-var sh_obs = 0;					//”M—e—Ê@áŠQ•¨ J/m3K
-var sh_wall = 783000;			//”M—e—Ê@•Ç J/m3K
-var sh_ceil = 783000;			//”M—e—Ê@“Vˆä J/m3K
-var sh_floor = 783000;			//”M—e—Ê@° J/m3K
-var sh_thick = 0.02;			//”M—e—Ê‚ğl—¶‚·‚éŒú‚³ m i2cm’ö“x‚ª“K“–j
-var windowK = 6.0;				//”MŠÑ—¬—¦@W/m2K
-var wallK = 2.5;				//”MŠÑ—¬—¦@W/m2K
-
-
-//—eÏ”ä”M@
-//ƒRƒ“ƒNƒŠ[ƒg@ @@@2013@KJ/m3k
-//“y•Ç@@@@@ @@@1327@KJ/m3k
-//ƒvƒ‰ƒXƒ^[ƒ{[ƒh@@	854@KJ/m3k
-//™@@@@@@@@@	783@KJ/m3k
-//ƒOƒ‰ƒXƒE[ƒ‹ 			420@KJ/m3k
+var sh_air = 1.006;				//æ¯”ç†±ã€€ç©ºæ°—J/gK
+var sh_obs = 0;					//ç†±å®¹é‡ã€€éšœå®³ç‰© J/m3K
+var sh_wall = 783000;			//ç†±å®¹é‡ã€€å£ J/m3K
+var sh_ceil = 783000;			//ç†±å®¹é‡ã€€å¤©äº• J/m3K
+var sh_floor = 783000;			//ç†±å®¹é‡ã€€åºŠ J/m3K
+var sh_thick = 0.02;			//ç†±å®¹é‡ã‚’è€ƒæ…®ã™ã‚‹åšã• m ï¼ˆ2cmç¨‹åº¦ãŒé©å½“ï¼‰
+var windowK = 6.0;				//ç†±è²«æµç‡ã€€W/m2K
+var wallK = 2.5;				//ç†±è²«æµç‡ã€€W/m2K
 
 
-//•sg—pİ’è
-var flagExecute = 1;		//–¢Às
-var Dd = 0.001	;			//ŠgUŒW”@m2/s
-var nu = 0.000155;			//‹ó‹C‚Ì“®”S«ŒW” m2/s
+//å®¹ç©æ¯”ç†±ã€€
+//ã‚³ãƒ³ã‚¯ãƒªãƒ¼ãƒˆã€€ ã€€ã€€ã€€2013ã€€KJ/m3k
+//åœŸå£ã€€ã€€ã€€ã€€ã€€ ã€€ã€€ã€€1327ã€€KJ/m3k
+//ãƒ—ãƒ©ã‚¹ã‚¿ãƒ¼ãƒœãƒ¼ãƒ‰ã€€ã€€	854ã€€KJ/m3k
+//æ‰ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€ã€€	783ã€€KJ/m3k
+//ã‚°ãƒ©ã‚¹ã‚¦ãƒ¼ãƒ« 			420ã€€KJ/m3k
+
+
+//ä¸ä½¿ç”¨è¨­å®š
+var flagExecute = 1;		//æœªå®Ÿè¡Œ
+var Dd = 0.001	;			//æ‹¡æ•£ä¿‚æ•°ã€€m2/s
+var nu = 0.000155;			//ç©ºæ°—ã®å‹•ç²˜æ€§ä¿‚æ•° m2/s
 var rou = 1.293;			// kg/m3
 
-//ŒvZğŒ
-var maxtime = 100;		//Å‘å‰ñ”
+//è¨ˆç®—æ¡ä»¶
+var maxtime = 100;		//æœ€å¤§å›æ•°
 
-var InsidePhi = 20;	//‰Šú‰·“x
-var ObsPhi =20;		//áŠQ•¨‚Ì‰·“x
-var InletPhi = 10;	//‘‹‚ÌŠO‚Ì‰·“x
-var FloorPhi = 18;	//°‚Ì‰·“x
+var InsidePhi = 20;	//åˆæœŸæ¸©åº¦
+var ObsPhi =20;		//éšœå®³ç‰©ã®æ¸©åº¦
+var InletPhi = 10;	//çª“ã®å¤–ã®æ¸©åº¦
+var FloorPhi = 18;	//åºŠã®æ¸©åº¦
 
-//ƒƒbƒVƒ…(’l‚Í‰Šú’lj
+//ãƒ¡ãƒƒã‚·ãƒ¥(å€¤ã¯åˆæœŸå€¤ï¼‰
 var nMeshX = 8;
 var nMeshY = 8;
 var nMeshZ = 8;
-var size_x = 3;			//•¨—ƒXƒP[ƒ‹ m
+var size_x = 3;			//ç‰©ç†ã‚¹ã‚±ãƒ¼ãƒ« m
 var size_y = 3;
 var size_z = 3;
 
 
-//ˆ³—Íi‹ó‹C‚ÌüˆÍ‚Ì‰·“x‚Æ‚Ì·jYUP•ûŒü‚ªã‚Æ‚·‚é
+//åœ§åŠ›ï¼ˆç©ºæ°—ã®å‘¨å›²ã®æ¸©åº¦ã¨ã®å·®ï¼‰YUPæ–¹å‘ãŒä¸Šã¨ã™ã‚‹
 var g = 9.8;			// m/s2
 var tz = 273.15;
-var prsair = 0;	//101325;	//•W€‹Cˆ³ Pa N/m2
+var prsair = 0;	//101325;	//æ¨™æº–æ°—åœ§ Pa N/m2
 
-//Œ`®’è‹`
+//å½¢å¼å®šç¾©
 var INSIDE = 1;
 var BOTTOM = 2;
 var TOP = 3;
@@ -98,14 +98,14 @@ var OUTSIDE = 5;
 var SIDE = 6;
 var OBSTACLE = 7;
 var AC = 8;
-var CL = 9;			//ƒT[ƒLƒ…ƒŒ[ƒ^iXƒvƒ‰ƒX‚©‚ç‹zûAã–ÊY‚©‚ç‘—•—j
+var CL = 9;			//ã‚µãƒ¼ã‚­ãƒ¥ãƒ¬ãƒ¼ã‚¿ï¼ˆXãƒ—ãƒ©ã‚¹ã‹ã‚‰å¸åã€ä¸Šé¢Yã‹ã‚‰é€é¢¨ï¼‰
 
 var x = 0;
 var y = 1;
 var z = 2;
 
 
-//ŒvZƒtƒB[ƒ‹ƒh
+//è¨ˆç®—ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰
 var meshtype;
 var Phi;
 var Prs;
@@ -122,7 +122,7 @@ var delta_x2 ;
 var delta_y2 ;
 var delta_z2 ;
 
-//Œ‹‰ÊƒOƒ‰ƒt
+//çµæœã‚°ãƒ©ãƒ•
 var vmax = 1;
 var tmax = 0;
 var tmin = 0;
@@ -130,10 +130,10 @@ var tmin = 0;
 var CirculatorWind = 0;
 
 
-//workerŒÄ‚Ño‚µ========================
+//workerå‘¼ã³å‡ºã—========================
 onmessage = function (event) {
   
-	//ŒÄ‚Ño‚µ‚Ìƒpƒ‰ƒ[ƒ^‚Ìİ’è
+	//å‘¼ã³å‡ºã—æ™‚ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®è¨­å®š
 	var ret = event.data.val;
 	var totaltime = 0;
 	maxtime = ret.maxtime;
@@ -155,18 +155,18 @@ onmessage = function (event) {
 	FloorPhi = ret.FloorPhi;
 	meshtype = event.data.meshtype;
 
-	init();							//‰Šú‰»
+	init();							//åˆæœŸåŒ–
 
-	//ŠÔƒ‹[ƒv
+	//æ™‚é–“ãƒ«ãƒ¼ãƒ—
 	for( var i=0 ; i<=maxtime ; i++ ) {
-		var ret = calculate();		//’PŠÔŒvZ
+		var ret = calculate();		//å˜æ™‚é–“è¨ˆç®—
 		var heatin = {};
 		totaltime += delta_t;
 		if ( ret>0 ) break;
 		if ( Math.round(totaltime/60) !=  Math.round((totaltime-delta_t)/60) ) {
 			heatin.heatleftin = ( heatleftcount ? sumheatleft / heatleftcount : 0 );
 			heatin.heatfrontin = ( heatleftcount ? sumheatfront / heatleftcount : 0 );
-			//ƒVƒ~ƒ…ƒŒ[ƒVƒ‡ƒ““àŠÔ1•ª‚²‚Æ‚É’l‚ğ•Ô‚·
+			//ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³å†…æ™‚é–“1åˆ†ã”ã¨ã«å€¤ã‚’è¿”ã™
 			postMessage({ 
 				"count": i,
 				"totaltime": totaltime,
@@ -186,7 +186,7 @@ onmessage = function (event) {
 	}
 	var count = i-1;
 
-	//I—¹‚É•Ô‚·
+	//çµ‚äº†æ™‚ã«è¿”ã™
 	heatin.heatleftin = ( heatleftcount ? sumheatleft / heatleftcount : 0 );
 	heatin.heatfrontin = ( heatleftcount ? sumheatfront / heatleftcount : 0 );
 	postMessage({ 
@@ -202,14 +202,14 @@ onmessage = function (event) {
 };
 
 
-//‰Šúİ’è========================
+//åˆæœŸè¨­å®š========================
 function init(){
-	//ƒtƒB[ƒ‹ƒhƒTƒCƒY
+	//ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã‚µã‚¤ã‚º
 	var NUM_MAX_X = nMeshX+1;
 	var NUM_MAX_Y = nMeshY+1;
 	var NUM_MAX_Z = nMeshZ+1;
 
-	//ƒtƒB[ƒ‹ƒh‚Ìİ’è
+	//ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã®è¨­å®š
 	Phi = Array( NUM_MAX_X );
 	Prs = Array( NUM_MAX_X );
 	Vel = Array( 3 );
@@ -247,7 +247,7 @@ function init(){
 		}
 	}
 
-	//‹¤’Êg—p•Ï”
+	//å…±é€šä½¿ç”¨å¤‰æ•°
 	delta_x = size_x / nMeshX;
 	delta_y = size_y / nMeshY;
 	delta_z = size_z / nMeshZ;
@@ -256,11 +256,11 @@ function init(){
 	delta_y2 = delta_y * delta_y;
 	delta_z2 = delta_z * delta_z;
 
-	//‰·“xİ’è
+	//æ¸©åº¦è¨­å®š
 	for( i=0 ; i<=nMeshX+1 ; i++ ) {
 		for( j=0 ; j<=nMeshY+1 ; j++ ) {
 			for( k=0 ; k<=nMeshZ+1 ; k++ ) {
-				Phi[i][j][k] = InsidePhi;			//‰Šú‰·“x
+				Phi[i][j][k] = InsidePhi;			//åˆæœŸæ¸©åº¦
 				Vel[x][i][j][k] = 0.0;
 				Vel[y][i][j][k] = 0.0;
 				Vel[z][i][j][k] = 0.0;
@@ -276,7 +276,7 @@ function init(){
 	}
 
 /*
-	//ƒGƒAƒRƒ“‘¶İ
+	//ã‚¨ã‚¢ã‚³ãƒ³å­˜åœ¨
 	var ace =0;
 	for( i=0 ; i<=nMeshX+1 ; i++ ) {
 		for( j=0 ; j<=nMeshY+1 ; j++ ) {
@@ -304,7 +304,7 @@ function init(){
 
 
 
-//ŒvZƒ‹[ƒ`ƒ“@ƒtƒ‰ƒNƒVƒ‡ƒiƒ‹ƒXƒeƒbƒv–@========================
+//è¨ˆç®—ãƒ«ãƒ¼ãƒãƒ³ã€€ãƒ•ãƒ©ã‚¯ã‚·ãƒ§ãƒŠãƒ«ã‚¹ãƒ†ãƒƒãƒ—æ³•========================
 function calculate() {
 	var cnt = 0;
 	var perror = 0.0;
@@ -318,7 +318,7 @@ function calculate() {
 	var dv = 0;
 
 
-	//‘¬“x‹«ŠEğŒ
+	//é€Ÿåº¦å¢ƒç•Œæ¡ä»¶
 	for( i=0 ; i<=nMeshX+1 ; i++ ) {
 		for( j=0 ; j<=nMeshY+1 ; j++ ) {
 			for( k=0 ; k<=nMeshZ+1 ; k++ ) {
@@ -332,8 +332,8 @@ function calculate() {
 	}
 
 
-	//‰·“x‚©‚ç‚Ì•‚—Í‚É‚æ‚é‘¬“xXV---------------------------
-	//•½‹Ï‰·“x
+	//æ¸©åº¦ã‹ã‚‰ã®æµ®åŠ›ã«ã‚ˆã‚‹é€Ÿåº¦æ›´æ–°---------------------------
+	//å¹³å‡æ¸©åº¦
 	var phisum = 0;
 	var phicount = 0;
 	for( i=1 ; i<=nMeshX ; i++ ) {
@@ -357,7 +357,7 @@ function calculate() {
 				if ( meshtype[i][j][k] == INSIDE ) {
 
 				  if ( fgAround == 1 ) {
-					//üˆÍ‚Ì‰·“x‚Æ‚Ì·‚ğg‚¤ê‡ig‚í‚È‚¢‚Æ‚«‚ÍƒtƒB[ƒ‹ƒh•½‹Ïj
+					//å‘¨å›²ã®æ¸©åº¦ã¨ã®å·®ã‚’ä½¿ã†å ´åˆï¼ˆä½¿ã‚ãªã„ã¨ãã¯ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰å¹³å‡ï¼‰
 					var neararound = 0;
 					var neararoundc = 0;
 					if ( meshtype[i-1][j][k] == INSIDE ) {
@@ -390,12 +390,12 @@ function calculate() {
 						around = phiaverage+ tz;
 					}
 				  }
-					//‰·“x·‚É‚æ‚é•‚—Í
+					//æ¸©åº¦å·®ã«ã‚ˆã‚‹æµ®åŠ›
 					tmprature = Phi[i][j][k] + tz;
 					dv = g  * ( tmprature - around ) / around * delta_t;
-					//Å‘å’l
+					//æœ€å¤§å€¤
 					if ( tmax < dv ) tmax = dv;
-					//‚Ô‚ê‚ğ‚¢‚ê‚é
+					//ã¶ã‚Œã‚’ã„ã‚Œã‚‹
 					Vel[y][i][j][k] += dv * (Math.random() * 0.1*2 + 0.9) ;
 				}
 			}
@@ -403,9 +403,9 @@ function calculate() {
 	}
 
 
-	//ƒGƒAƒRƒ“i‰·“x‚Æ•—‘¬‚Ìİ’èj--------------------------
-	//‰º•ûŒü‚É‰·•— •Ç‚Æ”½‘Î•ûŒü‚Å“¯‚¶•—‘¬‚Å‹zû
-	//ƒGƒAƒRƒ“‚Ì•ûŒü‚Ìİ’è
+	//ã‚¨ã‚¢ã‚³ãƒ³ï¼ˆæ¸©åº¦ã¨é¢¨é€Ÿã®è¨­å®šï¼‰--------------------------
+	//ä¸‹æ–¹å‘ã«æ¸©é¢¨ å£ã¨åå¯¾æ–¹å‘ã§åŒã˜é¢¨é€Ÿã§å¸å
+	//ã‚¨ã‚¢ã‚³ãƒ³ã®æ–¹å‘ã®è¨­å®š
 	var acx = 0;
 	var acz = 0;
 	j=nMeshY-2;
@@ -413,12 +413,12 @@ function calculate() {
 	if ( ACwind > 0 ) {
 		acv = ACwind;
 	} else {
-		acv = 2;	//‹­•—
+		acv = 2;	//å¼·é¢¨
 	}
-	//’g–[”\—Í2.8kW‚Æ‘z’è act‰·“xã¸ 
+	//æš–æˆ¿èƒ½åŠ›2.8kWã¨æƒ³å®š actæ¸©åº¦ä¸Šæ˜‡ 
 	if ( addair ) {
 		act = 2800 / ( sh_air * rou * 1000 * acv * 1 * delta_x );
-		//•1m~delta_x‚Ì‚«o‚µŒû
+		//å¹…1mÃ—delta_xã®å¹ãå‡ºã—å£
 	} else {
 		act = 0;
 	}
@@ -434,9 +434,9 @@ function calculate() {
 						Phi[i][j-1][k] = Phi[i][j+1][k]+act;
 						adj = 1;
 					} else {
-						//©“®’²®
+						//è‡ªå‹•èª¿æ•´
 						if ( Phi[i][j+1][k] < 20 && totaltime > 300 ) {
-							//Å‰‚Ì5•ª‚Íƒtƒ‹“®ì
+							//æœ€åˆã®5åˆ†ã¯ãƒ•ãƒ«å‹•ä½œ
 							acheatsum += 1400;
 							adj = 0.5;
 						} else {
@@ -484,18 +484,18 @@ function calculate() {
 		}
 	}
 
-	//ƒT[ƒLƒ…ƒŒ[ƒ^•—‘¬İ’è
+	//ã‚µãƒ¼ã‚­ãƒ¥ãƒ¬ãƒ¼ã‚¿é¢¨é€Ÿè¨­å®š
 	i=1;
 	j=1;
 	k=Math.round(nMeshZ/2);
 	if ( meshtype[i][j][k] == CL ) {
-		//ˆê‚Â‰¡‚ğİ’è‚µ‚Ä‚½‚ªA’¼ÚƒZƒ‹‚Ìİ’è‚ğ‚µ‚½‚Ù‚¤‚ª‚¢‚¢Œ‹‰Ê‚ªo‚é 161025
-		//Vel[y][i][j][k] = CirculatorWind;		//1’i–Ú‚Í‚ ‚Æ‚Å‘¬“x0‚É‚³‚ê‚Ä‚µ‚Ü‚¤@ˆ³—Í‚ª‚¨‚©‚µ‚­‚È‚é
+		//ä¸€ã¤æ¨ªã‚’è¨­å®šã—ã¦ãŸãŒã€ç›´æ¥ã‚»ãƒ«ã®è¨­å®šã‚’ã—ãŸã»ã†ãŒã„ã„çµæœãŒå‡ºã‚‹ 161025
+		//Vel[y][i][j][k] = CirculatorWind;		//1æ®µç›®ã¯ã‚ã¨ã§é€Ÿåº¦0ã«ã•ã‚Œã¦ã—ã¾ã†ã€€åœ§åŠ›ãŒãŠã‹ã—ããªã‚‹
 		Vel[y][i][j+1][k] = CirculatorWind;
 	}
 
-	//“à•”•Ç–Ê‚Ì‘¬“x‹«ŠEğŒi•Ç“™‚Ö‚Ì‚’¼•ûŒü‚Ì•—‚Í‚È‚¢j
-	//‚±‚ê‚ğ‚È‚­‚·‚ÆA•Ç–Ê‚Å‚Ìˆ³—Í‚ª‚È‚­‚È‚èA•ûŒü“]Š·‚ª‚³‚ê‚È‚¢
+	//å†…éƒ¨å£é¢ã®é€Ÿåº¦å¢ƒç•Œæ¡ä»¶ï¼ˆå£ç­‰ã¸ã®å‚ç›´æ–¹å‘ã®é¢¨ã¯ãªã„ï¼‰
+	//ã“ã‚Œã‚’ãªãã™ã¨ã€å£é¢ã§ã®åœ§åŠ›ãŒãªããªã‚Šã€æ–¹å‘è»¢æ›ãŒã•ã‚Œãªã„
 	for( i=1 ; i<=nMeshX ; i++ ) {
 		for( j=1 ; j<=nMeshY ; j++ ) {
 			for( k=1 ; k<=nMeshZ ; k++ ) {
@@ -515,31 +515,31 @@ function calculate() {
 	}
 	
 
-	//NS•û’ö®‚É‚æ‚é‘¬“xXVi•—ã·•ªj-----------
+	//NSæ–¹ç¨‹å¼ã«ã‚ˆã‚‹é€Ÿåº¦æ›´æ–°ï¼ˆé¢¨ä¸Šå·®åˆ†ï¼‰-----------
 	methodSabun(x);
 	methodSabun(y);
 	methodSabun(z);
 
 
-	//Poisson•û’ö®i‘¬“xEˆ³—Í‚©‚çA‚à‚¤ˆê“x‘¬“xj----------------------
-	//Poisson•û’ö®‚Ì‰E•Ói‘Î—¬€j
+	//Poissonæ–¹ç¨‹å¼ï¼ˆé€Ÿåº¦ãƒ»åœ§åŠ›ã‹ã‚‰ã€ã‚‚ã†ä¸€åº¦é€Ÿåº¦ï¼‰----------------------
+	//Poissonæ–¹ç¨‹å¼ã®å³è¾ºï¼ˆå¯¾æµé …ï¼‰
 	var maxD = 0;
 	var a,b,c;
 	for( i=1 ; i<=nMeshX ; i++ ) {
 		for( j=1 ; j<=nMeshY ; j++ ) {
 			for( k=1 ; k<=nMeshZ ; k++ ) {
 				if ( meshtype[i][j][k] == INSIDE || meshtype[i][j][k] == CL ) {
-					//1611 CL’Ç‰Á
+					//1611 CLè¿½åŠ 
 
 				  if ( 1 ) {	
-					// 160210 ’†S·•ª‚Å‚È‚¢‚Æ’l‚ª‚Å‚È‚¢
-					//’†S·•ª
+					// 160210 ä¸­å¿ƒå·®åˆ†ã§ãªã„ã¨å€¤ãŒã§ãªã„
+					//ä¸­å¿ƒå·®åˆ†
 					a = (Vel[x][i+1][j][k] - Vel[x][i-1][j][k]) /2 / delta_x;
 					b = (Vel[y][i][j+1][k] - Vel[y][i][j-1][k]) /2 / delta_y;
 					c = (Vel[z][i][j][k+1] - Vel[z][i][j][k-1]) /2 / delta_z;
 
 				  } else {
-					//‘Oi·•ª
+					//å‰é€²å·®åˆ†
 					if( Vel[x][i][j][k] > 0 ) {
 						a = (Vel[x][i][j][k] - Vel[x][i-1][j][k]) / delta_x;
 					} else {
@@ -557,7 +557,7 @@ function calculate() {
 					}
 				  }
 
-				  //170630 rou’Ç‰Á
+				  //170630 rouè¿½åŠ 
 					D[i][j][k] = (a + b + c) * rou / delta_t;
 					if ( D[i][j][k] > maxD )
 						maxD = D[i][j][k];
@@ -566,16 +566,16 @@ function calculate() {
 		}
 	}
 
-	//Poisson‚Ì•û’ö®‚ğ‰ğ‚­
+	//Poissonã®æ–¹ç¨‹å¼ã‚’è§£ã
 	var cnt = 0;
 	var A4 = 2 * ( 1 / delta_x2 + 1 / delta_y2 + 1 / delta_z2 );
 
 	while ( cnt < iteration ) {
 		maxError = 0.0;
 
-		//ˆ³—ÍğŒİ’è@ŒvZ’†‚Å‹ó‹CˆÈŠO‚ğ”»’è‚µ‚Ä‚¢‚é‚Ì‚Å•s—v
+		//åœ§åŠ›æ¡ä»¶è¨­å®šã€€è¨ˆç®—ä¸­ã§ç©ºæ°—ä»¥å¤–ã‚’åˆ¤å®šã—ã¦ã„ã‚‹ã®ã§ä¸è¦
 
-		//”½•œŒvZ GS–@ASOR–@ASIP–@
+		//åå¾©è¨ˆç®— GSæ³•ã€SORæ³•ã€SIPæ³•
 		var pp;
 
 		var xp,xm, yp,ym,zp,zm;
@@ -583,8 +583,8 @@ function calculate() {
 			for( j=1 ; j<=nMeshY ; j++ ) {
 				for( k=1 ; k<=nMeshZ ; k++ ) {
 					if ( meshtype[i][j][k] == INSIDE || meshtype[i][j][k] == CL ) {
-						//1611 CL’Ç‰Á
-						//D‚ğ‚Ó‚­‚ß‚Ä‚Ü‚Æ‚ß‚Ä6‚ÅŠ„‚éi®‚Ì“WŠJ‚æ‚èj
+						//1611 CLè¿½åŠ 
+						//Dã‚’ãµãã‚ã¦ã¾ã¨ã‚ã¦6ã§å‰²ã‚‹ï¼ˆå¼ã®å±•é–‹ã‚ˆã‚Šï¼‰
 						xp = Prs[i+1][j][k];
 						xm = Prs[i-1][j][k];
 						yp = Prs[i][j+1][k];
@@ -601,12 +601,12 @@ function calculate() {
 			}
 		}
 
-		//ˆ³—Í‚Ìİ’è
+		//åœ§åŠ›ã®è¨­å®š
 		for( i=0 ; i<=nMeshX+1 ; i++ ) {
 			for( j=0 ; j<=nMeshY+1 ; j++ ) {
 				for( k=0 ; k<=nMeshZ+1 ; k++ ) {
 					if ( meshtype[i][j][k] == INSIDE || meshtype[i][j][k] == CL ) {
-						// 1611CL‚à’Ç‰Á
+						// 1611CLã‚‚è¿½åŠ 
 						Prs[i][j][k] = tmp[0][i][j][k];
 					}
 				}
@@ -615,7 +615,7 @@ function calculate() {
 		for( i=0 ; i<=nMeshX+1 ; i++ ) {
 			for( j=0 ; j<=nMeshY+1 ; j++ ) {
 				for( k=0 ; k<=nMeshZ+1 ; k++ ) {
-						//‹ó‹C‚Å‚È‚¢ê‡‚É‚ÍAÅ‚à‹ß‚¢‹ó‹C‚Ìˆ³—Í‚ğİ’è
+						//ç©ºæ°—ã§ãªã„å ´åˆã«ã¯ã€æœ€ã‚‚è¿‘ã„ç©ºæ°—ã®åœ§åŠ›ã‚’è¨­å®š
 						if ( i==0 ) {
 							Prs[i][j][k] = tmp[0][i+1][j][k];
 						} else if ( i==nMeshX+1 ) {
@@ -629,7 +629,7 @@ function calculate() {
 						} else if ( k==nMeshZ+1 ) {
 							Prs[i][j][k] = tmp[0][i][j][k-1];
 						} else {
-							//áŠQ•¨‚È‚Ç 170629@íœ
+							//éšœå®³ç‰©ãªã© 170629ã€€å‰Šé™¤
 							/*
 							if ( meshtype[i-1][j][k] == INSIDE ) {
 								Prs[i][j][k] = tmp[0][i-1][j][k];
@@ -664,12 +664,12 @@ function calculate() {
 	}
 
 
-	//‘¬“xƒxƒNƒgƒ‹‚ÌXV
+	//é€Ÿåº¦ãƒ™ã‚¯ãƒˆãƒ«ã®æ›´æ–°
 	for( i=1 ; i<=nMeshX ; i++ ) {
 		for( j=1 ; j<=nMeshY ; j++ ) {
 			for( k=1 ; k<=nMeshZ ; k++ ) {
 				if ( meshtype[i][j][k] == INSIDE || meshtype[i][j][k] == CL) {
-					//170629 ”ädrou ‚ğŠ|‚¯‡‚í‚¹‚é
+					//170629 æ¯”é‡rou ã‚’æ›ã‘åˆã‚ã›ã‚‹
 					tmp[x][i][j][k] = Vel[x][i][j][k] - 0.5 * delta_t * (Prs[i+1][j][k] - Prs[i-1][j][k]) / (rou * delta_x);
 					tmp[y][i][j][k] = Vel[y][i][j][k] - 0.5 * delta_t * (Prs[i][j+1][k] - Prs[i][j-1][k]) / ( rou  * delta_y);	
 					tmp[z][i][j][k] = Vel[z][i][j][k] - 0.5 * delta_t * (Prs[i][j][k+1] - Prs[i][j][k-1]) / ( rou * delta_z);
@@ -690,7 +690,7 @@ function calculate() {
 		}
 	}
 
-	//‘¬“x‹«ŠEğŒ Ä‚Ñİ’è‚·‚é‚±‚Æ‚ÅƒT[ƒLƒ…ƒŒ[ƒ^‚ª“KØ‚É‚È‚é 170629‚È‚­‚µ‚Ä‚à•Ï‰»‚È‚µ
+	//é€Ÿåº¦å¢ƒç•Œæ¡ä»¶ å†ã³è¨­å®šã™ã‚‹ã“ã¨ã§ã‚µãƒ¼ã‚­ãƒ¥ãƒ¬ãƒ¼ã‚¿ãŒé©åˆ‡ã«ãªã‚‹ 170629ãªãã—ã¦ã‚‚å¤‰åŒ–ãªã—
 	/*
 	for( i=0 ; i<=nMeshX+1 ; i++ ) {
 		for( j=0 ; j<=nMeshY+1 ; j++ ) {
@@ -706,7 +706,7 @@ function calculate() {
 	*/
 
 
-	//‰·“x-----------------------------------------------
+	//æ¸©åº¦-----------------------------------------------
 	var coulant;
 	var maxcoulant;
 	maxcoulant = 0;
@@ -718,14 +718,14 @@ function calculate() {
 	var heatparm_c = delta_t / ( Ric * sh_air * rou * 1000 );
 	var heatparm_w = delta_t / ( sh_air * rou * 1000 );
 
-	//‰·“x‚ÌˆÚ“®
+	//æ¸©åº¦ã®ç§»å‹•
 	for( i=0 ; i<=nMeshX+1 ; i++ ) {
 		for( j=0 ; j<=nMeshY+1 ; j++ ) {
 			for( k=0 ; k<=nMeshZ+1 ; k++ ) {
 				var pphi =  Phi[i][j][k];
 				tmp[0][i][j][k] = pphi;
 				if ( meshtype[i][j][k] == INSIDE || meshtype[i][j][k] == CL ) {
-					//‹ó‹C‚Ìê‡i+1A-1‚Í‚ ‚è‚¤‚éj
+					//ç©ºæ°—ã®å ´åˆï¼ˆ+1ã€-1ã¯ã‚ã‚Šã†ã‚‹ï¼‰
 					xp = Phi[i+1][j][k];
 					xm = Phi[i-1][j][k];
 					yp = Phi[i][j+1][k];
@@ -733,16 +733,16 @@ function calculate() {
 					zp = Phi[i][j][k+1];
 					zm = Phi[i][j][k-1];
 					
-					//170630 NOT •—ã·•ª‚Å ƒƒbƒVƒ…ˆá‚¢‚Å‚Í‚È‚­AƒƒbƒVƒ…‚Ì•½‹Ï’l‚ğ—p‚¢‚½‚ªA ƒT[ƒLƒ…ƒŒ[ƒ^‚ª‚Å‚«‚È‚¢AƒGƒAƒRƒ“‚Ì”M‹Ÿ‹‹‚ª’x‚¢
-					//170630 ’[‚Ìê‡‚É‚ÍA©•ª‚Ì‘¬“x‚ğg‚¤
-					//ˆêŸ¸“x@ˆêŸ•ûŒüˆÚ—¬ X
+					//170630 NOT é¢¨ä¸Šå·®åˆ†ã§ ãƒ¡ãƒƒã‚·ãƒ¥é•ã„ã§ã¯ãªãã€ãƒ¡ãƒƒã‚·ãƒ¥ã®å¹³å‡å€¤ã‚’ç”¨ã„ãŸãŒã€ ã‚µãƒ¼ã‚­ãƒ¥ãƒ¬ãƒ¼ã‚¿ãŒã§ããªã„ã€ã‚¨ã‚¢ã‚³ãƒ³ã®ç†±ä¾›çµ¦ãŒé…ã„
+					//170630 ç«¯ã®å ´åˆã«ã¯ã€è‡ªåˆ†ã®é€Ÿåº¦ã‚’ä½¿ã†
+					//ä¸€æ¬¡ç²¾åº¦ã€€ä¸€æ¬¡æ–¹å‘ç§»æµ X
 					coulant = Vel[x][i][j][k] * delta_t / delta_x;
 					//vijk = Vel[x][i][j][k];
 					if ( fgCalcTempAround == 1 ) {
-						//ˆêŸ¸“x
+						//ä¸€æ¬¡ç²¾åº¦
 						tmp[0][i][j][k] += 0.5 * (coulant * (xm - xp) + Math.abs(coulant) * (xp + xm - 2.0 * pphi));
 					} else {
-						//•—ã·•ª
+						//é¢¨ä¸Šå·®åˆ†
 						fixwall = ( i==2 ? 2 : i-1 );
 						//fixwall = i-1;
 						if ( Vel[x][fixwall][j][k] > 0 ) {
@@ -758,7 +758,7 @@ function calculate() {
 					}
 					if ( maxcoulant < coulant ) maxcoulant = coulant;
 
-					//ˆêŸ¸“x@ˆêŸ•ûŒüˆÚ—¬ Y
+					//ä¸€æ¬¡ç²¾åº¦ã€€ä¸€æ¬¡æ–¹å‘ç§»æµ Y
 					vijk = Vel[y][i][j][k];
 					coulant = Vel[y][i][j][k] * delta_t / delta_y;
 					if ( fgCalcTempAround == 1 ) {
@@ -779,7 +779,7 @@ function calculate() {
 					}
 					if ( maxcoulant < coulant ) maxcoulant = coulant;
 
-					//ˆêŸ¸“x@ˆêŸ•ûŒüˆÚ—¬ Z
+					//ä¸€æ¬¡ç²¾åº¦ã€€ä¸€æ¬¡æ–¹å‘ç§»æµ Z
 					//vijk = Vel[z][i][j][k];
 					coulant = Vel[z][i][j][k] * delta_t / delta_z;
 					if ( fgCalcTempAround == 1 ) {
@@ -800,17 +800,17 @@ function calculate() {
 					}
 					if ( maxcoulant < coulant ) maxcoulant = coulant;
 	
-					//ŠO•Ç‚©‚ç‚Ì—¬“ü
-					// º“à‘¤”M’ïR0.11m2K/W @‹ó‹C”ä”M@1.006J/gK@
-					// 170629 heatparm_w ‚ğg‚¤ê‡‚É‚Í delta_*‚ÅŠ„‚ç‚È‚¢
+					//å¤–å£ã‹ã‚‰ã®æµå…¥
+					// å®¤å†…å´ç†±æŠµæŠ—0.11m2K/W ã€€ç©ºæ°—æ¯”ç†±ã€€1.006J/gKã€€
+					// 170629 heatparm_w ã‚’ä½¿ã†å ´åˆã«ã¯ delta_*ã§å‰²ã‚‰ãªã„
 					if ( meshtype[i-1][j][k] != INSIDE && meshtype[i-1][j][k] != CL ) {
-						//¶‘¤‚ª‹ó‹C‚Å‚È‚¢
+						//å·¦å´ãŒç©ºæ°—ã§ãªã„
 						if ( meshtype[i-1][j][k] == OUTSIDE ) {
-							//ŠO•Çi¶j
+							//å¤–å£ï¼ˆå·¦ï¼‰
 							tmp[0][i][j][k] += ( xm - pphi ) * wallK * heatparm_w / delta_x;
 							sumheatleft += ( xm - pphi ) * wallK * delta_y*delta_z ;
 						} else if ( meshtype[i-1][j][k] == WINDOW ) {
-							//‘‹i¶j
+							//çª“ï¼ˆå·¦ï¼‰
 							tmp[0][i][j][k] += ( xm - pphi )  * windowK * heatparm_w / delta_x;
 							sumheatleft += ( xm - pphi )  * windowK * delta_y*delta_z ;
 						} else {
@@ -823,11 +823,11 @@ function calculate() {
 					}
 
 					if ( meshtype[i][j-1][k] != INSIDE && meshtype[i][j-1][k] != CL ) {
-						//°‚¾‚Á‚½‚ç
+						//åºŠã ã£ãŸã‚‰
 						tmp[0][i][j][k] += ( ym - pphi )  / delta_y * heatparm_f;
 					}
 					if ( meshtype[i][j+1][k] != INSIDE ) {
-						//“Vˆä‚¾‚Á‚½‚ç
+						//å¤©äº•ã ã£ãŸã‚‰
 						tmp[0][i][j][k] += ( yp - pphi ) / delta_y * heatparm_c;
 					}
 
@@ -835,24 +835,24 @@ function calculate() {
 						tmp[0][i][j][k] += ( zm - pphi ) / delta_z * heatparm;
 					}
 					if ( meshtype[i][j][k+1] != INSIDE && meshtype[i][j][k+1] != CL) {
-						//‰œ‚ª‹ó‹C‚Å‚È‚¢
+						//å¥¥ãŒç©ºæ°—ã§ãªã„
 						if ( meshtype[i][j][k+1] == OUTSIDE ) {
-							//ŠO•Ç
+							//å¤–å£
 							tmp[0][i][j][k] += ( zp - pphi ) * wallK  * heatparm_w;
 							sumheatfront += ( zp - pphi ) * wallK* delta_y*delta_z ;
 						} else if ( meshtype[i][j][k+1] == WINDOW ) {
-							//‘‹i³–Êj
+							//çª“ï¼ˆæ­£é¢ï¼‰
 							tmp[0][i][j][k] += ( zp - pphi )  * windowK * heatparm_w;
 							sumheatfront += ( zp - pphi ) * windowK* delta_y*delta_z ;
 						} else {
-							//“à•Ç
+							//å†…å£
 							tmp[0][i][j][k] += ( zp - pphi )  / delta_z * heatparm;
 							sumheatfront += ( zp - pphi ) / delta_z * Riw* delta_y*delta_z ;
 						}
 					}
 
 				} else if ( meshtype[i][j][k] == OBSTACLE ) {
-					//•¨‘Ì‚Ì‹ó‹C‚©‚ç‚Ì”MˆÚ“®‚ğ•]‰¿(-1 +1‚ª—LŒø)
+					//ç‰©ä½“ã®ç©ºæ°—ã‹ã‚‰ã®ç†±ç§»å‹•ã‚’è©•ä¾¡(-1 +1ãŒæœ‰åŠ¹)
 					xp = Phi[i+1][j][k];
 					xm = Phi[i-1][j][k];
 					yp = Phi[i][j+1][k];
@@ -860,7 +860,7 @@ function calculate() {
 					zp = Phi[i][j][k+1];
 					zm = Phi[i][j][k-1];
 					if ( ObsPhi != InsidePhi ) {
-						//‰·“xİ’è‚ª‚³‚ê‚Ä‚¢‚éê‡‚É‚Íˆ—‚µ‚È‚¢
+						//æ¸©åº¦è¨­å®šãŒã•ã‚Œã¦ã„ã‚‹å ´åˆã«ã¯å‡¦ç†ã—ãªã„
 					} else if ( meshtype[i-1][j][k] == INSIDE ||  meshtype[i+1][j][k] == INSIDE ) {
 						tmp[0][i][j][k] = ( xp+ xm ) / 2;
 					} else if ( meshtype[i][j-1][k] == INSIDE ||  meshtype[i][j+1][k] == INSIDE ) {
@@ -872,17 +872,17 @@ function calculate() {
 					}
 
 				} else if ( meshtype[i][j][k] == SIDE ) {
-					//•Ç‚Ì‹ó‹C‚©‚ç‚Ì”MˆÚ“®‚ğ•]‰¿
-					// ‰·“x‚Íg‚í‚È‚¢‚Ì‚ÅA‹ó‹C‰·“x‚ğİ’è‚·‚é
+					//å£ã®ç©ºæ°—ã‹ã‚‰ã®ç†±ç§»å‹•ã‚’è©•ä¾¡
+					// æ¸©åº¦ã¯ä½¿ã‚ãªã„ã®ã§ã€ç©ºæ°—æ¸©åº¦ã‚’è¨­å®šã™ã‚‹
 					if ( meshtype[i][j][Math.max(k-1,0)] == INSIDE) {
-						//•Ç–Ê‰·“x‚ğŠO‹C‰·‚Æ‚µ‚Äˆµ‚¤i‰œj
+						//å£é¢æ¸©åº¦ã‚’å¤–æ°—æ¸©ã¨ã—ã¦æ‰±ã†ï¼ˆå¥¥ï¼‰
 						//tmp[0][i][j][k] = Phi[i][j][k] + (Phi[i][j][k-1]-Phi[i][j][k]) / Riw * delta_t / ( sh_wall * sh_thick );
 					} else if ( meshtype[i][j][Math.min(k+1,nMeshZ+1)] == INSIDE) {
 						tmp[0][i][j][k] += (Phi[i][j][k+1]-pphi) / Riw * delta_t / ( sh_wall * sh_thick );
 					} else if ( meshtype[Math.max(i-1,0)][j][k] == INSIDE) {
 						tmp[0][i][j][k] += (Phi[i-1][j][k]-pphi) / Riw * delta_t / ( sh_wall * sh_thick );
 					} else if ( meshtype[Math.min(i+1,nMeshX+1)][j][k] == INSIDE) {
-						//•Ç–Ê‰·“x‚ğŠO‹C‰·‚Æ‚µ‚Äˆµ‚¤i¶j
+						//å£é¢æ¸©åº¦ã‚’å¤–æ°—æ¸©ã¨ã—ã¦æ‰±ã†ï¼ˆå·¦ï¼‰
 						//tmp[0][i][j][k] += (Phi[i+1][j][k]-Phi[i][j][k]) / Riw * delta_t / ( sh_wall * sh_thick );
 
 					}
@@ -892,7 +892,7 @@ function calculate() {
 					tmp[0][i][j][k] += (Phi[i][j+1][k]-pphi) / Rif * delta_t / ( sh_wall * sh_thick );
 				}
 			}
-			//‘‹EŠO•Ç‚É‚Â‚¢‚Ä‚Í‰·“x‚Í•]‰¿‚µ‚È‚¢iŠO•”‚©‚çŒÅ’èİ’è‚·‚éj
+			//çª“ãƒ»å¤–å£ã«ã¤ã„ã¦ã¯æ¸©åº¦ã¯è©•ä¾¡ã—ãªã„ï¼ˆå¤–éƒ¨ã‹ã‚‰å›ºå®šè¨­å®šã™ã‚‹ï¼‰
 		}
 	}
 	heatleftcount++;
@@ -908,7 +908,7 @@ function calculate() {
 	}
 
 
-	//ƒN[ƒ‰ƒ“ğŒ‚É‚æ‚éŒvZƒ^ƒCƒ~ƒ“ƒO‚ÌŒ©’¼‚µ-----------------------------
+	//ã‚¯ãƒ¼ãƒ©ãƒ³æ¡ä»¶ã«ã‚ˆã‚‹è¨ˆç®—ã‚¿ã‚¤ãƒŸãƒ³ã‚°ã®è¦‹ç›´ã—-----------------------------
 	if ( fix_coulant ) {
 		if ( maxcoulant > coulant_min ) {
 			delta_t *= 0.95;
@@ -918,7 +918,7 @@ function calculate() {
 		}
 	}
 
-	//ˆ³—Í/‰·“x‚ÌÅ‘å’lEÅ¬’l--------------------------
+	//åœ§åŠ›/æ¸©åº¦ã®æœ€å¤§å€¤ãƒ»æœ€å°å€¤--------------------------
 	var prscount = 0;
 	var prssum = 0;
 	for( i=1 ; i<=nMeshX ; i++ ) {
@@ -937,13 +937,13 @@ function calculate() {
 			}
 		}
 	}
-	//ˆ³—Í‚Ì•½‹Ï‰»@•s—v
+	//åœ§åŠ›ã®å¹³å‡åŒ–ã€€ä¸è¦
 
 	return 0;
 };
 
 
-//‘¬“x—A‘—•û’ö®ˆêŸ·•ªi•ûŒü¬•ª‚²‚Æj===================================
+//é€Ÿåº¦è¼¸é€æ–¹ç¨‹å¼ä¸€æ¬¡å·®åˆ†ï¼ˆæ–¹å‘æˆåˆ†ã”ã¨ï¼‰===================================
 function methodSabun( target ) {
 	var f = Vel[target];
 	var maxcoulant = 0;
@@ -969,8 +969,8 @@ function methodSabun( target ) {
 					zp = f[i][j][k+1];
 					zm = f[i][j][k-1];
 
-					//•—ã·•ª
-					//‚±‚ê‚ğ’†‰›·•ª‚ğ‚Æ‚é‚ÆAƒ`ƒFƒbƒJ[ƒ{[ƒh‚Æ‚È‚é
+					//é¢¨ä¸Šå·®åˆ†
+					//ã“ã‚Œã‚’ä¸­å¤®å·®åˆ†ã‚’ã¨ã‚‹ã¨ã€ãƒã‚§ãƒƒã‚«ãƒ¼ãƒœãƒ¼ãƒ‰ã¨ãªã‚‹
 					coulant = Vel[x][i][j][k] * delta_t / delta_x;
 					newF[i][j][k] = fijk + 0.5 * (coulant * (xm - xp) + Math.abs(coulant) * (xp +xm - 2.0 * fijk));
 					coulant = Vel[y][i][j][k] * delta_t / delta_y;
@@ -978,14 +978,14 @@ function methodSabun( target ) {
 					coulant = Vel[z][i][j][k] * delta_t / delta_z;
 					newF[i][j][k] += 0.5 * (coulant * (zm - zp) + Math.abs(coulant) * (zp +zm - 2.0 * fijk));
 
-					//”S«€‚É’†‰›·•ª
+					//ç²˜æ€§é …ã«ä¸­å¤®å·®åˆ†
 					newF[i][j][k] += delta_t * ( (xm + xp - 2.0 * fijk) / delta_x2   +  (ym + yp - 2.0 * fijk) / delta_y2 +  (zm + zp - 2.0 * fijk) / delta_z2 ) / Re;
 				}
 			}
 		}
 	}
 
-	//XV
+	//æ›´æ–°
 	for( i=1 ; i<=nMeshX ; i++ ) {
 		for( j=1 ; j<=nMeshY ; j++ ) {
 			for( k=1 ; k<=nMeshZ ; k++ ) {
