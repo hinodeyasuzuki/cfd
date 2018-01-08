@@ -1,5 +1,0 @@
-
-
-electron-packager D:\txt\www\cfd2015\ver1.2 cfdhome --platform=win32 --arch=ia32 --version=0.36.7 --asar
-
-
