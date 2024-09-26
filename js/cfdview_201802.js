@@ -3,7 +3,7 @@
 　画面IO機能
 
 copyright(C) 2015-2018 Yasufumi Suzuki, Hinodeya Insititute for Ecolife co.ltd.
-					鈴木靖文, 有限会社ひのでやエコライフ研究所										
+					鈴木靖文, 有限会社ひのでやエコライフ研究所
 Released under the MIT license
 http://www.hinodeya-ecolife.com
 
@@ -134,7 +134,7 @@ var defSenario = [
 {	group: "部屋サイズ",
 	data : [
 	{ 
-		title:"４畳半",
+		title:"4畳半",
 		size_x:2.7,
 		size_y:2.4,
 		size_z:2.7,
@@ -147,7 +147,7 @@ var defSenario = [
 		ObsZ1r:0.4,
 	},
 	{ 
-		title:"６畳",
+		title:"6畳",
 		default:1,
 		size_x:3.6,
 		size_y:2.4,
@@ -161,7 +161,7 @@ var defSenario = [
 		ObsZ1r:0.4,
 	},
 	{ 
-		title:"８畳",
+		title:"8畳",
 		size_x:3.6,
 		size_y:2.4,
 		size_z:3.6,
@@ -174,7 +174,7 @@ var defSenario = [
 		ObsZ1r:0.4,
 	},
 	{ 
-		title:"１２畳",
+		title:"12畳",
 		size_x:5.4,
 		size_y:2.4,
 		size_z:3.6,
@@ -187,7 +187,7 @@ var defSenario = [
 		ObsZ1r:0.4,
 	},
 	{ 
-		title:"１５畳",
+		title:"15畳",
 		size_x:5.4,
 		size_y:2.4,
 		size_z:4.5,
@@ -294,14 +294,14 @@ var defSenario = [
 		maxtime_minute:20,
 	},
 	{
-		title:"なし（室温18℃）",
+		title:"なし（室温22℃）",
 		default:1,
 		ObsSet:2,
 		ACwall:4,
 		ACwind:0,
-		InsidePhi:18,
-		ObsPhi:18,
-		FloorPhi:18,
+		InsidePhi:22,
+		ObsPhi:22,
+		FloorPhi:22,
 		maxtime_minute:60,
 	}
 	]
@@ -392,7 +392,7 @@ var defSenario = [
 	{
 		title:"あり",
 		ObsSet:1,
-		ObsPhi:18,
+		ObsPhi:22,
 	},
 	{
 		title:"なし",
@@ -421,6 +421,7 @@ if (window.Worker) {
 		var acheat = event.data.acheat;
 		var heatleftin = event.data.heatin.heatleftin;
 		var heatfrontin = event.data.heatin.heatfrontin;
+		var heattopin = event.data.heatin.heattopin;
 		Vel = event.data.Vel;
 		Phi = event.data.Phi;
 		Prs = event.data.Prs;
@@ -431,15 +432,16 @@ if (window.Worker) {
 		var disp = Math.round(time / 60) +  "分後" + "　　計算回数:" + count + "回 <br>"
 				+ "エアコン出力:" + parseInt(acheat) + "W　 <br>" 
 				+ "エアコン消費電力量" + parseInt(sumwatt)/1000 + "kWh　 <br>" 
-				+ "左面　熱移動:" + parseInt(heatleftin) + "W　 <br>" 
-				+ "正面　熱移動:" + parseInt(heatfrontin) + "W　 <br>" 
-				+ "床面最大風速:" + parseInt(temp["floormaxvf"]*100)/100 + "(m/s)<br>" 
-				+ "床面最低温度" + parseInt(temp["floormin"]*10)/10 + "℃　<br>" 
-				+ "床面最高温度" + parseInt(temp["floormax"]*10)/10 +"℃　<br>"
-				+ "床面 平均温度" + parseInt(temp["floorav"]*10)/10 +"℃　<br>"
-				+ "左面 平均温度" + parseInt(temp["leftav"]*10)/10 +"℃　<br>"
-				+ "正面 平均温度" + parseInt(temp["frontav"]*10)/10 +"℃　<br>"
-				+ "部屋 平均温度" + parseInt(temp["totalav"]*10)/10 +"℃";
+				+ "熱移動　（左面）" + parseInt(heatleftin) + "W　 <br>" 
+				+ "　　　　（正面）" + parseInt(heatfrontin) + "W　 <br>" 
+				+ "　　　　（天井）" + parseInt(heattopin) + "W　 <br>" 
+				+ "最大風速（床面）" + parseInt(temp["floormaxvf"]*100)/100 + "(m/s)<br>" 
+				+ "最低温度（床面）" + parseInt(temp["floormin"]*10)/10 + "℃　<br>" 
+				+ "最高温度（床面）" + parseInt(temp["floormax"]*10)/10 +"℃　<br>"
+				+ "平均温度（床面）" + parseInt(temp["floorav"]*10)/10 +"℃　<br>"
+				+ "　　　　（左面）" + parseInt(temp["leftav"]*10)/10 +"℃　<br>"
+				+ "　　　　（正面）" + parseInt(temp["frontav"]*10)/10 +"℃　<br>"
+				+ "　　　　（部屋）" + parseInt(temp["totalav"]*10)/10 +"℃";
 		$("#step").html( disp );
 		$("#res").html( dump() );
 		graph1();
@@ -462,6 +464,7 @@ function calcStart() {
 	$("#layery").html("");
 	$(".setting").hide();
 	
+	gtabChange(2);
 	tabChange(3);
 	$("#v_result").prop("checked",true);
 	$("#v_settei").prop("checked",false);
@@ -1247,6 +1250,12 @@ function showlayout(){
 	ctxw1.rect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
 	ctxw1.stroke();
 	
+	//レイヤー名記載
+	ctxw1.fillStyle = "magenta";
+    ctxw1.font = "24px 'ＭＳ Ｐゴシック'";
+    ctxw1.fillText("床面", 10, 380, 300);
+	ctxw1.stroke();
+
 	if( $("#ObsSet").val() == 1 ) {
 		//obstacle
 		ctxw1.beginPath();
@@ -1277,6 +1286,11 @@ function showlayout(){
 	ret2 = meter2canvas( size_x, size_y , 2);
 	ctxw2.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
 	ctxw2.rect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
+	ctxw2.stroke();
+
+	ctxw2.fillStyle = "magenta";
+    ctxw2.font = "20px 'ＭＳ Ｐゴシック'";
+    ctxw2.fillText("正面窓面（水色が窓）", 10, 30, 300);
 	ctxw2.stroke();
 
 	if ( $("#Window2Wr").val() > 0 ) {
@@ -1325,6 +1339,12 @@ function showlayout(){
 	ret2 = meter2canvas( $("#WindowZr").val() *1+$("#WindowWr").val() *1,  $("#WindowYr").val()*1 + $("#WindowHr").val()*1 , 3);
 	ctxw3.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
 	ctxw3.stroke();
+
+	ctxw3.fillStyle = "magenta";
+    ctxw3.font = "24px 'ＭＳ Ｐゴシック'";
+    ctxw3.fillText("左窓面", 10, 40, 300);
+	ctxw3.stroke();
+
 	if ( $("#ACwall").val()== 1 ) {
 		ctxw3.beginPath();
 		ctxw3.fillStyle = "red";

@@ -1,22 +1,8 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-		<meta charset="UTF-8">
-		<title>室内空気の流れ計算（エアコン、送風、断熱の効果）</title>
-		<link rel="stylesheet" href="" media="screen">
-		<script
-			  src="https://code.jquery.com/jquery-3.2.1.min.js"
-			  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-			  crossorigin="anonymous"></script>
-		<script
-			  src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
-			  integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
-			  crossorigin="anonymous"></script>
-		<script src="./js/cfdview.js"></script>
-		<link href="./cfd.css" rel="stylesheet" type="text/css" />
-		<link href="./jquery/jquery-ui.min.css" rel="stylesheet" type="text/css" />
-
-<!--
+<?php
+// cfd main code
+//					Hinodeya Insittute for Ecolife.co. 2016
+//	js file is defined in index.php
+//
 //--div structure--------------------------
 //	.header
 //	.field
@@ -35,7 +21,19 @@
 //		.tabcontents #tab3c
 //	.detail_matrix
 //	.footer
--->
+//
+//
+?><!DOCTYPE html>
+<html lang="ja">
+<head>
+		<meta charset="UTF-8">
+		<title>室内空気の流れ計算（エアコン、送風、断熱の効果）</title>
+		<link rel="stylesheet" href="" media="screen">
+		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.14.0/themes/smoothness/jquery-ui.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.14.0/jquery-ui.min.js"></script>
+		<script src="./js/cfdview.js"></script>
+		<link href="./cfd.css" rel="stylesheet" type="text/css" />
 
 </head>
 
@@ -43,9 +41,22 @@
 
 <div class="header">
 
+<?php
+if( strcmp($_SERVER['HTTP_HOST'] , 'localhost') != 0 ){
+?>
+<!-- google translation -->
+<div style="text-align:right;" id="google_translate_element"></div><script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({pageLanguage: 'ja', includedLanguages: 'de,en,es,fr,id,ko,pt,ru,th,zh-CN,zh-TW', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+}
+</script><script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<?php
+}
+?>
+
 	<h1>室内空気の流れ計算（エアコン、送風、断熱の効果）</h1>
 
-	<div style="text-align: right;top: -20px;position: relative;line-height: 0px;"><a href="http://www.hinodeya-ecolife.com/test/cfd2015/about.html">[解説]</a>  <a href="http://www.hinodeya-ecolife.com/">有限会社ひのでやエコライフ研究所</a> </div>
+	<div style="text-align: right;top: -20px;position: relative;line-height: 0px;"><a href="about.html">[解説]</a>  <a href="https://www.hinodeya-ecolife.com/">有限会社ひのでやエコライフ研究所</a> </div>
 </div><!--// header -->
 
 
@@ -53,6 +64,11 @@
 <div class="field">
 
 <div id="graphs"><!-- display wall graphs -->
+
+	<div class="gtab">
+		<span id="gtab1" class="selected" onclick="gtabChange(1);">レイアウト</span>
+		<span id="gtab2" onclick="gtabChange(2);">結果</span>
+	</div>
 
 	<!-- wall left side with window -->
 	<div class="wall vresult" id="left">
@@ -99,7 +115,7 @@
 </div>
 
 	<!-- legend -->
-	<table border=0 style="position:absolute;">
+	<table border=0 style="position:absolute;top:0px;">
 	<tr>
 		<td>
 		<canvas id="graph4" width="600" height="40" style="position:relative"></canvas>
@@ -120,7 +136,7 @@
 <p>　家屋のうちの、壁で囲われた直方体の一部屋を計算エリアとしています。表示では立方体の3面が表示されていますが、部屋のサイズに応じて実際に計算・表示されるのは、白色を除いた薄黄色の範囲です。表示サイズは最長軸の長さに合わせて自動的に調整されています。</p>
 <p>　画面設定で、レイアウトと結果画面のレイヤー表示をON/OFFできます。レイアウト画面では、水色が窓、薄黄色が壁面と床面を表します。</p>
 <p>　結果画面では、メッシュの色を温度、矢印の長さを風速で表示します。</p>
-<p>　計算等に関する詳しい説明は、<a href="http://www.hinodeya-ecolife.com/test/cfd2015/about.html">解説ページ</a>を参照してください。</p>
+<p>　計算等に関する詳しい説明は、<a href="about.html">解説ページ</a>を参照してください。</p>
 </div>
 
 	
@@ -169,6 +185,14 @@
 	</tr>
 	<tr>
 		<th>計算分割数Z</th><td><input type="text" id="nMeshZ" value="8"></td>
+	</tr>
+	<tr>
+		<th>計算ステップ時間(s)</th>
+		<td><input type="text" id="delta_t" value="0.3"></td>
+	</tr>
+	<tr><td colspan=2>
+		<p>風があるときは、部屋サイズ(m)/(分割数×最大風速(m/s)×4) 秒以下としてください。</p>
+	</td>
 	</tr>
 	<tr>
 		<th>屋外気温（℃）</th><td><input type="text" id="InletPhi" value="5"></td>
@@ -257,6 +281,7 @@
 	<h2>画面設定</h2>
 	<p>　表示する内容とレイヤー（層）を変更できます。計算中でも変更可能です。</p>
 	<table>
+<!--
 	<tr>
 		<th>画面表示</th>
 		<td>
@@ -264,6 +289,7 @@
 			<input type="checkbox" id="v_result" onclick="resultviewChange();">結果画面
 		</td>
 	</tr>
+-->
 	<tr>
 		<td><br>水平面の移動<br>
 			<div id="layery"></div><br>
@@ -357,16 +383,19 @@
 <!-- footer -->
 <div class="footer">
 	<hr>
-	<div align="right">Ver.1.75 2018/01/08  Copyright(C)2015-2017 <a href="http://www.hinodeya-ecolife.com/">有限会社ひのでやエコライフ研究所</a> </div>
-<!--
-//copyright(C) 2015-2018 Yasufumi Suzuki, Hinodeya Insititute for Ecolife co.ltd.
-//					鈴木靖文, 有限会社ひのでやエコライフ研究所										
-//Released under the MIT license
-//http://www.hinodeya-ecolife.com
-//
--->
+	<div align="right">Ver.1.76 2018/2/11  (C)2015-2024 <a href="https://www.hinodeya-ecolife.com/">有限会社ひのでやエコライフ研究所</a> </div>
 </div><!--// footer -->
 
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3WP4L1RRF1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-3WP4L1RRF1');
+</script>
 
 </body>
 </html>
