@@ -262,23 +262,23 @@ function canvasinit(){
 };
 
 
-	//initialize 3D array
-	init_3d = function() {
-		var d = [];
-		//フィールドサイズ
-		var NUM_MAX_X = this.nMeshX+1;
-		var NUM_MAX_Y = this.nMeshY+1;
-		var NUM_MAX_Z = this.nMeshZ+1;
-		d = Array( NUM_MAX_X );
-		for( var i=0 ; i<=NUM_MAX_X; i++ ){
-			d[i] = Array( NUM_MAX_Y );
-			for ( var j=0 ; j<=NUM_MAX_Y; j++ ) {
-				d[i][j] = Array( NUM_MAX_Z );
-				d[i][j].fill(0);
-			}
+//initialize 3D array
+init_3d = function() {
+	var d = [];
+	//フィールドサイズ
+	var NUM_MAX_X = this.nMeshX+1;
+	var NUM_MAX_Y = this.nMeshY+1;
+	var NUM_MAX_Z = this.nMeshZ+1;
+	d = Array( NUM_MAX_X );
+	for( var i=0 ; i<=NUM_MAX_X; i++ ){
+		d[i] = Array( NUM_MAX_Y );
+		for ( var j=0 ; j<=NUM_MAX_Y; j++ ) {
+			d[i][j] = Array( NUM_MAX_Z );
+			d[i][j].fill(0);
 		}
-		return d;	//3D array
 	}
+	return d;	//3D array
+}
 
 //フィールド初期設定　meshtype[][][] を設定
 function init_mesh(){
@@ -759,12 +759,12 @@ function graph1(){
 	vgraph(ctx,1,nowy);
 	vgraph(ctxbase,1,1);
 
-	$("#layery").html( nowy + "層目(1-" + nMeshY +  ")" );
+	$("#layery").html(nowy + "層目(1-" + nMeshY +  ")" );
 
 	//レイヤー名記載
-	ctx.fillStyle = "magenta";
+	ctx.fillStyle = "black";
     ctx.font = "24px 'ＭＳ Ｐゴシック'";
-    ctx.fillText(" 　　   " + nowy + "層目", 10, 380, 300);
+    ctx.fillText("Y床面 " + nowy + "層目", 10, 380, 300);
 	ctx.stroke();
 	$(".floor").css( "top", parseInt( 380 - (nowy-1) * mesuy ) );
 };
@@ -777,9 +777,9 @@ function graph2(){
 	$("#layerz").html( nowz + "層目(1-" + nMeshZ +  ")" );
 
 	//レイヤー名記載
-	ctx2.fillStyle = "magenta";
+	ctx2.fillStyle = "black";
     ctx2.font = "20px 'ＭＳ Ｐゴシック'";
-    ctx2.fillText("外壁面  " + nowz + "層目", 10, 40, 300);
+    ctx2.fillText("Z奥外壁面  " + nowz + "層目", 10, 40, 300);
 	$(".wall2").css( "left", parseInt( 220 - (nMeshZ - nowz) * mesuz/2 ) );
 	$(".wall2").css( "top", parseInt( 80 + (nMeshZ - nowz) * mesuz/2 ) );
 	ctx2.stroke();
@@ -793,9 +793,9 @@ function graph3(){
 	$("#layerx").html( nowx + "層目(1-" + nMeshX +  ")" );
 
 	//レイヤー名記載
-	ctx3.fillStyle = "magenta";
+	ctx3.fillStyle = "black";
     ctx3.font = "24px 'ＭＳ Ｐゴシック'";
-    ctx3.fillText("窓面     " + nowx + "層目", 10, 40, 300);
+    ctx3.fillText("X窓面     " + nowx + "層目", 10, 40, 300);
 	ctx3.stroke();
 	$(".wall").css( "left", parseInt( -80 + (nowx-1) * mesux ) );
 };
@@ -932,6 +932,11 @@ function showlayout(){
 	ctxw1.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
 	ctxw1.rect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
 	ctxw1.stroke();
+
+	ctxw1.fillStyle = "black";
+    ctxw1.font = "24px 'ＭＳ Ｐゴシック'";
+    ctxw1.fillText("Y床面", 10, 380, 300);
+	ctxw1.stroke();
 	
 	if( $("#ObsSet").val() == 1 ) {
 		//obstacle
@@ -963,6 +968,11 @@ function showlayout(){
 	ret2 = meter2canvas( size_x, size_y , 2);
 	ctxw2.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
 	ctxw2.rect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
+	ctxw2.stroke();
+
+	ctxw2.fillStyle = "black";
+    ctxw2.font = "20px 'ＭＳ Ｐゴシック'";
+    ctxw2.fillText("Z奥外壁面", 10, 40, 300);
 	ctxw2.stroke();
 
 	if ( $("#Window2Wr").val() > 0 ) {
@@ -1003,6 +1013,11 @@ function showlayout(){
 	ret2 = meter2canvas( size_z, size_y , 3);
 	ctxw3.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
 	ctxw3.rect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
+	ctxw3.stroke();
+
+	ctxw3.fillStyle = "black";
+    ctxw3.font = "24px 'ＭＳ Ｐゴシック'";
+    ctxw3.fillText("X窓面", 10, 40, 300);
 	ctxw3.stroke();
 
 	ctxw3.beginPath();
