@@ -19,7 +19,7 @@ http://www.hinodeya-ecolife.com
 
 var val = {};	//保存設定値
 
-//web workerを使って、計算を完全に別に行う：メイン側で描画・操作のみ
+//計算を別に行う：メイン側で描画・操作のみ
 
 //形式定義
 var INSIDE = 1;		//室内空気
@@ -60,12 +60,7 @@ var size_y = 3;
 var size_z = 3;
 
 //canvas 関連設定
-var canvas,canvas2,canvas3,canvas4;
-var canvasbase,canvas2base,canvas3base;
-var canvasw1,canvasw2,canvasw3;
-var ctx,ctx2,ctx3,ctx4;
-var ctxbase,ctx2base,ctx3base;
-var ctxw1,ctxw2,ctxw3;
+var canvas = [];
 
 //ctxサイズ
 var cx = 400;
@@ -137,7 +132,6 @@ function calcStart() {
 // 結果表示処理（1分ごと）
 function createview() {
 	data = mesh_result;
-	console.log(data);
 	var count = data.count;
 	var totaltime = data.totaltime;
 	var acheat = data.acheat;
@@ -174,7 +168,7 @@ function createview() {
 
 //初期設定================================================
 $( function() {
-	canvasinit();
+	canvasinit(canvas);
 	setInputsDefault();
 	dispSenarioButton();
 
@@ -191,74 +185,37 @@ $( function() {
 
 
 //画面canvas初期設定
-function canvasinit(){
+function canvasinit(canvas){
 	$("#wall").height(cy).width(cx);
 	$("#wall_base").height(cy).width(cx);
 	$("#wall2").height(cy).width(cx);
 	$("#wall2_base").height(cy).width(cx);
 	$("#floor").height(cy).width(cx);
 	$("#floor_base").height(cy).width(cx);
-
-	canvas = document.getElementById('graph');
-	if (typeof G_vmlCanvasManager != 'undefined') {
-	  canvas = G_vmlCanvasManager.initElement(canvas);
-	}
-	ctx = canvas.getContext('2d');
-
-	canvas2 = document.getElementById('graph2');
-	if (typeof G_vmlCanvasManager != 'undefined') {
-	  canvas2 = G_vmlCanvasManager.initElement(canvas2);
-	}
-	ctx2 = canvas2.getContext('2d');
-
-	canvas3 = document.getElementById('graph3');
-	if (typeof G_vmlCanvasManager != 'undefined') {
-	  canvas3 = G_vmlCanvasManager.initElement(canvas3);
-	}
-	ctx3 = canvas3.getContext('2d');
-
-	canvas4 = document.getElementById('graph4');
-	if (typeof G_vmlCanvasManager != 'undefined') {
-	  canvas4 = G_vmlCanvasManager.initElement(canvas4);
-	}
-	ctx4 = canvas4.getContext('2d');
-
 	$("#graphbase").height(cy).width(cx);
-	canvasbase = document.getElementById('graphbase');
-	if (typeof G_vmlCanvasManager != 'undefined') {
-	  canvasbase = G_vmlCanvasManager.initElement(canvasbase);
-	}
-	ctxbase = canvasbase.getContext('2d');
 
-	canvas2base = document.getElementById('graph2base');
-	if (typeof G_vmlCanvasManager != 'undefined') {
-	  canvas2base = G_vmlCanvasManager.initElement(canvas2base);
+	for( var i=0 ; i<3 ; i++ ){
+		canvas[i] = [];
+		canvas[i].graph = document.getElementById('graph'+i);
+		canvas[i].base = document.getElementById('graph'+i+'base');
+		canvas[i].layout = document.getElementById('layout'+i);
+		if (typeof G_vmlCanvasManager != 'undefined') {
+			canvas[i].graph = G_vmlCanvasManager.initElement(canvas[i].graph);
+			canvas[i].base = G_vmlCanvasManager.initElement(canvas[i].base);
+			canvas[i].layout = G_vmlCanvasManager.initElement(canvas[i].layout);
+		}
+		canvas[i].ctxgraph = canvas[i].graph.getContext('2d');
+		canvas[i].ctxbase = canvas[i].base.getContext('2d');
+		canvas[i].ctxlayout = canvas[i].layout.getContext('2d');
 	}
-	ctx2base = canvas2base.getContext('2d');
 
-	canvas3base = document.getElementById('graph3base');
+	//legend
+	canvas[3] = [];
+	canvas[3].camvas = document.getElementById('legend');
 	if (typeof G_vmlCanvasManager != 'undefined') {
-	  canvas3base = G_vmlCanvasManager.initElement(canvas3base);
+		canvas[3].camvas = G_vmlCanvasManager.initElement(canvas[3].camvas);
 	}
-	ctx3base = canvas3base.getContext('2d');
-
-	canvasw1 = document.getElementById('window_in_floor');
-	if (typeof G_vmlCanvasManager != 'undefined') {
-	  canvasw1 = G_vmlCanvasManager.initElement(canvasw1);
-	}
-	ctxw1 = canvasw1.getContext('2d');
-
-	canvasw2 = document.getElementById('window_in_wall2');
-	if (typeof G_vmlCanvasManager != 'undefined') {
-	  canvasw2 = G_vmlCanvasManager.initElement(canvasw2);
-	}
-	ctxw2 = canvasw2.getContext('2d');
-
-	canvasw3 = document.getElementById('window_in_wall');
-	if (typeof G_vmlCanvasManager != 'undefined') {
-	  canvasw3 = G_vmlCanvasManager.initElement(canvasw3);
-	}
-	ctxw3 = canvasw3.getContext('2d');
+	canvas[3].ctx = canvas[3].camvas.getContext('2d');
 };
 
 
@@ -756,8 +713,9 @@ function vgraph(ctx, xyz, layer) {
 
 //底面--------------------------------------
 function graph1(){
+	var ctx = canvas[1].ctxgraph;
 	vgraph(ctx,1,nowy);
-	vgraph(ctxbase,1,1);
+	vgraph(canvas[1].ctxbase,1,1);
 
 	$("#layery").html(nowy + "層目(1-" + nMeshY +  ")" );
 
@@ -771,32 +729,34 @@ function graph1(){
 
 //正面-------------------------------------
 function graph2(){
-	vgraph(ctx2,2,nowz);
-	vgraph(ctx2base,2,nMeshZ);
+	var ctx = canvas[2].ctxgraph;
+	vgraph(ctx,2,nowz);
+	vgraph(canvas[2].ctxbase,2,nMeshZ);
 
 	$("#layerz").html( nowz + "層目(1-" + nMeshZ +  ")" );
 
 	//レイヤー名記載
-	ctx2.fillStyle = "black";
-    ctx2.font = "20px 'ＭＳ Ｐゴシック'";
-    ctx2.fillText("Z奥外壁面  " + nowz + "層目", 10, 40, 300);
+	ctx.fillStyle = "black";
+    ctx.font = "20px 'ＭＳ Ｐゴシック'";
+    ctx.fillText("Z奥外壁面  " + nowz + "層目", 10, 40, 300);
 	$(".wall2").css( "left", parseInt( 220 - (nMeshZ - nowz) * mesuz/2 ) );
 	$(".wall2").css( "top", parseInt( 80 + (nMeshZ - nowz) * mesuz/2 ) );
-	ctx2.stroke();
+	ctx.stroke();
 };
 
 //左面-------------------------------------
 function graph3(){
-	vgraph(ctx3,3,nowx);
-	vgraph(ctx3base,3,1);
+	var ctx = canvas[0].ctxgraph;
+	vgraph(ctx,3,nowx);
+	vgraph(canvas[0].ctxbase,3,1);
 
 	$("#layerx").html( nowx + "層目(1-" + nMeshX +  ")" );
 
 	//レイヤー名記載
-	ctx3.fillStyle = "black";
-    ctx3.font = "24px 'ＭＳ Ｐゴシック'";
-    ctx3.fillText("X窓面     " + nowx + "層目", 10, 40, 300);
-	ctx3.stroke();
+	ctx.fillStyle = "black";
+    ctx.font = "24px 'ＭＳ Ｐゴシック'";
+    ctx.fillText("X窓面     " + nowx + "層目", 10, 40, 300);
+	ctx.stroke();
 	$(".wall").css( "left", parseInt( -80 + (nowx-1) * mesux ) );
 };
 
@@ -809,17 +769,18 @@ function graphresize(r){
 
 //色凡例表示-------------------------
 function hanrei(len){
-	ctx4.clearRect(0, 0, 800, 40);
+	var ctx = canvas[3].ctx;
+	ctx.clearRect(0, 0, 800, 40);
 	var st = 10;
 	var ed = 25;
 	var wid = 300/(ed-st);
 	for ( var i=st ; i<=ed ; i++ ) {
-		ctx4.beginPath();
-		ctx4.fillStyle = colorTemp(i);
-		ctx4.fillRect((i-st)*wid, 10, wid, 20);
-		ctx4.stroke();
+		ctx.beginPath();
+		ctx.fillStyle = colorTemp(i);
+		ctx.fillRect((i-st)*wid, 10, wid, 20);
+		ctx.stroke();
 	}
-	arrow( ctx4, 350, 20, 350 + len , 20 , colorTemp(0) );
+	arrow( ctx, 350, 20, 350 + len , 20 , colorTemp(0) );
 };
 
 //最大速度・温度算出-------------
@@ -923,118 +884,121 @@ function showlayout(){
 	var color_window = 'rgb(150, 220, 255)'; //window
 
 	//floor
-	ctxw1.beginPath();
-	ctxw1.clearRect(0,0,399,399);
-	ctxw1.strokeStyle = "black";
-	ctxw1.fillStyle = color_wall;
+	var ctx = canvas[1].ctxlayout;
+	ctx.beginPath();
+	ctx.clearRect(0,0,399,399);
+	ctx.strokeStyle = "black";
+	ctx.fillStyle = color_wall;
 	ret = meter2canvas( 0, 0 , 1);
 	ret2 = meter2canvas( size_x, size_z , 1);
-	ctxw1.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
-	ctxw1.rect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
-	ctxw1.stroke();
+	ctx.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
+	ctx.rect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
+	ctx.stroke();
 
-	ctxw1.fillStyle = "black";
-    ctxw1.font = "24px 'ＭＳ Ｐゴシック'";
-    ctxw1.fillText("Y床面", 10, 380, 300);
-	ctxw1.stroke();
+	ctx.fillStyle = "black";
+    ctx.font = "24px 'ＭＳ Ｐゴシック'";
+    ctx.fillText("Y床面", 10, 380, 300);
+	ctx.stroke();
 	
 	if( $("#ObsSet").val() == 1 ) {
 		//obstacle
-		ctxw1.beginPath();
-		ctxw1.fillStyle = "orange";
+		ctx.beginPath();
+		ctx.fillStyle = "orange";
 		ret = meter2canvas( $("#ObsX1r").val(), $("#ObsZ1r").val() , 1);
 		ret2 = meter2canvas( $("#ObsX1r").val() *1+$("#ObsX2r").val()*1 ,  $("#ObsZ1r").val()*1 + $("#ObsZwr").val()*1 , 1);
-		ctxw1.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
-		ctxw1.stroke();
+		ctx.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
+		ctx.stroke();
 	}
 
 	if( $("#CirculatorWind").val() > 0 ) {
 		//circulator
-		ctxw1.beginPath();
-		ctxw1.strokeStyle = "orange";
-		 ctxw1.lineWidth = 4;
+		ctx.beginPath();
+		ctx.strokeStyle = "orange";
+		ctx.lineWidth = 4;
 		ret = meter2canvas(0.3, 1.5, 1);
-		ctxw1.arc(ret.x, ret.y, 20, 0, 6.3, 0 );
-		ctxw1.stroke();
+		ctx.arc(ret.x, ret.y, 20, 0, 6.3, 0 );
+		ctx.stroke();
 	}
 	
 	//front
-	ctxw2.beginPath();
-	ctxw2.clearRect(0,0,399,399);
-	ctxw2.rect(0,0,399,399);
-	ctxw2.strokeStyle = "black";
-	ctxw2.fillStyle = color_wall;
+	ctx = canvas[2].ctxlayout;
+	ctx.beginPath();
+	ctx.clearRect(0,0,399,399);
+	ctx.rect(0,0,399,399);
+	ctx.strokeStyle = "black";
+	ctx.fillStyle = color_wall;
 	ret = meter2canvas( 0, 0 , 2);
 	ret2 = meter2canvas( size_x, size_y , 2);
-	ctxw2.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
-	ctxw2.rect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
-	ctxw2.stroke();
+	ctx.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
+	ctx.rect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
+	ctx.stroke();
 
-	ctxw2.fillStyle = "black";
-    ctxw2.font = "20px 'ＭＳ Ｐゴシック'";
-    ctxw2.fillText("Z奥外壁面", 10, 40, 300);
-	ctxw2.stroke();
+	ctx.fillStyle = "black";
+    ctx.font = "20px 'ＭＳ Ｐゴシック'";
+    ctx.fillText("Z奥外壁面", 10, 40, 300);
+	ctx.stroke();
 
 	if ( $("#Window2Wr").val() > 0 ) {
-		ctxw2.beginPath();
-		ctxw2.fillStyle = color_window;
+		ctx.beginPath();
+		ctx.fillStyle = color_window;
 		ret = meter2canvas( $("#Window2Xr").val(), $("#Window2Yr").val() , 2);
 		ret2 = meter2canvas( $("#Window2Xr").val()*1+$("#Window2Wr").val()*1 ,  $("#Window2Yr").val()*1 + $("#Window2Hr").val() *1, 2);
-		ctxw2.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
-		ctxw2.stroke();
+		ctx.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
+		ctx.stroke();
 	}
 
 	if ( $("#ACwall").val()== 2 ) {
-		ctxw2.beginPath();
-		ctxw2.fillStyle = "red";
+		ctx.beginPath();
+		ctx.fillStyle = "red";
 		ret = meter2canvas( 1, 2 , 2);
 		ret2 = meter2canvas( 2.2 , 2.3, 2);
-		ctxw2.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
-		ctxw2.stroke();
+		ctx.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
+		ctx.stroke();
 	}
 	if ( $("#ACwall").val()== 3) {
-		ctxw2.beginPath();
-		ctxw2.fillStyle = "red";
+		ctx.beginPath();
+		ctx.fillStyle = "red";
 		ret = meter2canvas( 1, 2 , 3);
 		ret2 = meter2canvas( 2.2 , 2.3, 3);
-		ctxw2.moveTo(200+(Math.min(ret.x, ret2.x))/2, Math.min(ret.y, ret2.y)+(400-Math.min(ret.x, ret2.x))/2);
-		ctxw2.lineTo(200+(Math.min(ret.x, ret2.x))/2, Math.min(ret.y, ret2.y)+(400-Math.min(ret.x, ret2.x))/2+40);
-		ctxw2.lineTo(200+(Math.max(ret.x, ret2.x))/2, Math.min(ret.y, ret2.y)+(400-Math.max(ret.x, ret2.x))/2+40);
-		ctxw2.lineTo(200+(Math.max(ret.x, ret2.x))/2, Math.min(ret.y, ret2.y)+(400-Math.max(ret.x, ret2.x))/2);
-		ctxw2.fill();
-		ctxw2.stroke();
+		ctx.moveTo(200+(Math.min(ret.x, ret2.x))/2, Math.min(ret.y, ret2.y)+(400-Math.min(ret.x, ret2.x))/2);
+		ctx.lineTo(200+(Math.min(ret.x, ret2.x))/2, Math.min(ret.y, ret2.y)+(400-Math.min(ret.x, ret2.x))/2+40);
+		ctx.lineTo(200+(Math.max(ret.x, ret2.x))/2, Math.min(ret.y, ret2.y)+(400-Math.max(ret.x, ret2.x))/2+40);
+		ctx.lineTo(200+(Math.max(ret.x, ret2.x))/2, Math.min(ret.y, ret2.y)+(400-Math.max(ret.x, ret2.x))/2);
+		ctx.fill();
+		ctx.stroke();
 	}
+
 	// left
-	ctxw3.beginPath();
-	ctxw3.clearRect(0,0,399,399);
-	ctxw3.strokeStyle = "black";
-	ctxw3.fillStyle = color_wall;
+	ctx = canvas[0].ctxlayout;
+	ctx.beginPath();
+	ctx.clearRect(0,0,399,399);
+	ctx.strokeStyle = "black";
+	ctx.fillStyle = color_wall;
 	ret = meter2canvas( 0, 0 , 3);
 	ret2 = meter2canvas( size_z, size_y , 3);
-	ctxw3.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
-	ctxw3.rect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
-	ctxw3.stroke();
+	ctx.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
+	ctx.rect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
+	ctx.stroke();
 
-	ctxw3.fillStyle = "black";
-    ctxw3.font = "24px 'ＭＳ Ｐゴシック'";
-    ctxw3.fillText("X窓面", 10, 40, 300);
-	ctxw3.stroke();
+	ctx.fillStyle = "black";
+    ctx.font = "24px 'ＭＳ Ｐゴシック'";
+    ctx.fillText("X窓面", 10, 40, 300);
+	ctx.stroke();
 
-	ctxw3.beginPath();
-	ctxw3.fillStyle = color_window;
+	ctx.beginPath();
+	ctx.fillStyle = color_window;
 	ret = meter2canvas( $("#WindowZr").val(), $("#WindowYr").val() , 3);
 	ret2 = meter2canvas( $("#WindowZr").val() *1+$("#WindowWr").val() *1,  $("#WindowYr").val()*1 + $("#WindowHr").val()*1 , 3);
-	ctxw3.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
-	ctxw3.stroke();
+	ctx.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
+	ctx.stroke();
 	if ( $("#ACwall").val()== 1 ) {
-		ctxw3.beginPath();
-		ctxw3.fillStyle = "red";
+		ctx.beginPath();
+		ctx.fillStyle = "red";
 		ret = meter2canvas( 1, 2, 3);
 		ret2 = meter2canvas( 2.2 , 2.3, 3);
-		ctxw3.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
-		ctxw3.stroke();
+		ctx.fillRect( Math.min(ret.x, ret2.x), Math.min(ret.y, ret2.y), Math.abs(ret2.x-ret.x), Math.abs(ret2.y-ret.y) );
+		ctx.stroke();
 	}
-	
 }
 
 

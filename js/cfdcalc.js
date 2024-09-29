@@ -271,6 +271,9 @@ class CFD {
 		//Poisson方程式（速度・圧力から、もう一度速度）
 		this.poisson_conditions();
 
+		//速度境界条件
+		this.vel_boundary_conditions();
+
 		//Poisson方程式を解く
 		var maxcoulant = this.solve_poisson();
 
@@ -546,7 +549,7 @@ class CFD {
 		var i,j,k;
 		var a,b,c;
 		//Poisson方程式の右辺（対流項）
-		var maxD = 0;
+		// var maxD = 0;
 		for( i=1 ; i<=this.nMeshX ; i++ ) {
 			for( j=1 ; j<=this.nMeshY ; j++ ) {
 				for( k=1 ; k<=this.nMeshZ ; k++ ) {
@@ -581,8 +584,8 @@ class CFD {
 
 					//170630 rou追加
 					this.D[i][j][k] = (a + b + c) * this.rou / this.delta_t;
-						if ( this.D[i][j][k] > maxD )
-							maxD = this.D[i][j][k];
+					// if ( this.D[i][j][k] > maxD )
+					// 	maxD = this.D[i][j][k];
 					}
 				}
 			}

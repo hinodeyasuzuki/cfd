@@ -75,15 +75,15 @@ function googleTranslateElementInit() {
 	<!-- wall left side with window -->
 	<div class="wall vresult" id="left">
 		<div >
-			<canvas class="vresult" id="graph3" width="400" height="400"></canvas>
+			<canvas class="vresult" id="graph0" width="400" height="400"></canvas>
 		</div>
 	</div>
 
 	<div class="wall_base ">
 		<div class="setting" >
-			<canvas id="window_in_wall" width="400" height="400"></canvas>
+			<canvas id="layout0" width="400" height="400"></canvas>
 		</div>
-		<canvas  class="vresult" id="graph3base" width="400" height="400"></canvas>
+		<canvas  class="vresult" id="graph0base" width="400" height="400"></canvas>
 	</div>
 
 	<!-- wall2 front view of wall, code is top -->
@@ -95,7 +95,7 @@ function googleTranslateElementInit() {
 
 	<div class="wall2_base">
 		<div class="setting">
-			<canvas  id="window_in_wall2" width="400" height="400"></canvas>
+			<canvas  id="layout2" width="400" height="400"></canvas>
 		</div>
 		<canvas  class="vresult" id="graph2base" width="400" height="400"></canvas>
 	</div>
@@ -104,15 +104,15 @@ function googleTranslateElementInit() {
 	<!-- floor -->
 	<div class="floor vresult" id="floor">
 		<div>
-			<canvas  class="vresult" id="graph" width="400" height="400"></canvas>
+			<canvas  class="vresult" id="graph1" width="400" height="400"></canvas>
 		</div>
 	</div>
 
 	<div class="floor_base ">
 		<div class="setting">
-			<canvas  id="window_in_floor" width="400" height="400"></canvas>
+			<canvas  id="layout1" width="400" height="400"></canvas>
 		</div>
-		<canvas  class="vresult" id="graphbase" width="400" height="400"></canvas>
+		<canvas  class="vresult" id="graph1base" width="400" height="400"></canvas>
 	</div>
 </div>
 
@@ -120,7 +120,7 @@ function googleTranslateElementInit() {
 	<table border=0 style="position:absolute;top:0px;">
 	<tr>
 		<td>
-		<canvas id="graph4" width="600" height="40" style="position:relative"></canvas>
+		<canvas id="legend" width="600" height="40" style="position:relative"></canvas>
 		<table border=0><tr>
 			<td width="120px">10℃←</td>
 			<td width="100px">15℃</td>
@@ -377,7 +377,7 @@ function googleTranslateElementInit() {
 <!-- footer -->
 <div class="footer">
 	<hr>
-	<div align="right">Ver.1.77 2024/9/27  (C)2015-2024 <a href="https://www.hinodeya-ecolife.com/">有限会社ひのでやエコライフ研究所</a> </div>
+	<div align="right">Ver.1.78 2024/9/29  (C)2015-2024 <a href="https://www.hinodeya-ecolife.com/">有限会社ひのでやエコライフ研究所</a> </div>
 </div><!--// footer -->
 
 
