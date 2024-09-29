@@ -16,29 +16,32 @@
 //
 //
 
+//計算方法フラグ
 var fgAround = 2;				//1:浮力で周囲の温度を使う 2:平均温度を使う
-var Re = 1000.0;				//レイノルズ数
 var fgCalcTempAround = 2;		//温度計算　1:一次精度 2:風上差分での評価
-var acv = 1;					//エアコン流速 m/s（仮設定）
-var act = 5;					//エアコン 加温℃（流量で再計算）
-var dir = 0.3;					//エアコン角度
-var delta_t = 0.01;				//タイムステップ s  10℃なら0.5,20℃で0.1(自動変動）
-
-var addair = true;				//エアコンによる加温 通常は true
 var fix_coulant = true;			//coulant条件による自動タイムステップ変更 通常はtrue
 var coulant_min = 0.7;			//　最小基準
 var coulant_max = 0.8;			//  最大基準　1で発散
 
+var acv = 1;					//エアコン流速 m/s（仮設定）
+var act = 5;					//エアコン 加温℃（流量で再計算）
+var dir = 0.3;					//エアコン角度
+var delta_t = 0.01;				//タイムステップ s  10℃なら0.5,20℃で0.1(自動変動）
+var addair = true;				//エアコンによる加温 通常は true
 
 var iteration = 100;			//最大補正繰り返し回数
 var tolerance = 0.001;			//許容誤差
 
+//記録
 var totaltime = 0;				//経過時間
 var acheatsum = 0;				//エアコン出力(W)
 var acheatcount = 0;			//エアコン出力(W)
 var sumheatleft = 0;			// left window heat loss
 var sumheatfront = 0;			// front window heat loss
 var heatleftcount = 0;
+
+//物理定数
+var Re = 1000.0;				//レイノルズ数
 
 var Riw = 0.11;					//室内側熱伝導抵抗　壁	㎡・K／W
 var Rif = 0.15;					//室内側熱伝導抵抗　床
@@ -80,7 +83,7 @@ var FloorPhi = 18;			//床の温度
 var nMeshX = 8;
 var nMeshY = 8;
 var nMeshZ = 8;
-var size_x = 3;				//物理スケール m
+var size_x = 3;				//1メッシュの物理的長さ m
 var size_y = 3;
 var size_z = 3;
 
@@ -91,15 +94,15 @@ var tz = 273.15;
 var prsair = 0;	//101325;	//標準気圧 Pa N/m2
 
 //形式定義
-var INSIDE = 1;
-var BOTTOM = 2;
-var TOP = 3;
-var WINDOW = 4;
-var OUTSIDE = 5;
-var SIDE = 6;
-var OBSTACLE = 7;
-var AC = 8;
-var CL = 9;					//サーキュレータ（Xプラスから吸収、上面Yから送風）
+var INSIDE = 1;		//内部（空気）
+var BOTTOM = 2;		//床
+var TOP = 3;		//天井
+var WINDOW = 4;		//窓
+var OUTSIDE = 5;	//屋外壁面
+var SIDE = 6;		//屋内壁面
+var OBSTACLE = 7;	//障害物
+var AC = 8;			//エアコン
+var CL = 9;			//サーキュレータ（Xプラスから吸収、上面Yから送風）
 
 var x = 0;
 var y = 1;
@@ -158,47 +161,39 @@ onmessage = function (event) {
 
 	init();						//初期化
 
+	function resultSend(i) {
+		var heatin = {};
+		heatin.heatleftin = ( heatleftcount ? sumheatleft / heatleftcount : 0 );
+		heatin.heatfrontin = ( heatleftcount ? sumheatfront / heatleftcount : 0 );
+		//シミュレーション内時間1分ごとに値を返す
+		postMessage({ 
+			"count": i,
+			"totaltime": totaltime,
+			"acheat": ( acheatcount ? acheatsum / acheatcount : 0 ),
+			"heatin" : heatin,
+			"Vel":Vel,
+			"Phi":Phi,
+			"Prs":Prs
+		});
+		sumheatleft = 0;
+		sumheatfront = 0;
+		acheatsum = 0;
+		acheatcount = 0;
+		heatleftcount = 0;
+	}
+
 	//時間ループ
 	for( var i=0 ; i<=maxtime ; i++ ) {
 		var ret = calculate();		//単時間計算
-		var heatin = {};
 		totaltime += delta_t;
 		if ( ret>0 ) break;
 		if ( Math.round(totaltime/60) !=  Math.round((totaltime-delta_t)/60) ) {
-			heatin.heatleftin = ( heatleftcount ? sumheatleft / heatleftcount : 0 );
-			heatin.heatfrontin = ( heatleftcount ? sumheatfront / heatleftcount : 0 );
-			//シミュレーション内時間1分ごとに値を返す
-			postMessage({ 
-				"count": i,
-				"totaltime": totaltime,
-				"acheat": ( acheatcount ? acheatsum / acheatcount : 0 ),
-				"heatin" : heatin,
-				"Vel":Vel,
-				"Phi":Phi,
-				"Prs":Prs
-			});
-			sumheatleft = 0;
-			sumheatfront = 0;
-			acheatsum = 0;
-			acheatcount = 0;
-			heatleftcount = 0;
+			resultSend(i);
 		}
 		if ( maxtime_sec < totaltime ) break;
 	}
-	var count = i-1;
-
 	//終了時に返す
-	heatin.heatleftin = ( heatleftcount ? sumheatleft / heatleftcount : 0 );
-	heatin.heatfrontin = ( heatleftcount ? sumheatfront / heatleftcount : 0 );
-	postMessage({ 
-				"count": count,
-				"totaltime": totaltime,
-				"heatin" : heatin,
-				"acheat": ( acheatcount ? acheatsum / acheatcount : 0 ),
-				"Vel":Vel,
-				"Phi":Phi,
-				"Prs":Prs
-	});
+	resultSend(i);
 
 };
 

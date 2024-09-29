@@ -28,8 +28,8 @@ $_SESSION["code2"] = $randval2;
 $fp = fopen("./log/logcfdindex.log", "a");
 fwrite($fp, 
 	date("Y-m-d H:i:s") . ", " .
-	gethostbyaddr($_SERVER['REMOTE_ADDR']) . ", ".
-	( isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : "" ) . "\n"
+	( isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? gethostbyaddr($_SERVER['HTTP_X_FORWARDED_FOR']) : "") . ", ".
+	( isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : "" ) . "\n"
 );
 fclose($fp);
 

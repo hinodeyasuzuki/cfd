@@ -90,7 +90,7 @@ var arrowsize = 1;
 var defInput = { 
 	"maxtime" : { title:"最大計算回数", "default":40000 },
 	"maxtime_minute" : { title:"最大計算時間(分)", "default":10 },
-	"delta_t" : { title:"単位計算時間(秒)", "default":0.3 },
+	"delta_t" : { title:"単位計算時間(秒)", "default":0.01 },
 	"size_x" : { title:"部屋幅X(m)", "default":3 },
 	"size_y" : { title:"部屋高さY(m)", "default":3 },
 	"size_z" : { title:"部屋奥行Z(m)", "default":3 },
@@ -426,7 +426,7 @@ if (window.Worker) {
 		Prs = event.data.Prs;
 
 		var temp = getTempMaxMin();
-		sumwatt += ( time - totaltime )/3600/3.5 * acheat;		//COP 3.5
+		sumwatt += ( time - totaltime )/3600/5 * acheat;		//COP 5.0
 		totaltime = time;
 		var disp = Math.round(time / 60) +  "分後" + "　　計算回数:" + count + "回 <br>"
 				+ "エアコン出力:" + parseInt(acheat) + "W　 <br>" 

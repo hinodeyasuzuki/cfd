@@ -32,6 +32,7 @@
 		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.14.0/themes/smoothness/jquery-ui.css">
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.14.0/jquery-ui.min.js"></script>
+		<script src="./js/cfdcalc.js"></script>
 		<script src="./js/cfdview.js"></script>
 		<link href="./cfd.css" rel="stylesheet" type="text/css" />
 
@@ -185,14 +186,6 @@ function googleTranslateElementInit() {
 	</tr>
 	<tr>
 		<th>計算分割数Z</th><td><input type="text" id="nMeshZ" value="8"></td>
-	</tr>
-	<tr>
-		<th>計算ステップ時間(s)</th>
-		<td><input type="text" id="delta_t" value="0.3"></td>
-	</tr>
-	<tr><td colspan=2>
-		<p>風があるときは、部屋サイズ(m)/(分割数×最大風速(m/s)×4) 秒以下としてください。</p>
-	</td>
 	</tr>
 	<tr>
 		<th>屋外気温（℃）</th><td><input type="text" id="InletPhi" value="5"></td>
@@ -383,7 +376,7 @@ function googleTranslateElementInit() {
 <!-- footer -->
 <div class="footer">
 	<hr>
-	<div align="right">Ver.1.76 2018/2/11  (C)2015-2024 <a href="https://www.hinodeya-ecolife.com/">有限会社ひのでやエコライフ研究所</a> </div>
+	<div align="right">Ver.1.77 2024/9/27  (C)2015-2024 <a href="https://www.hinodeya-ecolife.com/">有限会社ひのでやエコライフ研究所</a> </div>
 </div><!--// footer -->
 
 
