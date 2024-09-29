@@ -86,374 +86,15 @@ var totaltime = 0;
 //arrowsize　比率
 var arrowsize = 1;
 
-//入力変数定義
-var defInput = { 
-	"maxtime" : { title:"最大計算回数", "default":40000 },
-	"maxtime_minute" : { title:"最大計算時間(分)", "default":10 },
-	"delta_t" : { title:"単位計算時間(秒)", "default":0.01 },
-	"size_x" : { title:"部屋幅X(m)", "default":3 },
-	"size_y" : { title:"部屋高さY(m)", "default":3 },
-	"size_z" : { title:"部屋奥行Z(m)", "default":3 },
-	"nMeshX" : { title:"計算分割数X", "default":8 },
-	"nMeshY" : { title:"計算分割数X", "default":8 },
-	"nMeshZ" : { title:"計算分割数X", "default":8 },
-	
-	"InsidePhi" : { title:"室内温度（℃）", "default":15 },
-	"ObsPhi" : { title:"障害物/パネルヒータ温度", "default":15 },
-	"InletPhi" : { title:"屋外気温", "default":5 },
-	"FloorPhi" : { title:"床面温度", "default":15 },
+var mesh_result = {};
+var precalc = 0;
+var calc_interval = null;
 
-	"ObsSet" : {title:"障害物/パネルヒータ設置", "default":2 },
-	"ObsX1r" : { title:"障害物横位置(m)", "default":1 },
-	"ObsX2r" : { title:"障害物横位置(m)", "default":0.4 },
-	"ObsYr" : { title:"障害物高さ(m)", "default":0.4 },
-	"ObsZwr" : { title:"障害物奥幅(m)", "default":1.5 },
-	"ObsZ1r" : { title:"障害物奥位置(m)", "default":0.5 },
-
-	"WindowYr" : { title:"窓腰位置(m)", "default":1 },
-	"WindowHr" : { title:"窓高さ(m)", "default":1 },
-	"WindowZr" : { title:"窓奥位置(m)", "default":1 },
-	"WindowWr" : { title:"窓幅(m)", "default":1 },
-
-	"Window2Yr" : { title:"窓腰位置(m)", "default":1 },
-	"Window2Hr" : { title:"窓高さ(m)", "default":1 },
-	"Window2Xr" : { title:"窓横位置(m)", "default":1 },
-	"Window2Wr" : { title:"窓幅(m)", "default":1 },
-
-	"ACwall" : { title:"エアコン設置", "default":4 },
-	"ACwind" : { title:"エアコン風速", "default":2 },
-	"CirculatorWind" : { title:"サーキュレータ風速", "default":0 },
-
-	"windowKset" : { title:"窓の断熱性能", "default":6 },
-	"wallKset" : { title:"外壁の断熱性能", "default":2.5 },
-	
-};
-
-//推奨シナリオ
-var defSenario = [
-{	group: "部屋サイズ",
-	data : [
-	{ 
-		title:"４畳半",
-		size_x:2.7,
-		size_y:2.4,
-		size_z:2.7,
-		nMeshX:8,
-		nMeshZ:8,
-		ObsX1r:0.8,
-		ObsX2r:0.4,
-		ObsYr:0.4,
-		ObsZwr:2.2,
-		ObsZ1r:0.4,
-	},
-	{ 
-		title:"６畳",
-		default:1,
-		size_x:3.6,
-		size_y:2.4,
-		size_z:2.7,
-		nMeshX:10,
-		nMeshZ:8,
-		ObsX1r:0.8,
-		ObsX2r:0.4,
-		ObsYr:0.4,
-		ObsZwr:2.2,
-		ObsZ1r:0.4,
-	},
-	{ 
-		title:"８畳",
-		size_x:3.6,
-		size_y:2.4,
-		size_z:3.6,
-		nMeshX:10,
-		nMeshZ:10,
-		ObsX1r:0.8,
-		ObsX2r:0.4,
-		ObsYr:0.4,
-		ObsZwr:2.8,
-		ObsZ1r:0.4,
-	},
-	{ 
-		title:"１２畳",
-		size_x:5.4,
-		size_y:2.4,
-		size_z:3.6,
-		nMeshX:15,
-		nMeshZ:10,
-		ObsX1r:1.2,
-		ObsX2r:0.4,
-		ObsYr:0.4,
-		ObsZwr:2.8,
-		ObsZ1r:0.4,
-	},
-	{ 
-		title:"１５畳",
-		size_x:5.4,
-		size_y:2.4,
-		size_z:4.5,
-		nMeshX:15,
-		nMeshZ:10,
-		ObsX1r:1.2,
-		ObsX2r:0.4,
-		ObsYr:0.4,
-		ObsZwr:2.8,
-		ObsZ1r:0.4,
-	}
-	]
-},
-
-{	group: "窓（左面）サイズ(cm)",
-	data : [
-	{ 
-		title:"90×90",
-		default:1,
-		WindowYr:0.9,
-		WindowHr:0.9,
-		WindowZr:0.9,
-		WindowWr:0.9,
-	},
-	{ 
-		title:"200×90",
-		WindowYr:0.9,
-		WindowHr:0.9,
-		WindowZr:0.2,
-		WindowWr:2,
-	},
-	{ 
-		title:"200×200",
-		WindowYr:0.2,
-		WindowHr:1.8,
-		WindowZr:0.5,
-		WindowWr:2,
-	}
-	]
-},
-
-{	group: "窓（正面）サイズ(cm)",
-	data : [
-	{ 
-		title:"なし",
-		Window2Yr:0,
-		Window2Hr:0,
-		Window2Xr:0,
-		Window2Wr:0,
-	},
-	{ 
-		title:"90×90",
-		Window2Yr:0.9,
-		Window2Hr:0.9,
-		Window2Xr:0.9,
-		Window2Wr:0.9,
-	},
-	{ 
-		title:"200×90",
-		default:1,
-		Window2Yr:0.9,
-		Window2Hr:0.9,
-		Window2Xr:0.5,
-		Window2Wr:2,
-	},
-	{ 
-		title:"200×200",
-		Window2Yr:0.2,
-		Window2Hr:1.8,
-		Window2Xr:0.5,
-		Window2Wr:2,
-	}
-	]
-},
-
-{
-	group: "エアコン暖房（初期室内10℃）",
-	data : [
-	{
-		title:"強風",
-		ACwall:3,
-		ACwind:2,
-		InsidePhi:10,
-		ObsPhi:10,
-		FloorPhi:10,
-		maxtime_minute:20,
-	},
-	{
-		title:"弱風",
-		ACwall:3,
-		ACwind:1,
-		InsidePhi:10,
-		ObsPhi:10,
-		FloorPhi:10,
-		maxtime_minute:20,
-	},
-	{
-		title:"自動送風",
-		ACwall:3,
-		ACwind:-1,
-		InsidePhi:10,
-		ObsPhi:10,
-		FloorPhi:10,
-		maxtime_minute:20,
-	},
-	{
-		title:"なし（室温18℃）",
-		default:1,
-		ObsSet:2,
-		ACwall:4,
-		ACwind:0,
-		InsidePhi:18,
-		ObsPhi:18,
-		FloorPhi:18,
-		maxtime_minute:60,
-	}
-	]
-},
-{
-	group: "室外気温",
-	data : [
-	{
-		title:"0℃",
-		InletPhi:0,
-	},
-	{
-		default:1,
-		title:"5℃",
-		InletPhi:5,
-	},
-	{
-		title:"10℃",
-		InletPhi:10,
-	}
-	]
-},
-
-{
-	group: "サーキュレータ（左床）",
-	data : [
-	{
-		title:"強風",
-		CirculatorWind:1.2,
-		maxtime_minute:20,
-	},
-	{
-		title:"弱風",
-		CirculatorWind:0.8,
-		maxtime_minute:20,
-	},
-	{
-		title:"なし",
-		default:1,
-		CirculatorWind:0,
-	}
-	]
-},
-
-{	
-	group: "窓の断熱設定",
-	data : [
-	{
-		title:"シングルガラス",
-		default:1,
-		windowKset:6,
-	},
-	{
-		title:"複層ガラス",
-		windowKset:3,
-	},
-	{
-		title:"low-eガラス",
-		windowKset:1.5,
-	}
-	]
-},
-{
-	group : "壁の断熱設定（グラスウール換算）",
-	data : [
-	{
-		title:"無断熱",
-		default:1,
-		wallKset:2.5,
-	},
-	{
-		title:"30mm",
-		wallKset:1.0,
-	},
-	{
-		title:"50mm",
-		wallKset:0.6,
-	},
-	{
-		title:"100mm",
-		wallKset:0.3,
-	}
-	]
-},
-{
-	group: "風よけの効果",
-	data : [
-	{
-		title:"あり",
-		ObsSet:1,
-		ObsPhi:18,
-	},
-	{
-		title:"なし",
-		default:1,
-		ObsSet:2,
-	},
-	{
-		title:"パネルヒーター設置",
-		ObsSet:1,
-		ObsPhi:35,
-	}
-	]
-}
-
-];
-
-
-// ワーカーの実装チェック
-if (window.Worker) {  
-	var worker = new Worker("./js/cfdcalc.js" );
-
-	// ワーカーからのメッセージ取得時の処理（1分ごと）
-	worker.onmessage = function (event) {
-		var count = event.data.count;
-		var time = event.data.totaltime;
-		var acheat = event.data.acheat;
-		var heatleftin = event.data.heatin.heatleftin;
-		var heatfrontin = event.data.heatin.heatfrontin;
-		Vel = event.data.Vel;
-		Phi = event.data.Phi;
-		Prs = event.data.Prs;
-
-		var temp = getTempMaxMin();
-		sumwatt += ( time - totaltime )/3600/5 * acheat;		//COP 5.0
-		totaltime = time;
-		var disp = Math.round(time / 60) +  "分後" + "　　計算回数:" + count + "回 <br>"
-				+ "エアコン出力:" + parseInt(acheat) + "W　 <br>" 
-				+ "エアコン消費電力量" + parseInt(sumwatt)/1000 + "kWh　 <br>" 
-				+ "左面　熱移動:" + parseInt(heatleftin) + "W　 <br>" 
-				+ "正面　熱移動:" + parseInt(heatfrontin) + "W　 <br>" 
-				+ "床面最大風速:" + parseInt(temp["floormaxvf"]*100)/100 + "(m/s)<br>" 
-				+ "床面最低温度" + parseInt(temp["floormin"]*10)/10 + "℃　<br>" 
-				+ "床面最高温度" + parseInt(temp["floormax"]*10)/10 +"℃　<br>"
-				+ "床面 平均温度" + parseInt(temp["floorav"]*10)/10 +"℃　<br>"
-				+ "左面 平均温度" + parseInt(temp["leftav"]*10)/10 +"℃　<br>"
-				+ "正面 平均温度" + parseInt(temp["frontav"]*10)/10 +"℃　<br>"
-				+ "部屋 平均温度" + parseInt(temp["totalav"]*10)/10 +"℃";
-		$("#step").html( disp );
-		$("#res").html( dump() );
-		graph1();
-		graph2();
-		graph3();
-	}
-
-} else {
-	window.alert("このブラウザでは利用できません");
-};
+var cfd1 = new CFD();
 
 
 
-// 計算開始（workerを使って別javascriptを呼び出す）
+// 計算開始
 //
 function calcStart() {
 	$("#step").html("");
@@ -471,8 +112,64 @@ function calcStart() {
 	sumwatt = 0;
 	totaltime = 0;
 	init_mesh();
-	worker.postMessage({ "val": val , "meshtype":meshtype });
+
+	//計算初期設定
+	cfd1.meshset({ "val": val , "meshtype":meshtype });
+
+	//時間ループ(単位：分)
+	calc_interval = setInterval( function() {
+		mesh_result = cfd1.meshcalc();		//単時間計算
+		if( mesh_result.count != precalc ){
+			//更新されていた場合
+			precalc = mesh_result.count;
+			createview();
+
+			if( mesh_result.totaltime/60 > val.maxtime_minute ){
+				clearInterval( calc_interval );
+			}
+			if( mesh_result.count > val.maxtime ){
+				clearInterval( calc_interval );
+			}
+		}
+	},20 );
 };
+
+// 結果表示処理（1分ごと）
+function createview() {
+	data = mesh_result;
+	console.log(data);
+	var count = data.count;
+	var totaltime = data.totaltime;
+	var acheat = data.acheat;
+	var heatleftin = data.heatin.heatleftin;
+	var heatfrontin = data.heatin.heatfrontin;
+	Vel = data.Vel;
+	Phi = data.Phi;
+	Prs = data.Prs;
+
+	var temp = getTempMaxMin();
+	var cop = 5.0;
+	sumwatt += 60/3600/cop * acheat;	
+	var disp = Math.floor(totaltime / 60) +  "分後" + "　　計算回数:" + count + "回 <br>"
+			+ "エアコン出力:" + parseInt(acheat) + "W　 <br>" 
+			+ "エアコン消費電力量" + parseInt(sumwatt)/1000 + "kWh　 <br>" 
+			+ "供給熱量" + parseInt(sumwatt*cop)/1000 + "kWh　 <br>" 
+			+ "左面　熱移動:" + parseInt(heatleftin) + "W　 <br>" 
+			+ "正面　熱移動:" + parseInt(heatfrontin) + "W　 <br>" 
+			+ "床面最大風速:" + parseInt(temp["floormaxvf"]*100)/100 + "(m/s)<br>" 
+			+ "床面最低温度" + parseInt(temp["floormin"]*10)/10 + "℃　<br>" 
+			+ "床面最高温度" + parseInt(temp["floormax"]*10)/10 +"℃　<br>"
+			+ "床面 平均温度" + parseInt(temp["floorav"]*10)/10 +"℃　<br>"
+			+ "左面 平均温度" + parseInt(temp["leftav"]*10)/10 +"℃　<br>"
+			+ "正面 平均温度" + parseInt(temp["frontav"]*10)/10 +"℃　<br>"
+			+ "部屋 平均温度" + parseInt(temp["totalav"]*10)/10 +"℃";
+	$("#step").html( disp );
+	$("#res").html( dump() );
+	graph1();
+	graph2();
+	graph3();
+}
+
 
 
 //初期設定================================================
@@ -480,6 +177,7 @@ $( function() {
 	canvasinit();
 	setInputsDefault();
 	dispSenarioButton();
+
 	init_mesh();
 
 	$(".vresult").hide();
@@ -564,48 +262,36 @@ function canvasinit(){
 };
 
 
+	//initialize 3D array
+	init_3d = function() {
+		var d = [];
+		//フィールドサイズ
+		var NUM_MAX_X = this.nMeshX+1;
+		var NUM_MAX_Y = this.nMeshY+1;
+		var NUM_MAX_Z = this.nMeshZ+1;
+		d = Array( NUM_MAX_X );
+		for( var i=0 ; i<=NUM_MAX_X; i++ ){
+			d[i] = Array( NUM_MAX_Y );
+			for ( var j=0 ; j<=NUM_MAX_Y; j++ ) {
+				d[i][j] = Array( NUM_MAX_Z );
+				d[i][j].fill(0);
+			}
+		}
+		return d;	//3D array
+	}
+
 //フィールド初期設定　meshtype[][][] を設定
 function init_mesh(){
 	getInputs();
-	//フィルドサイズ設定
-	var NUM_MAX_X = nMeshX+1;
-	var NUM_MAX_Y = nMeshY+1;
-	var NUM_MAX_Z = nMeshZ+1;
 
-	meshtype = Array( NUM_MAX_X );
-	Phi = Array( NUM_MAX_X );
-	Prs = Array( NUM_MAX_X );
+	meshtype = init_3d();
+	console.log(meshtype);
+	Phi = init_3d();
+	Prs = init_3d();
 	Vel = Array( 3 );
-	Vel[0] = Array( NUM_MAX_X );
-	Vel[1] = Array( NUM_MAX_X );
-	Vel[2] = Array( NUM_MAX_X );
-	D = Array( NUM_MAX_X );
-	newF = Array( NUM_MAX_X );
-
-	
-	for( var i=0 ; i<=NUM_MAX_X; i++ ){
-		//Y軸拡張
-		meshtype[i] = Array( NUM_MAX_Y );
-		Phi[i] = Array( NUM_MAX_Y );
-		Prs[i] = Array( NUM_MAX_Y );
-		Vel[0][i] = Array( NUM_MAX_Y );
-		Vel[1][i] = Array( NUM_MAX_Y );
-		Vel[2][i] = Array( NUM_MAX_Y );
-		D[i] = Array( NUM_MAX_Y );
-		newF[i] = Array( NUM_MAX_Y );
-
-		for( var j=0 ; j<=NUM_MAX_Y; j++ ){
-			//Z軸拡張
-			meshtype[i][j] = Array( NUM_MAX_Z );
-			Phi[i][j] = Array( NUM_MAX_Z );
-			Prs[i][j] = Array( NUM_MAX_Z );
-			Vel[0][i][j] = Array( NUM_MAX_Z );
-			Vel[1][i][j] = Array( NUM_MAX_Z );
-			Vel[2][i][j] = Array( NUM_MAX_Z );
-			D[i][j] = Array( NUM_MAX_Z );
-			newF[i][j] = Array( NUM_MAX_Z );
-		}
-	}
+	Vel[0] = init_3d();
+	Vel[1] = init_3d();
+	Vel[2] = init_3d();
 
 	ObsX1 = parseInt(val.ObsX1r*nMeshX/size_x+0.49);		//障害物X=0(WINDOW)からの距離
 	ObsX2 = parseInt(val.ObsX2r*nMeshX/size_x+0.49);		//障害物の厚さ
@@ -1364,6 +1050,7 @@ function setInputs(){
 function setInputsDefault(){
 	//パラメータを設定する
 	for( var d in defInput ){
+		val[d] = defInput[d].default;
 		$("#" + d ).val(defInput[d].default);
 	}
 };
