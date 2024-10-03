@@ -10,6 +10,6 @@ https://hinodeyasuzuki.github.io/cfd/
 
 
 ## 実稼働サイト
-http://www.hinodeya-ecolife.com/test/cfd2015/index.php
+http://www.hinodeya-ecolife.com/cfd/
 
 
