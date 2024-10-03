@@ -16,14 +16,15 @@ class CFD {
 		//計算方法フラグ
 		this.fgAround = 2;				//1:浮力で周囲の温度を使う 2:平均温度を使う
 		this.fgCalcTempAround = 2;		//温度計算　1:一次精度 2:風上差分での評価
-		this.fix_coulant = true;			//coulant条件による自動タイムステップ変更 通常はtrue
+		this.fgPoissonConvection = 1;	//Poisson対流項  1:中心差分 2:前進差分
+		this.fgFixCoulant = true;		//coulant条件による自動タイムステップ変更 通常はtrue
 		this.coulant_min = 0.7;			//　最小基準
 		this.coulant_max = 0.8;			//  最大基準　1で発散
 
 		this.acv = 1;					//エアコン流速 m/s（仮設定）
 		this.act = 5;					//エアコン 加温℃（流量で再計算）
-		this.dir = 0.3;					//エアコン角度
-		this.delta_t = 0.01;				//タイムステップ s  10℃なら0.5,20℃で0.1(自動変動）
+		this.dir = 0.4;					//エアコン角度
+		this.delta_t = 0.1;				//タイムステップ s  10℃なら0.5,20℃で0.1(自動変動）
 		this.addair = true;				//エアコンによる加温 通常は true
 
 		this.iteration = 100;			//最大補正繰り返し回数
@@ -50,7 +51,7 @@ class CFD {
 		this.sh_ceil = 783000;			//熱容量　天井 J/m3K
 		this.sh_floor = 783000;			//熱容量　床 J/m3K
 		this.sh_thick = 0.02;			//熱容量を考慮する厚さ m （2cm程度が適当）
-		this.windowK = 6.0;				//熱貫流率　W/m2K
+		this.WindowK = 6.0;				//熱貫流率　W/m2K
 		this.wallK = 2.5;				//熱貫流率　W/m2K
 
 		this.rou = 1.293;				// kg/m3
@@ -68,42 +69,17 @@ class CFD {
 		this.nu = 0.000155;			//空気の動粘性係数 m2/s
 
 		//計算条件
-		this.InsidePhi = 20;			//初期温度
 		this.ObsPhi =20;				//障害物の温度
 		this.InletPhi = 10;			//窓の外の温度
 		this.FloorPhi = 18;			//床の温度
-
-		//メッシュ(値は初期値）
-		this.nMeshX = 8;
-		this.nMeshY = 8;
-		this.nMeshZ = 8;
-		this.size_x = 3;				//1メッシュの物理的長さ m
-		this.size_y = 3;
-		this.size_z = 3;
-
 
 		//圧力（空気の周囲の温度との差）YUP方向が上とする
 		this.g = 9.8;				// m/s2
 		this.tz = 273.15;
 		this.prsair = 0;			//101325;	//標準気圧 Pa N/m2
 
-		//形式定義
-		this.INSIDE = 1;		//内部（空気）
-		this.BOTTOM = 2;		//床
-		this.TOP = 3;			//天井
-		this.WINDOW = 4;		//窓
-		this.OUTSIDE = 5;		//屋外壁面
-		this.SIDE = 6;			//屋内壁面
-		this.OBSTACLE = 7;		//障害物
-		this.AC = 8;			//エアコン
-		this.CL = 9;			//サーキュレータ（Xプラスから吸収、上面Yから送風）
-
-		this.x = 0;
-		this.y = 1;
-		this.z = 2;
-
 		this.delta_t_max = 5;
-		this.delta_t_min = 0.01;
+		this.delta_t_min = 0.001;
 
 		this.CirculatorWind = 0;
 	}
@@ -117,17 +93,10 @@ class CFD {
 		//呼び出し時のパラメータの設定
 		var ret = data.val;
 		this.delta_t = ret.delta_t;
-		this.size_x = ret.size_x;
-		this.size_y = ret.size_y;
-		this.size_z = ret.size_z;
-		this.nMeshX = ret.nMeshX;
-		this.nMeshY = ret.nMeshY;
-		this.nMeshZ = ret.nMeshZ;
 		this.InsidePhi = ret.InsidePhi;
 		this.ACwind = ret.ACwind;
 		this.CirculatorWind = ret.CirculatorWind;
-		this.windowK = ret.windowKset;
-		this.wallK = ret.wallKset;
+		this.WindowK = ret.windowKset;
 		this.ObsPhi = ret.ObsPhi;
 		this.InletPhi = ret.InletPhi;
 		this.FloorPhi = ret.FloorPhi;
@@ -139,9 +108,9 @@ class CFD {
 	//mesh initialize 
 	init = function(){
 		//フィールドサイズ
-		var NUM_MAX_X = this.nMeshX+1;
-		var NUM_MAX_Y = this.nMeshY+1;
-		var NUM_MAX_Z = this.nMeshZ+1;
+		var NUM_MAX_X = nMeshX+1;
+		var NUM_MAX_Y = nMeshY+1;
+		var NUM_MAX_Z = nMeshZ+1;
 
 		//フィールドの設定
 		this.Phi = this.init_3d();
@@ -158,9 +127,9 @@ class CFD {
 		this.newF = this.init_3d();
 
 		//共通使用変数
-		this.delta_x = this.size_x / this.nMeshX;
-		this.delta_y = this.size_y / this.nMeshY;
-		this.delta_z = this.size_z / this.nMeshZ;
+		this.delta_x = size_x / nMeshX;
+		this.delta_y = size_y / nMeshY;
+		this.delta_z = size_z / nMeshZ;
 		this.delta_x2 = this.delta_x * this.delta_x;
 		this.delta_y2 = this.delta_y * this.delta_y;
 		this.delta_z2 = this.delta_z * this.delta_z;
@@ -173,11 +142,11 @@ class CFD {
 					this.Prs[i][j][k] = this.prsair;
 					//temperature
 					this.Phi[i][j][k] = this.InsidePhi;
-					if ( this.meshtype[i][j][k] ==  this.BOTTOM )
+					if ( this.meshtype[i][j][k] ==  BOTTOM )
 						this.Phi[i][j][k] = this.FloorPhi;
-					if ( this.meshtype[i][j][k] ==  this.OBSTACLE )
+					if ( this.meshtype[i][j][k] ==  OBSTACLE )
 						this.Phi[i][j][k] = this.ObsPhi;
-					if ( this.meshtype[i][j][k] ==  this.WINDOW || this.meshtype[i][j][k] ==  this.OUTSIDE )
+					if ( this.meshtype[i][j][k] ==  WINDOW || this.meshtype[i][j][k] ==  OUTSIDE )
 						this.Phi[i][j][k] = this.InletPhi;
 				}
 			}
@@ -194,9 +163,9 @@ class CFD {
 	init_3d = function() {
 		var d = [];
 		//フィールドサイズ
-		var NUM_MAX_X = this.nMeshX+1;
-		var NUM_MAX_Y = this.nMeshY+1;
-		var NUM_MAX_Z = this.nMeshZ+1;
+		var NUM_MAX_X = nMeshX+1;
+		var NUM_MAX_Y = nMeshY+1;
+		var NUM_MAX_Z = nMeshZ+1;
 		d = Array( NUM_MAX_X );
 		for( var i=0 ; i<=NUM_MAX_X; i++ ){
 			d[i] = Array( NUM_MAX_Y );
@@ -209,8 +178,9 @@ class CFD {
 	}
 
 
-	//60秒分の計算---------------------------------------
+	//単位時間分の計算---------------------------------------
 	meshcalc = function() {
+		var sec = 20;
 		var error = 0;
 		while(1){
 			this.count++;
@@ -219,8 +189,8 @@ class CFD {
 				error = 1;
 				break;
 			}
-			if ( Math.floor(this.totaltime/60) > Math.floor((this.totaltime - this.delta_t)/60 ) ) {
-				//60seconds
+			if ( Math.floor(this.totaltime/sec) > Math.floor((this.totaltime - this.delta_t)/sec ) ) {
+				//sec seconds
 				break;
 			}
 		}
@@ -263,6 +233,9 @@ class CFD {
 		//サーキュレータ風速設定
 		this.equip_circulator();
 
+		//固定面垂直方向の風速
+		this.wind_block();
+
 		//NS方程式による速度更新（風上差分）
 		this.difference_method(x);
 		this.difference_method(y);
@@ -286,10 +259,10 @@ class CFD {
 	vel_boundary_conditions = function() {
 		var i,j,k;
 
-		for( i=0 ; i<=this.nMeshX+1 ; i++ ) {
-			for( j=0 ; j<=this.nMeshY+1 ; j++ ) {
-				for( k=0 ; k<=this.nMeshZ+1 ; k++ ) {
-					if ( this.meshtype[i][j][k] != this.INSIDE &&  this.meshtype[i][j][k] != this.CL ) {
+		for( i=0 ; i<=nMeshX+1 ; i++ ) {
+			for( j=0 ; j<=nMeshY+1 ; j++ ) {
+				for( k=0 ; k<=nMeshZ+1 ; k++ ) {
+					if ( !this.isCellAir(i,j,k) ) {
 						this.Vel[x][i][j][k] = 0.0;
 						this.Vel[y][i][j][k] = 0.0;
 						this.Vel[z][i][j][k] = 0.0;	//this.Vel[y][1][j];
@@ -302,17 +275,16 @@ class CFD {
 	//2温度差による浮力
 	buoyancy = function() {
 		var i,j,k;
-		var y = this.y;
 		var tmprature = 0;
 		var dv;
 
 		//平均温度
 		var phisum = 0;
 		var phicount = 0;
-		for( i=1 ; i<=this.nMeshX ; i++ ) {
-			for( j=1 ; j<=this.nMeshY ; j++ ) {
-				for( k=1 ; k<=this.nMeshZ ; k++ ) {
-					if ( this.meshtype[i][j][k] == this.INSIDE ) {
+		for( i=1 ; i<=nMeshX ; i++ ) {
+			for( j=1 ; j<=nMeshY ; j++ ) {
+				for( k=1 ; k<=nMeshZ ; k++ ) {
+					if ( this.meshtype[i][j][k] == INSIDE ) {
 						phicount += 1;
 						phisum += this.Phi[i][j][k];
 					}
@@ -324,41 +296,42 @@ class CFD {
 		var around = phiaverage+ this.tz;
 		var tmax = 0;
 
-		for( i=1 ; i<=this.nMeshX ; i++ ) {
-			for( j=1 ; j<=this.nMeshY ; j++ ) {
-				for( k=1 ; k<=this.nMeshZ ; k++ ) {
-					if ( this.meshtype[i][j][k] == this.INSIDE ) {
+		for( i=1 ; i<=nMeshX ; i++ ) {
+			for( j=1 ; j<=nMeshY ; j++ ) {
+				for( k=1 ; k<=nMeshZ ; k++ ) {
+					if ( this.meshtype[i][j][k] == INSIDE ) {
 
 						if ( this.fgAround == 1 ) {
 							//周囲の温度との差を使う場合（使わないときはフィールド平均）
 							var neararound = 0;
 							var neararoundc = 0;
-							if ( this.meshtype[i-1][j][k] == this.INSIDE ) {
+							if ( this.meshtype[i-1][j][k] == INSIDE ) {
 								neararound += this.Phi[i-1][j][k];
 								neararoundc++;
 							}
-							if ( this.meshtype[i+1][j][k] == this.INSIDE ) {
+							if ( this.meshtype[i+1][j][k] == INSIDE ) {
 								neararound += this.Phi[i+1][j][k];
 								neararoundc++;
 							}
-							if ( this.meshtype[i][j-1][k] == this.INSIDE ) {
+							if ( this.meshtype[i][j-1][k] == INSIDE ) {
 								neararound += this.Phi[i][j-1][k];
 								neararoundc++;
 							}
-							if ( this.meshtype[i][j+1][k] == this.INSIDE ) {
+							if ( this.meshtype[i][j+1][k] == INSIDE ) {
 								neararound += this.Phi[i][j+1][k];
 								neararoundc++;
 							}
-							if ( this.meshtype[i][j][k-1] == this.INSIDE ) {
+							if ( this.meshtype[i][j][k-1] == INSIDE ) {
 								neararound += this.Phi[i][j][k-1];
 								neararoundc++;
 							}
-							if ( this.meshtype[i][j][k+1] == this.INSIDE ) {
+							if ( this.meshtype[i][j][k+1] == INSIDE ) {
 								neararound += this.Phi[i][j][k+1];
 								neararoundc++;
 							}
 							if ( neararoundc > 0 ){
-								around = ( neararound / neararoundc + phiaverage ) /2 + tz;
+								// around = ( neararound / neararoundc + phiaverage ) /2 + tz;
+								around = neararound / neararoundc + tz;
 							} else {
 								around = phiaverage+ tz;
 							}
@@ -369,7 +342,7 @@ class CFD {
 						//最大値
 						if ( tmax < dv ) tmax = dv;
 						//ぶれをいれる
-						this.Vel[y][i][j][k] += dv * (Math.random() * 0.01*2 + 0.99) ;
+						this.Vel[y][i][j][k] += dv * (Math.random() * 0.1*2 + 0.9) ;
 					}
 				}
 			}
@@ -379,16 +352,13 @@ class CFD {
 	//3a エアコンの設定
 	equip_airconditioner = function() {
 		var i,j,k;
-		var x = this.x;
-		var y = this.y;
-		var z = this.z;
 		var dir = this.dir;
 
 		//下方向に温風 壁と反対方向で同じ風速で吸収
 		//エアコンの方向の設定
 		var acx = 0;
 		var acz = 0;		
-		j = this.nMeshY-2;
+		j = nMeshY-2;
 
 		if ( this.ACwind > 0 ) {
 			this.acv = this.ACwind;
@@ -397,20 +367,20 @@ class CFD {
 		}
 		//暖房能力2.8kWと想定 act温度上昇 
 		if ( this.addair ) {
-			this.act = 2800 / ( this.sh_air * this.rou * 1000 * this.acv * 1 * this.delta_x );
-			//幅1m×delta_xの吹き出し口
+			this.act = 2800 / ( this.sh_air * this.rou * 1000 * this.acv * ac_width * ac_height );
+			//吹き出し口
 		} else {
 			this.act = 0;
 		}
 		var adj = 1;
 		
-		for( i=1 ; i<=this.nMeshX ; i++ ) {
-			for( k=1 ; k<=this.nMeshZ ; k++ ) {
-				if ( this.meshtype[i][j][k] == this.AC ) {
-					if ( this.Phi[i][j+1][k] < 22 ) {
+		for( i=1 ; i<=nMeshX ; i++ ) {
+			for( k=1 ; k<=nMeshZ ; k++ ) {
+				if ( this.meshtype[i][j][k] == AC ) {
+					if ( this.Phi[i][j+1][k] < 22 ) {	//入口温度
 						if ( this.ACwind > 0 ) {
 							this.acheatsum += 2800;
-							this.Phi[i][j][k] = this.Phi[i][j+1][k]+this.act;
+							this.Phi[i][j][k] = this.Phi[i][j+1][k];
 							this.Phi[i][j-1][k] = this.Phi[i][j+1][k]+this.act;
 							adj = 1;
 						} else {
@@ -423,7 +393,7 @@ class CFD {
 								this.acheatsum += 2800;
 								adj = 1;
 							}
-							this.Phi[i][j][k] = this.Phi[i][j+1][k]+this.act;
+							this.Phi[i][j][k] = this.Phi[i][j+1][k];
 							this.Phi[i][j-1][k] = this.Phi[i][j+1][k]+this.act;
 						}
 					} else {
@@ -441,7 +411,7 @@ class CFD {
 						this.Vel[x][i][j-1][k] = this.acv * dir * adj;
 						this.Vel[x][i][j+1][k] = -this.acv * dir * adj;
 					}
-					if ( i == this.nMeshX-1 ) {
+					if ( i == nMeshX-1 ) {
 						acx = -1;
 						this.Vel[x][i][j-1][k] = -this.acv * dir * adj;
 						this.Vel[x][i][j+1][k] = this.acv * dir * adj;
@@ -451,7 +421,7 @@ class CFD {
 						this.Vel[z][i][j-1][k] = this.acv * dir * adj;
 						this.Vel[z][i][j+1][k] = -this.acv * dir * adj;
 					}
-					if ( k == this.nMeshX-1 ) {
+					if ( k == nMeshZ-1 ) {
 						acz = -1;
 						this.Vel[z][i][j-1][k] = -this.acv * dir * adj;
 						this.Vel[z][i][j+1][k] = this.acv * dir * adj;
@@ -469,27 +439,30 @@ class CFD {
 	equip_circulator = function() {
 		var i=1;
 		var j=1;
-		var k=Math.round(this.nMeshZ/2);
+		var k=Math.round(nMeshZ/2);
 
-		if ( this.meshtype[i][j][k] == this.CL ) {
-			//一つ横を設定してたが、直接セルの設定をしたほうがいい結果が出る 161025
-			this.Vel[this.y][i][j+1][k] = this.CirculatorWind;
+		if ( this.meshtype[i][j][k] == CL ) {
+			this.Vel[y][i][j][k] = this.CirculatorWind;
 		}
+	}
 
+	//3c 固定面垂直方向の風速
+	wind_block = function() {
+		var i,j,k;
 		//内部壁面の速度境界条件（壁等への垂直方向の風はない）
 		//これをなくすと、壁面での圧力がなくなり、方向転換がされない
-		for( i=1 ; i<=this.nMeshX ; i++ ) {
-			for( j=1 ; j<=this.nMeshY ; j++ ) {
-				for( k=1 ; k<=this.nMeshZ ; k++ ) {
-					if ( this.meshtype[i][j][k] == this.INSIDE || this.meshtype[i][j][k] == this.OBSTACLE ) {
-						if( i==1 || i==this.nMeshX || this.meshtype[i-1][j][k] == this.OBSTACLE || this.meshtype[i+1][j][k] == this.OBSTACLE ) {
-							this.Vel[this.x][i][j][k] = 0.0;
+		for( i=1 ; i<=nMeshX ; i++ ) {
+			for( j=1 ; j<=nMeshY ; j++ ) {
+				for( k=1 ; k<=nMeshZ ; k++ ) {
+					if ( this.meshtype[i][j][k] == INSIDE) {
+						if( i==1 || i==nMeshX || this.meshtype[i-1][j][k] == OBSTACLE || this.meshtype[i+1][j][k] == OBSTACLE ) {
+							this.Vel[x][i][j][k] = 0.0;
 						}
-						if( j==1 || j==this.nMeshY) {
-							this.Vel[this.y][i][j][k] = 0.0;
+						if( j==1 || j==nMeshY) {
+							this.Vel[y][i][j][k] = 0.0;
 						}
-						if( k==1|| k== this.nMeshZ) {
-							this.Vel[this.z][i][j][k] = 0.0;
+						if( k==1 || k== nMeshZ) {
+							this.Vel[z][i][j][k] = 0.0;
 						}
 					}
 				}
@@ -504,10 +477,10 @@ class CFD {
 		var coulant;
 		var i,j,k;
 
-		for( i=1 ; i<=this.nMeshX ; i++ ) {
-			for( j=1 ; j<=this.nMeshY ; j++ ) {
-				for( k=1 ; k<=this.nMeshZ ; k++ ) {
-					if ( this.meshtype[i][j][k] == this.INSIDE || this.meshtype[i][j][k] == this.CL) {
+		for( i=1 ; i<=nMeshX ; i++ ) {
+			for( j=1 ; j<=nMeshY ; j++ ) {
+				for( k=1 ; k<=nMeshZ ; k++ ) {
+					if ( this.isCellAir(i,j,k)) {
 						fijk = f[i][j][k];
 						var xp = f[i+1][j][k];
 						var xm = f[i-1][j][k];
@@ -518,11 +491,11 @@ class CFD {
 
 						//風上差分
 						//これを中央差分をとると、チェッカーボードとなる
-						coulant = this.Vel[this.x][i][j][k] * this.delta_t / this.delta_x;
+						coulant = this.Vel[x][i][j][k] * this.delta_t / this.delta_x;
 						this.newF[i][j][k] = fijk + 0.5 * (coulant * (xm - xp) + Math.abs(coulant) * (xp +xm - 2.0 * fijk));
-						coulant = this.Vel[this.y][i][j][k] * this.delta_t / this.delta_y;
+						coulant = this.Vel[y][i][j][k] * this.delta_t / this.delta_y;
 						this.newF[i][j][k] += 0.5 * (coulant * (ym - yp) + Math.abs(coulant) * (yp +ym - 2.0 * fijk));
-						coulant = this.Vel[this.z][i][j][k] * this.delta_t / this.delta_z;
+						coulant = this.Vel[z][i][j][k] * this.delta_t / this.delta_z;
 						this.newF[i][j][k] += 0.5 * (coulant * (zm - zp) + Math.abs(coulant) * (zp +zm - 2.0 * fijk));
 
 						//粘性項に中央差分
@@ -533,10 +506,10 @@ class CFD {
 		}
 
 		//更新
-		for( i=1 ; i<=this.nMeshX ; i++ ) {
-			for( j=1 ; j<=this.nMeshY ; j++ ) {
-				for( k=1 ; k<=this.nMeshZ ; k++ ) {
-					if ( this.meshtype[i][j][k] == this.INSIDE || this.meshtype[i][j][k] == this.CL ) {
+		for( i=1 ; i<=nMeshX ; i++ ) {
+			for( j=1 ; j<=nMeshY ; j++ ) {
+				for( k=1 ; k<=nMeshZ ; k++ ) {
+					if ( this.isCellAir(i,j,k) ) {
 						this.Vel[target][i][j][k] = this.newF[i][j][k];
 					}
 				}
@@ -550,13 +523,13 @@ class CFD {
 		var a,b,c;
 		//Poisson方程式の右辺（対流項）
 		// var maxD = 0;
-		for( i=1 ; i<=this.nMeshX ; i++ ) {
-			for( j=1 ; j<=this.nMeshY ; j++ ) {
-				for( k=1 ; k<=this.nMeshZ ; k++ ) {
-					if ( this.meshtype[i][j][k] == this.INSIDE || this.meshtype[i][j][k] == this.CL ) {
+		for( i=1 ; i<=nMeshX ; i++ ) {
+			for( j=1 ; j<=nMeshY ; j++ ) {
+				for( k=1 ; k<=nMeshZ ; k++ ) {
+					if ( this.isCellAir(i,j,k) ) {
 						//1611 CL追加
 
-					if ( 1 ) {	
+					if ( this.fgPoissonConvection == 1 ) {	
 						// 160210 中心差分でないと値がでない
 						//中心差分
 						a = (this.Vel[x][i+1][j][k] - this.Vel[x][i-1][j][k]) /2 / this.delta_x;
@@ -606,11 +579,10 @@ class CFD {
 
 		var xp,xm, yp,ym,zp,zm;
 
-		for( i=1 ; i<=this.nMeshX ; i++ ) {
-			for( j=1 ; j<=this.nMeshY ; j++ ) {
-				for( k=1 ; k<=this.nMeshZ ; k++ ) {
-					if ( this.meshtype[i][j][k] == this.INSIDE || this.meshtype[i][j][k] == this.CL ) {
-						//1611 CL追加
+		for( i=1 ; i<=nMeshX ; i++ ) {
+			for( j=1 ; j<=nMeshY ; j++ ) {
+				for( k=1 ; k<=nMeshZ ; k++ ) {
+					if ( this.isCellAir(i,j,k) ) {
 						//Dをふくめてまとめて6で割る（式の展開より）
 						xp = this.Prs[i+1][j][k];
 						xm = this.Prs[i-1][j][k];
@@ -629,31 +601,30 @@ class CFD {
 		}
 
 		//圧力の設定
-		for( i=0 ; i<=this.nMeshX+1 ; i++ ) {
-			for( j=0 ; j<=this.nMeshY+1 ; j++ ) {
-				for( k=0 ; k<=this.nMeshZ+1 ; k++ ) {
-					if ( this.meshtype[i][j][k] == this.INSIDE || this.meshtype[i][j][k] == this.CL ) {
-						// 1611CLも追加
+		for( i=0 ; i<=nMeshX+1 ; i++ ) {
+			for( j=0 ; j<=nMeshY+1 ; j++ ) {
+				for( k=0 ; k<=nMeshZ+1 ; k++ ) {
+					if ( this.isCellAir(i,j,k) ) {
 						this.Prs[i][j][k] = this.tmp[0][i][j][k];
 					}
 				}
 			}
 		}
-		for( i=0 ; i<=this.nMeshX+1 ; i++ ) {
-			for( j=0 ; j<=this.nMeshY+1 ; j++ ) {
-				for( k=0 ; k<=this.nMeshZ+1 ; k++ ) {
+		for( i=0 ; i<=nMeshX+1 ; i++ ) {
+			for( j=0 ; j<=nMeshY+1 ; j++ ) {
+				for( k=0 ; k<=nMeshZ+1 ; k++ ) {
 					//空気でない場合には、最も近い空気の圧力を設定
 					if ( i==0 ) {
 						this.Prs[i][j][k] = this.tmp[0][i+1][j][k];
-					} else if ( i==this.nMeshX+1 ) {
+					} else if ( i==nMeshX+1 ) {
 						this.Prs[i][j][k] = this.tmp[0][i-1][j][k];
 					} else if ( j==0 ) {
 						this.Prs[i][j][k] = this.tmp[0][i][j+1][k];
-					} else if ( j==this.nMeshY+1 ) {
+					} else if ( j==nMeshY+1 ) {
 						this.Prs[i][j][k] = this.tmp[0][i][j-1][k];
 					} else if ( k==0 ) {
 						this.Prs[i][j][k] = this.tmp[0][i][j][k+1];
-					} else if ( k==this.nMeshZ+1 ) {
+					} else if ( k==nMeshZ+1 ) {
 						this.Prs[i][j][k] = this.tmp[0][i][j][k-1];
 					} else {
 						//障害物など 170629　削除
@@ -684,27 +655,22 @@ class CFD {
 	poisson_update_velocity = function() {
 		var i,j,k;
 
-		var x = this.x;
-		var y = this.y;
-		var z = this.z;
-
-		for( i=1 ; i<=this.nMeshX ; i++ ) {
-			for( j=1 ; j<=this.nMeshY ; j++ ) {
-				for( k=1 ; k<=this.nMeshZ ; k++ ) {
-					if ( this.meshtype[i][j][k] == this.INSIDE || this.meshtype[i][j][k] == this.CL) {
+		for( i=1 ; i<=nMeshX ; i++ ) {
+			for( j=1 ; j<=nMeshY ; j++ ) {
+				for( k=1 ; k<=nMeshZ ; k++ ) {
+					if ( this.isCellAir(i,j,k) ) {
 						//170629 比重rou を掛け合わせる
 						this.tmp[x][i][j][k] = this.Vel[x][i][j][k] - 0.5 * this.delta_t * (this.Prs[i+1][j][k] - this.Prs[i-1][j][k]) / ( this.rou * this.delta_x);
 						this.tmp[y][i][j][k] = this.Vel[y][i][j][k] - 0.5 * this.delta_t * (this.Prs[i][j+1][k] - this.Prs[i][j-1][k]) / ( this.rou * this.delta_y);	
 						this.tmp[z][i][j][k] = this.Vel[z][i][j][k] - 0.5 * this.delta_t * (this.Prs[i][j][k+1] - this.Prs[i][j][k-1]) / ( this.rou * this.delta_z);
-
 					}
 				}
 			}
 		}
-		for( i=1 ; i<=this.nMeshX ; i++ ) {
-			for( j=1 ; j<=this.nMeshY ; j++ ) {
-				for( k=1 ; k<=this.nMeshZ ; k++ ) {
-					if ( this.meshtype[i][j][k] == this.INSIDE ) {
+		for( i=1 ; i<=nMeshX ; i++ ) {
+			for( j=1 ; j<=nMeshY ; j++ ) {
+				for( k=1 ; k<=nMeshZ ; k++ ) {
+					if ( this.isCellAir(i,j,k) ) {
 						this.Vel[x][i][j][k] = this.tmp[x][i][j][k];
 						this.Vel[y][i][j][k] = this.tmp[y][i][j][k];
 						this.Vel[z][i][j][k] = this.tmp[z][i][j][k];
@@ -719,10 +685,6 @@ class CFD {
 		var i,j,k;
 		var xp,xm, yp,ym,zp,zm;
 
-		var x = this.x;
-		var y = this.y;
-		var z = this.z;
-
 		var coulant;
 		var maxcoulant = 0;
 		var fixwall;
@@ -733,12 +695,12 @@ class CFD {
 		var heatparm_w = this.delta_t / ( this.sh_air * this.rou * 1000 );
 
 		//温度の移動
-		for( i=0 ; i<=this.nMeshX+1 ; i++ ) {
-			for( j=0 ; j<=this.nMeshY+1 ; j++ ) {
-				for( k=0 ; k<=this.nMeshZ+1 ; k++ ) {
+		for( i=0 ; i<=nMeshX+1 ; i++ ) {
+			for( j=0 ; j<=nMeshY+1 ; j++ ) {
+				for( k=0 ; k<=nMeshZ+1 ; k++ ) {
 					var pphi =  this.Phi[i][j][k];
 					this.tmp[0][i][j][k] = pphi;
-					if ( this.meshtype[i][j][k] == this.INSIDE || this.meshtype[i][j][k] == this.CL ) {
+					if ( this.isCellAir(i,j,k) ) {
 						//空気の場合（+1、-1はありうる）
 						xp = this.Phi[i+1][j][k];
 						xm = this.Phi[i-1][j][k];
@@ -762,7 +724,7 @@ class CFD {
 								coulant = this.Vel[x][fixwall][j][k] * this.delta_t / this.delta_x;
 								this.tmp[0][i][j][k] += ( xm - pphi ) * coulant;
 							}
-							fixwall = ( i==this.nMeshX ? this.nMeshX : i+1 );
+							fixwall = ( i==nMeshX ? nMeshX : i+1 );
 							//fixwall = i+1;
 							if ( this.Vel[x][fixwall][j][k] < 0 ) {
 								coulant = -this.Vel[x][fixwall][j][k] * this.delta_t / this.delta_x;
@@ -782,7 +744,7 @@ class CFD {
 								coulant = this.Vel[y][i][fixwall][k] * this.delta_t / this.delta_y;
 								this.tmp[0][i][j][k] += ( ym - pphi ) * coulant;
 							}
-							fixwall = ( j==this.nMeshY ? this.nMeshY : j+1 );
+							fixwall = ( j==nMeshY ? nMeshY : j+1 );
 							//fixwall = j+1 ;
 							if ( this.Vel[y][i][fixwall][k] < 0 ) {
 								coulant = -this.Vel[y][i][fixwall][k] * this.delta_t / this.delta_y;
@@ -792,7 +754,7 @@ class CFD {
 						if ( maxcoulant < coulant ) maxcoulant = coulant;
 
 						//一次精度　一次方向移流 Z
-						var vzij = Vel[z][i][j];
+						var vzij = this.Vel[z][i][j];
 						coulant = vzij[k] * this.delta_t / this.delta_z;
 						if ( this.fgCalcTempAround == 1 ) {
 							this.tmp[0][i][j][k] += 0.5 * (coulant * (zm - zp) + Math.abs(coulant) * (zp +zm - 2.0 * pphi));
@@ -803,7 +765,7 @@ class CFD {
 								coulant = vzij[fixwall] * this.delta_t / this.delta_z;
 								this.tmp[0][i][j][k] += ( zm - pphi ) * coulant;
 							}
-							fixwall = ( k==this.nMeshZ ? this.nMeshZ : k+1 );
+							fixwall = ( k==nMeshZ ? nMeshZ : k+1 );
 							//fixwall =  k+1;
 							if ( vzij[fixwall] < 0 ) {
 								coulant = -vzij[k+1] * this.delta_t / this.delta_z;
@@ -815,55 +777,55 @@ class CFD {
 						//外壁からの流入
 						// 室内側熱抵抗0.11m2K/W 　空気比熱　1.006J/gK　
 						// 170629 heatparm_w を使う場合には delta_*で割らない
-						if ( this.meshtype[i-1][j][k] != this.INSIDE && this.meshtype[i-1][j][k] != this.CL ) {
+						if ( this.meshtype[i-1][j][k] != INSIDE && this.meshtype[i-1][j][k] != CL ) {
 							//左側が空気でない
-							if ( this.meshtype[i-1][j][k] == this.OUTSIDE ) {
+							if ( this.meshtype[i-1][j][k] == OUTSIDE ) {
 								//外壁（左）
 								this.tmp[0][i][j][k] += ( xm - pphi ) * this.wallK * heatparm_w / this.delta_x;
-								this.sumheatleft += ( xm - pphi ) * this.wallK * this.delta_y*this.delta_z ;
-							} else if ( this.meshtype[i-1][j][k] == this.WINDOW ) {
+								this.sumheatleft += ( xm - pphi ) * this.wallK * this.delta_x*this.delta_z ;
+							} else if ( this.meshtype[i-1][j][k] == WINDOW ) {
 								//窓（左）
-								this.tmp[0][i][j][k] += ( xm - pphi )  * this.windowK * heatparm_w / this.delta_x;
-								this.sumheatleft += ( xm - pphi )  * this.windowK * this.delta_y*this.delta_z ;
+								this.tmp[0][i][j][k] += ( xm - pphi )  * this.WindowK * heatparm_w / this.delta_x;
+								this.sumheatleft += ( xm - pphi )  * this.WindowK * this.delta_x*this.delta_z ;
 							} else {
 								this.tmp[0][i][j][k] += ( xm - pphi ) / this.delta_x * heatparm / this.delta_x;
-								this.sumheatleft += ( xm - pphi ) / this.delta_x * this.Riw * this.delta_y*this.delta_z ;
+								this.sumheatleft += ( xm - pphi ) / this.delta_y * this.Riw * this.delta_x*this.delta_z ;
 							}
 						}
-						if ( this.meshtype[i+1][j][k] != this.INSIDE ) {
+						if ( this.meshtype[i+1][j][k] != INSIDE ) {
 							this.tmp[0][i][j][k] += ( xp - pphi ) / this.delta_x * heatparm;
 						}
 
-						if ( this.meshtype[i][j-1][k] != this.INSIDE && this.meshtype[i][j-1][k] != this.CL ) {
+						if ( this.meshtype[i][j-1][k] != INSIDE && this.meshtype[i][j-1][k] != CL ) {
 							//床だったら
 							this.tmp[0][i][j][k] += ( ym - pphi )  / this.delta_y * heatparm_f;
 						}
-						if ( this.meshtype[i][j+1][k] != this.INSIDE ) {
+						if ( this.meshtype[i][j+1][k] != INSIDE ) {
 							//天井だったら
 							this.tmp[0][i][j][k] += ( yp - pphi ) / this.delta_y * heatparm_c;
 						}
 
-						if ( this.meshtype[i][j][k-1] != this.INSIDE && this.meshtype[i][j][k-1] != this.CL ) {
+						if ( this.meshtype[i][j][k-1] != INSIDE && this.meshtype[i][j][k-1] != CL ) {
 							this.tmp[0][i][j][k] += ( zm - pphi ) / this.delta_z * heatparm;
 						}
-						if ( this.meshtype[i][j][k+1] != this.INSIDE && this.meshtype[i][j][k+1] != this.CL) {
+						if ( this.meshtype[i][j][k+1] != INSIDE && this.meshtype[i][j][k+1] != this.CL) {
 							//奥が空気でない
-							if ( this.meshtype[i][j][k+1] == this.OUTSIDE ) {
+							if ( this.meshtype[i][j][k+1] == OUTSIDE ) {
 								//外壁
 								this.tmp[0][i][j][k] += ( zp - pphi ) * this.wallK  * heatparm_w;
-								this.sumheatfront += ( zp - pphi ) * this.wallK* this.delta_y*this.delta_z ;
-							} else if ( this.meshtype[i][j][k+1] == this.WINDOW ) {
+								this.sumheatfront += ( zp - pphi ) * this.wallK* this.delta_y*this.delta_x ;
+							} else if ( this.meshtype[i][j][k+1] == WINDOW ) {
 								//窓（正面）
-								this.tmp[0][i][j][k] += ( zp - pphi )  * this.windowK * heatparm_w;
-								this.sumheatfront += ( zp - pphi ) * this.windowK* this.delta_y*this.delta_z ;
+								this.tmp[0][i][j][k] += ( zp - pphi )  * this.WindowK * heatparm_w;
+								this.sumheatfront += ( zp - pphi ) * this.WindowK* this.delta_y*this.delta_x ;
 							} else {
 								//内壁
 								this.tmp[0][i][j][k] += ( zp - pphi )  / this.delta_z * heatparm;
-								this.sumheatfront += ( zp - pphi ) / this.delta_z * this.Riw* this.delta_y*this.delta_z ;
+								this.sumheatfront += ( zp - pphi ) / this.delta_z * this.Riw* this.delta_y*this.delta_x ;
 							}
 						}
 
-					} else if ( this.meshtype[i][j][k] == this.OBSTACLE ) {
+					} else if ( this.meshtype[i][j][k] == OBSTACLE ) {
 						//物体の空気からの熱移動を評価(-1 +1が有効)
 						xp = this.Phi[i+1][j][k];
 						xm = this.Phi[i-1][j][k];
@@ -873,34 +835,34 @@ class CFD {
 						zm = this.Phi[i][j][k-1];
 						if ( this.ObsPhi != this.InsidePhi ) {
 							//温度設定がされている場合には処理しない
-						} else if ( this.meshtype[i-1][j][k] == this.INSIDE ||  this.meshtype[i+1][j][k] == this.INSIDE ) {
+						} else if ( this.meshtype[i-1][j][k] == INSIDE ||  this.meshtype[i+1][j][k] == INSIDE ) {
 							this.tmp[0][i][j][k] = ( xp+ xm ) / 2;
-						} else if ( this.meshtype[i][j-1][k] == this.INSIDE ||  this.meshtype[i][j+1][k] == this.INSIDE ) {
+						} else if ( this.meshtype[i][j-1][k] == INSIDE ||  this.meshtype[i][j+1][k] == INSIDE ) {
 							this.tmp[0][i][j][k] = ( yp + ym ) / 2;
-						} else if ( this.meshtype[i][j-1][k] == this.INSIDE ||  this.meshtype[i][j+1][k] == this.INSIDE ) {
+						} else if ( this.meshtype[i][j-1][k] == INSIDE ||  this.meshtype[i][j+1][k] == INSIDE ) {
 							this.tmp[0][i][j][k] = ( zp + zm ) / 2;
 						} else {
 							this.tmp[0][i][j][k] = ( xp + xm + yp + ym +zp + zm ) / 6;
 						}
 
-					} else if ( this.meshtype[i][j][k] == this.SIDE ) {
+					} else if ( this.meshtype[i][j][k] == SIDE ) {
 						//壁の空気からの熱移動を評価
 						// 温度は使わないので、空気温度を設定する
-						if ( this.meshtype[i][j][Math.max(k-1,0)] == this.INSIDE) {
+						if ( this.meshtype[i][j][Math.max(k-1,0)] == INSIDE) {
 							//壁面温度を外気温として扱う（奥）
 							//tmp[0][i][j][k] = Phi[i][j][k] + (Phi[i][j][k-1]-Phi[i][j][k]) / Riw * delta_t / ( sh_wall * sh_thick );
-						} else if ( this.meshtype[i][j][Math.min(k+1,this.nMeshZ+1)] == this.INSIDE) {
+						} else if ( this.meshtype[i][j][Math.min(k+1,nMeshZ+1)] == INSIDE) {
 							this.tmp[0][i][j][k] += (this.Phi[i][j][k+1]-pphi) / this.Riw * this.delta_t / ( this.sh_wall * this.sh_thick );
-						} else if ( this.meshtype[Math.max(i-1,0)][j][k] == this.INSIDE) {
+						} else if ( this.meshtype[Math.max(i-1,0)][j][k] == INSIDE) {
 							this.tmp[0][i][j][k] += (this.Phi[i-1][j][k]-pphi) / this.Riw * this.delta_t / ( this.sh_wall * this.sh_thick );
-						} else if ( this.meshtype[Math.min(i+1,this.nMeshX+1)][j][k] == this.INSIDE) {
+						} else if ( this.meshtype[Math.min(i+1,nMeshX+1)][j][k] == INSIDE) {
 							//壁面温度を外気温として扱う（左）
 							//tmp[0][i][j][k] += (Phi[i+1][j][k]-Phi[i][j][k]) / Riw * delta_t / ( sh_wall * sh_thick );
 
 						}
-					} else if ( this.meshtype[i][j][k] == this.TOP ) {
+					} else if ( this.meshtype[i][j][k] == TOP ) {
 						this.tmp[0][i][j][k] += (this.Phi[i][j-1][k]-pphi) / this.Ric * this.delta_t / ( this.sh_wall * this.sh_thick );
-					} else if ( this.meshtype[i][j][k] == this.BOTTOM ) {
+					} else if ( this.meshtype[i][j][k] == BOTTOM ) {
 						this.tmp[0][i][j][k] += (this.Phi[i][j+1][k]-pphi) / this.Rif * this.delta_t / ( this.sh_wall * this.sh_thick );
 					}
 				}
@@ -909,9 +871,9 @@ class CFD {
 		}
 		this.heatleftcount++;
 
-		for( i=0 ; i<=this.nMeshX+1 ; i++ ) {
-			for( j=0 ; j<=this.nMeshY+1 ; j++ ) {
-				for( k=0 ; k<=this.nMeshZ+1 ; k++ ) {
+		for( i=0 ; i<=nMeshX+1 ; i++ ) {
+			for( j=0 ; j<=nMeshY+1 ; j++ ) {
+				for( k=0 ; k<=nMeshZ+1 ; k++ ) {
 					if ( this.tmp[0][i][j][k] ) {
 						this.Phi[i][j][k] = this.tmp[0][i][j][k];
 					}
@@ -945,9 +907,9 @@ class CFD {
 		// var maxPhi0 = -1000.0;
 		// var minPhi0 = 1000.0;
 
-		// for( i=1 ; i<=this.nMeshX ; i++ ) {
-		// 	for( j=1 ; j<=this.nMeshY ; j++ ) {
-		// 		for( k=1 ; k<=this.nMeshZ ; k++ ) {
+		// for( i=1 ; i<=nMeshX ; i++ ) {
+		// 	for( j=1 ; j<=nMeshY ; j++ ) {
+		// 		for( k=1 ; k<=nMeshZ ; k++ ) {
 		// 			prssum += this.Prs[i][j][k];
 		// 			prscount++;
 		// 			if ( this.Prs[i][j][k] > maxPrs0 ) 
@@ -966,20 +928,25 @@ class CFD {
 
 	//7 時間ステップ補正
 	time_step_correction = function(maxcoulant) {
-		if ( this.fix_coulant ) {
+		if ( this.fgFixCoulant ) {
 			if ( maxcoulant > this.coulant_min ) {
-				this.delta_t *= 0.95;
+				this.delta_t *= 0.9;
 				if( this.delta_t < this.delta_t_min ) {
 					this.delta_t = this.delta_t_min;
 				}
 			}
 			if ( maxcoulant < this.coulant_max ) {
-				this.delta_t *= 1.05;
+				this.delta_t *= 1.1;
 				if( this.delta_t > this.delta_t_max ) {
 					this.delta_t = this.delta_t_max;
 				}
 			}
 		}
+	}
+
+	//セル判定
+	isCellAir = function(i,j,k){
+		return ( this.meshtype[i][j][k] == INSIDE || this.meshtype[i][j][k] == CL );
 	}
 
 }

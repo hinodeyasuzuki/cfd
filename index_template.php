@@ -29,11 +29,15 @@
 		<meta charset="UTF-8">
 		<title>室内空気の流れ計算（エアコン、送風、断熱の効果）</title>
 		<link rel="stylesheet" href="" media="screen">
-		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.14.0/themes/smoothness/jquery-ui.css">
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.14.0/jquery-ui.min.js"></script>
+		<!-- <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.14.0/themes/smoothness/jquery-ui.css"> -->
+		<script src="./js/jquery.min.js"></script>
+		<script src="./js/jquery-ui.min.js"></script>
+		<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.14.0/jquery-ui.min.js"></script> -->
 		<script src="./js/cfdcalc.js"></script>
 		<script src="./js/scenario.js"></script>
+		<script src="./js/setting.js"></script>
+		<script src="./js/cfdgraph.js"></script>
 		<script src="./js/cfdview.js"></script>
 		<link href="./cfd.css" rel="stylesheet" type="text/css" />
 
