@@ -215,9 +215,9 @@ function layerup( dy ) {
 			graphupdate(1);
 		}
 	}
-	$("div#top").css("zIndex", "850");
-	$("div#left").css("zIndex", "880");
-	$("div#floor").css("zIndex", "920");
+	$(".front_base").css("zIndex", "850");
+	$(".wall_base").css("zIndex", "880");
+	$(".floor_base").css("zIndex", "920");
 };
 
 
@@ -234,9 +234,9 @@ function layerz( dz ) {
 			graphupdate(2);
 		}
 	}
-	$("div#top").css("zIndex", "920");
-	$("div#left").css("zIndex", "880");
-	$("div#floor").css("zIndex", "850");
+	$(".front_base").css("zIndex", "920");
+	$(".wall_base").css("zIndex", "880");
+	$(".floor_base").css("zIndex", "850");
 };
 
 //Xレイヤーを左右に変更-----------------------
@@ -252,18 +252,18 @@ function layerx( dx ) {
 			graphupdate(0);
 		}
 	}
-	$("div#top").css("zIndex", "850");
-	$("div#left").css("zIndex", "920");
-	$("div#floor").css("zIndex", "880");
+	$(".front_base").css("zIndex", "850");
+	$(".wall_base").css("zIndex", "920");
+	$(".floor_base").css("zIndex", "880");
 };
 
 
 /*
 //窓の位置移動からパラメータ設定(画面上での動的設定)
 function windowPosition( tname ) {
-	var w = $("#top #" + tname ).width();
-	var h = $("#top #" + tname ).height();
-	var p = $("#top #" + tname ).position();
+	var w = $(".front #" + tname ).width();
+	var h = $(".front #" + tname ).height();
+	var p = $(".front #" + tname ).position();
 	$("#WindowYr").val( Math.round(( - (p.top + h) + (400-(p.left*2 + w)/2) )/(400/$("#size_y").val())*10)/10 );
 	$("#WindowHr").val( Math.round( h / (400/$("#size_y").val())*10)/10 );
 	$("#WindowZr").val( Math.round( p.left / (400/$("#size_z").val())*10)/10*2 );
@@ -273,9 +273,9 @@ function windowPosition( tname ) {
 
 //屏風位置変更時のパラメータ設定(画面上での動的設定)
 function byobuPosition( tname ) {
-	var w = $("#top #" + tname ).width();
-	var h = $("#top #" + tname ).height();
-	var p = $("#top #" + tname ).position();
+	var w = $(".front #" + tname ).width();
+	var h = $(".front #" + tname ).height();
+	var p = $(".front #" + tname ).position();
 	$("#ObsX1r").val( 1.6 -Math.round((400 - (p.top + h) +( 400- (p.left*2 + w))/2  ) /(400/$("#size_y").val())*10)/10 );
 	$("#ObsYr").val( Math.round(h / (400/$("#size_y").val())*10)/10 );
 	$("#ObsZ1r").val( Math.round( ( (400 - (p.top + h))*1.4 - w/2 ) / (400/$("#size_z").val())*10)/10 );

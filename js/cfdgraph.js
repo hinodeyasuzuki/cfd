@@ -30,11 +30,8 @@ class Graph {
 
     //画面canvas初期設定
     canvasinit = function(){
-        $("#wall").height(cy).width(cx);
         $("#wall_base").height(cy).width(cx);
-        $("#wall2").height(cy).width(cx);
         $("#wall2_base").height(cy).width(cx);
-        $("#floor").height(cy).width(cx);
         $("#floor_base").height(cy).width(cx);
         $("#graphbase").height(cy).width(cx);
 
@@ -516,7 +513,8 @@ class Graph {
         ctx.font = "24px 'ＭＳ Ｐゴシック'";
         ctx.fillText("Y床面 " + nowy + "層目", 10, 380, 300);
         ctx.stroke();
-        $(".floor").css( "top", parseInt( 380 - (nowy-1) * mesuy ) );
+        $(".floor.move").css( "top", parseInt( - (nowy-1) * mesuy *2 ) );
+        $(".floor.move").css( "left", parseInt( -(nowy-1) * mesuy) );
     };
 
     //正面-------------------------------------
@@ -531,8 +529,8 @@ class Graph {
         ctx.fillStyle = "black";
         ctx.font = "20px 'ＭＳ Ｐゴシック'";
         ctx.fillText("Z奥外壁面  " + nowz + "層目", 10, 40, 300);
-        $(".wall2").css( "left", parseInt( 220 - (nMeshZ - nowz) * mesuz/2 ) );
-        $(".wall2").css( "top", parseInt( 80 + (nMeshZ - nowz) * mesuz/2 ) );
+        $(".front.move").css( "left", parseInt( - (nMeshZ - nowz) * mesuz/2 ) );
+        $(".front.move").css( "top", parseInt( + (nMeshZ - nowz) * mesuz/2 ) );
         ctx.stroke();
     };
 
@@ -549,7 +547,8 @@ class Graph {
         ctx.font = "24px 'ＭＳ Ｐゴシック'";
         ctx.fillText("X窓面     " + nowx + "層目", 10, 40, 300);
         ctx.stroke();
-        $(".wall").css( "left", parseInt( -80 + (nowx-1) * mesux ) );
+        $(".left.move").css( "left", parseInt( (nowx-1) * mesux *2) );
+        $(".left.move").css( "top", parseInt( (nowx-1) * mesux ) );
     };
     
     

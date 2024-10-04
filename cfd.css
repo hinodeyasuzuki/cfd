@@ -59,16 +59,9 @@ input[type="text"] {
 	display:none;
 }
 
-div.wall{
-	width:400px;
-	height:400px;
-	background-color:#fff;
-	position: absolute;
-	left:-80px;
-	top:180px;
-	transform: matrix(0.5, -0.5, 0, 1, 0, 0);
+div.move {
 	z-index:880;
-	opacity:0.6;
+	opacity:0.6;	
 }
 
 div.wall_base{
@@ -81,38 +74,13 @@ div.wall_base{
 	transform: matrix(0.5, -0.5, 0, 1, 0, 0);
 }
 
-div.wall2{
+div.front_base{
 	width:400px;
 	height:400px;
 	background-color:#fff;
 	position: absolute;
 	left:220px;
 	top:80px;
-	z-index:920;
-	opacity:0.6;
-
-}
-
-div.wall2_base{
-	width:400px;
-	height:400px;
-	background-color:#fff;
-	position: absolute;
-	left:220px;
-	top:80px;
-}
-
-div.floor{
-	width:400px;
-	height:400px;
-	background-color:#fff;
-	position: absolute;
-	left:120px;
-	top:380px;
-	transform: matrix(1, 0, -0.5, 0.5, 0, 0);
-	z-index:850;
-	opacity:0.6;
-
 }
 
 div.floor_base{
