@@ -1,9 +1,13 @@
 //計算結果に対応するグラフ表示
-// paramsets global
+//  フィールド定義
+//  計算結果の画像・表での表示
 
 class Graph {
 
-    constructor(){
+    //フィールド定義==================================================
+    constructor(cfd){
+        this.cfd = cfd;
+
         this.mesh_result = {};		//毎回の計算結果
         this.precalc = 0;
         this.canvas = [];
@@ -15,9 +19,13 @@ class Graph {
         this.Vel = [];			//速度ベクトル
     }
 
-    init = function(){
+    init = function(paramsets){
+        this.params = paramsets;
         this.canvasinit();    
         this.init_mesh();
+
+        this.batch_end = true;
+        this.cfd.meshset({ "val": this.params , "meshtype":this.meshtype });
     }
 
     //画面canvas初期設定
@@ -55,50 +63,6 @@ class Graph {
     };
 
 
-    //グラフアップデート：タイマーから呼び出し
-    // this.mesh_resultに結果が入っている
-    viewupdate = function(){
-        var data = this.mesh_result;
-
-        //更新されているか確認
-        if( data.calc != this.precalc){
-			this.precalc = data.count;
-            this.Vel = data.Vel;
-            this.Phi = data.Phi;
-            this.Prs = data.Prs;    
-
-            var totaltime = data.totaltime;
-            var acheat = data.acheat;
-            var heatleftin = data.heatin.heatleftin;
-            var heatfrontin = data.heatin.heatfrontin;
-
-            var temp = this.getTempMaxMin();
-
-            var cop = 5.0;  //エアコンCOP
-
-            sumwatt += 60/3600/cop * acheat;	
-            var disp = Math.floor(totaltime / 60) +  "分後" + "　　計算回数:" + data.count + "回 <br>"
-                    + "エアコン出力:" + parseInt(acheat) + "W　 <br>" 
-                    + "エアコン消費電力量" + parseInt(sumwatt)/1000 + "kWh　 <br>" 
-                    + "供給熱量" + parseInt(sumwatt*cop)/1000 + "kWh　 <br>" 
-                    + "左面　熱移動:" + parseInt(heatleftin) + "W　 <br>" 
-                    + "正面　熱移動:" + parseInt(heatfrontin) + "W　 <br>" 
-                    + "床面最大風速:" + parseInt(temp["floormaxvf"]*100)/100 + "(m/s)<br>" 
-                    + "床面最低温度" + parseInt(temp["floormin"]*10)/10 + "℃　<br>" 
-                    + "床面最高温度" + parseInt(temp["floormax"]*10)/10 +"℃　<br>"
-                    + "床面 平均温度" + parseInt(temp["floorav"]*10)/10 +"℃　<br>"
-                    + "左面 平均温度" + parseInt(temp["leftav"]*10)/10 +"℃　<br>"
-                    + "正面 平均温度" + parseInt(temp["frontav"]*10)/10 +"℃　<br>"
-                    + "部屋 平均温度" + parseInt(temp["totalav"]*10)/10 +"℃";
-            $("#step").html( disp );
-            $("#res").html( this.dump() );
-            this.graph();
-    
-            return true;
-        }
-        return false;   //更新されていない
-    }
-
     //フィールド初期設定　meshtype[][][] を設定
     init_mesh = function(){
 
@@ -110,21 +74,21 @@ class Graph {
         this.Vel[1] = this.init_3d();
         this.Vel[2] = this.init_3d();
 
-        var ObsX1 = parseInt(paramsets.ObsX1r*nMeshX/size_x+0.49);		//障害物X=0(WINDOW)からの距離
-        var ObsX2 = parseInt(paramsets.ObsX2r*nMeshX/size_x+0.49);		//障害物の厚さ
-        var ObsZr = parseInt(paramsets.ObsZ1r*nMeshZ/size_z+0.49);		//障害物のZ開始位置
-        var ObsZw = parseInt(paramsets.ObsZwr*nMeshZ/size_z);				//障害物の幅
-        var ObsY = parseInt(paramsets.ObsYr*nMeshY/size_y+0.49);			//障害物の高さ
+        var ObsX1 = parseInt(this.params.ObsX1r*nMeshX/size_x+0.49);		//障害物X=0(WINDOW)からの距離
+        var ObsX2 = parseInt(this.params.ObsX2r*nMeshX/size_x+0.49);		//障害物の厚さ
+        var ObsZr = parseInt(this.params.ObsZ1r*nMeshZ/size_z+0.49);		//障害物のZ開始位置
+        var ObsZw = parseInt(this.params.ObsZwr*nMeshZ/size_z);				//障害物の幅
+        var ObsY = parseInt(this.params.ObsYr*nMeshY/size_y+0.49);			//障害物の高さ
 
-        var WindowY = parseInt(paramsets.WindowYr*nMeshY/size_y+0.49);
-        var WindowH = parseInt(paramsets.WindowHr*nMeshY/size_y+0.49);
-        var WindowZ = parseInt(paramsets.WindowZr*nMeshZ/size_z+0.49);
-        var WindowW = parseInt(paramsets.WindowWr*nMeshZ/size_z+0.49);
+        var WindowY = parseInt(this.params.WindowYr*nMeshY/size_y+0.49);
+        var WindowH = parseInt(this.params.WindowHr*nMeshY/size_y+0.49);
+        var WindowZ = parseInt(this.params.WindowZr*nMeshZ/size_z+0.49);
+        var WindowW = parseInt(this.params.WindowWr*nMeshZ/size_z+0.49);
 
-        var Window2Y = parseInt(paramsets.Window2Yr*nMeshY/size_y+0.49);
-        var Window2H = parseInt(paramsets.Window2Hr*nMeshY/size_y+0.49);
-        var Window2X= parseInt(paramsets.Window2Xr*nMeshX/size_x+0.49);
-        var Window2W = parseInt(paramsets.Window2Wr*nMeshZ/size_x+0.49);
+        var Window2Y = parseInt(this.params.Window2Yr*nMeshY/size_y+0.49);
+        var Window2H = parseInt(this.params.Window2Hr*nMeshY/size_y+0.49);
+        var Window2X= parseInt(this.params.Window2Xr*nMeshX/size_x+0.49);
+        var Window2W = parseInt(this.params.Window2Wr*nMeshZ/size_x+0.49);
 
         //エアコン口の面積
         var ac_outsize = ac_width * ac_height;
@@ -166,7 +130,7 @@ class Graph {
                     //障害物
                     if ( i >= ObsX1 && i <= ObsX1 + ObsX2-1 
                         && k >= ObsZr + 0.5 && k <= ObsZr + ObsZw + 0.5
-                        && j >0 && j <= ObsY && paramsets.ObsSet == 1) 
+                        && j >0 && j <= ObsY && this.params.ObsSet == 1) 
                     {
                         this.meshtype[i][j][k] = OBSTACLE;	//障害物内部
                     }
@@ -201,7 +165,7 @@ class Graph {
                     }
                     
                     //サーキュレータ設置
-                    if ( paramsets.CirculatorWind > 0 ){
+                    if ( this.params.CirculatorWind > 0 ){
                         if ( j == 1 
                             && k == parseInt(nMeshZ/2)
                             && i == 1  
@@ -235,6 +199,68 @@ class Graph {
             }
         }
         return d;	//3D array
+    }
+
+    //計算実行================================
+    calc = function(recalc){
+        if( recalc ){
+            this.batch_end = false;
+            this.mesh_result = this.cfd.meshcalc();		//単時間計算
+        }
+
+        if(this.mesh_result.calc != this.precalc){
+            this.viewupdate();		    //結果があれば画面更新
+            this.batch_end = true;
+        }
+
+        //全体の計算時間上限
+		var endcalc = false;
+        if( this.mesh_result.totaltime/60 > this.params.maxtime_minute ||
+            this.mesh_result.count > this.params.maxtime 
+        ) {
+            endcalc = true;
+        }
+        return endcalc;
+    }
+
+
+    //グラフアップデート：================================
+    // this.mesh_resultに結果が入っている
+    viewupdate = function(){
+        var data = this.mesh_result;
+
+        this.precalc = data.count;
+        this.Vel = data.Vel;
+        this.Phi = data.Phi;
+        this.Prs = data.Prs;    
+
+        var totaltime = data.totaltime;
+        var acheat = data.acheat;
+        var heatleftin = data.heatin.heatleftin;
+        var heatfrontin = data.heatin.heatfrontin;
+
+        var temp = this.getTempMaxMin();
+
+        var cop = 5.0;  //エアコンCOP
+
+        sumwatt += 60/3600/cop * acheat;	
+        var disp = Math.floor(totaltime / 60) +  "分後" + "　　計算回数:" + data.count + "回 <br>"
+                + "エアコン出力:" + parseInt(acheat) + "W　 <br>" 
+                + "エアコン消費電力量" + parseInt(sumwatt)/1000 + "kWh　 <br>" 
+                + "供給熱量" + parseInt(sumwatt*cop)/1000 + "kWh　 <br>" 
+                + "左面　熱移動:" + parseInt(heatleftin) + "W　 <br>" 
+                + "正面　熱移動:" + parseInt(heatfrontin) + "W　 <br>" 
+                + "床面最大風速:" + parseInt(temp["floormaxvf"]*100)/100 + "(m/s)<br>" 
+                + "床面最低温度" + parseInt(temp["floormin"]*10)/10 + "℃　<br>" 
+                + "床面最高温度" + parseInt(temp["floormax"]*10)/10 +"℃　<br>"
+                + "床面 平均温度" + parseInt(temp["floorav"]*10)/10 +"℃　<br>"
+                + "左面 平均温度" + parseInt(temp["leftav"]*10)/10 +"℃　<br>"
+                + "正面 平均温度" + parseInt(temp["frontav"]*10)/10 +"℃　<br>"
+                + "部屋 平均温度" + parseInt(temp["totalav"]*10)/10 +"℃";
+        $("#step").html( disp );
+        $("#res").html( this.dump() );
+        this.graph();
+    
     }
 
 
@@ -341,7 +367,7 @@ class Graph {
     };
 
 
-    //グラフ描画 ===============================================
+    //結果グラフ描画 ===============================================
 
     //一括グラフ表示
     graph = function(){

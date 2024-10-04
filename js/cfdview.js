@@ -51,9 +51,10 @@ var timer = null;
 //canvas 関連設定
 var canvas = [];
 
-var cfd1 = new CFD();
-var graph1 = new Graph();
-var mesh_result = {};		//毎回の計算結果
+//計算インスタンス
+var pararel = 2;
+var cfd = [];
+var graph = [];
 
 
 // 計算開始=======================================
@@ -75,45 +76,60 @@ function calcStart() {
 	sumwatt = 0;
 	totaltime = 0;
 
-	//グラフ初期化
-	graph_init_mesh();
-
-	//計算初期設定
-	cfd1.meshset({ "val": paramsets , "meshtype":graph1.meshtype });
-
 	//時間ループ(単位：分)
 	timer = setInterval( function() {
-		graph1.mesh_result = cfd1.meshcalc();		//単時間計算
-		graph1.viewupdate();						//結果があれば画面更新
+		//グラフがすべて準備OKの場合再計算許可
+		var restart = true;
+		for( var i=0 ; i<pararel ; i++ ) {
+			restart &= graph[i].batch_end;
+		}
 
-		//タイマー最大
-		if( graph1.mesh_result.totaltime/60 > paramsets.maxtime_minute ){
+		//計算開始
+		var endcalc = false;
+		for( var i=0 ; i<pararel ; i++ ) {
+			endcalc |= graph[i].calc(restart);		//単位時間の実行
+		}
+
+		//時間上限に達したら終了
+		if (  endcalc ){
 			clearInterval( timer );
 		}
-		if( graph1.mesh_result.count > paramsets.maxtime ){
-			clearInterval( timer );
-		}
-	},20 );		//check by 20ms
+	},100 );		//check by 20ms
 };
 
 //結果表示cfdgraphの呼び出し（複数ある場合は並べる) ===========
 function graphInit(){
 	getInputs();
-	graph1.init();
-}
-
-function graphupdate(i){
-	graph1.graphupdate(i);
+	for( var i=0 ; i<pararel ; i++ ) {
+		graph[i].init(paramsets);
+	}
 }
 
 function graph_init_mesh(){
+	//設定パラメータの取得(共通)
 	getInputs();
-	graph1.init_mesh();
+
+	graph[0].init(paramsets);
+	graph[1].init(paramsets);
 }
+
+
+function graphupdate(xyz){
+	for( var i=0 ; i<pararel ; i++ ) {
+		graph[i].graphupdate(xyz);
+	}
+}
+
 
 
 //初期設定================================================
 $( function() {
+
+	for ( var i=0 ; i<pararel ; i++ ){
+		cfd[i] = new CFD();				//計算インスタンス
+		graph[i] = new Graph(cfd[i]);	//結果表示インスタンス	
+	}
+	
 	setInputsDefault();
 	dispSenarioButton();
 	graphInit();

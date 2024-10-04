@@ -1,7 +1,7 @@
 //入力変数定義
 var defInput = { 
 	"maxtime" : { title:"最大計算回数", "default":40000 },
-	"maxtime_minute" : { title:"最大計算時間(分)", "default":10 },
+	"maxtime_minute" : { title:"最大計算時間(分)", "default":20 },
 	"delta_t" : { title:"単位計算時間(秒)", "default":0.01 },
 	"size_x" : { title:"部屋幅X(m)", "default":3 },
 	"size_y" : { title:"部屋高さY(m)", "default":3 },

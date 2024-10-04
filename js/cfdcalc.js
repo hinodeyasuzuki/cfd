@@ -102,11 +102,11 @@ class CFD {
 		this.FloorPhi = ret.FloorPhi;
 		this.meshtype = data.meshtype;
 
-		this.init();						//初期化
+		this.init_mesh();						//初期化
 	}
 
 	//mesh initialize 
-	init = function(){
+	init_mesh = function(){
 		//フィールドサイズ
 		var NUM_MAX_X = nMeshX+1;
 		var NUM_MAX_Y = nMeshY+1;
@@ -216,7 +216,7 @@ class CFD {
 		this.acheatcount = 0;
 		this.heatleftcount = 0;
 
-		return returntoview
+		return returntoview;
 	}
 
 	//計算ルーチン　フラクショナルステップ法
@@ -579,6 +579,10 @@ class CFD {
 
 		var xp,xm, yp,ym,zp,zm;
 
+		//平均値を0とする
+		var pav = 0;
+		var pcount = 0;
+
 		for( i=1 ; i<=nMeshX ; i++ ) {
 			for( j=1 ; j<=nMeshY ; j++ ) {
 				for( k=1 ; k<=nMeshZ ; k++ ) {
@@ -592,6 +596,8 @@ class CFD {
 						zm = this.Prs[i][j][k-1];
 						this.tmp[0][i][j][k] = ( ( xp + xm ) / this.delta_x2 +  ( yp + ym ) / this.delta_y2 + ( zp + zm ) / this.delta_z2 - this.D[i][j][k] ) / A4;
 						perror = Math.abs(this.tmp[0][i][j][k] -  this.Prs[i][j][k]);
+						pav += this.tmp[0][i][j][k];
+						pcount++;
 						if ( perror > maxError ) {
 							maxError = perror;
 						}
@@ -605,7 +611,7 @@ class CFD {
 			for( j=0 ; j<=nMeshY+1 ; j++ ) {
 				for( k=0 ; k<=nMeshZ+1 ; k++ ) {
 					if ( this.isCellAir(i,j,k) ) {
-						this.Prs[i][j][k] = this.tmp[0][i][j][k];
+						this.Prs[i][j][k] = this.tmp[0][i][j][k] - pav/pcount;
 					}
 				}
 			}
