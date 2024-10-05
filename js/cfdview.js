@@ -29,6 +29,7 @@ http://www.hinodeya-ecolife.com
 
 //共通設定
 var paramsets = {};	//保存設定値
+var paramsets_g2 = {};	//保存設定値
 
 //結果グラフ
 var tmax = 0;
@@ -52,9 +53,55 @@ var timer = null;
 var canvas = [];
 
 //計算インスタンス
-var pararel = 2;
 var cfd = [];
 var graph = [];
+
+//IDタグの前置き文字の設定
+var graph_id_prefix = [ "", "G2_" ];
+
+//初期設定================================================
+$( function() {
+	for ( var i=0 ; i<pararel ; i++ ){
+		cfd[i] = new CFD();				//計算インスタンス
+		graph[i] = new Graph(cfd[i],graph_id_prefix[i]);	//結果表示インスタンス	
+	}
+	
+	setInputsDefault();
+	dispSenarioButton();
+	graph_init_mesh();
+
+	$(".vresult").hide();
+	$(".vresult").css("opacity", 0.6);
+
+});
+
+//入力コンポーネントの初期設定
+function setInputsDefault(){
+	//パラメータを設定する
+	for( var d in defInput ){
+		paramsets[d] = defInput[d].default;
+		paramsets_g2[d] = defInput[d].default;
+		$("#" + d ).val(defInput[d].default);
+		$("#G2_" + d ).val(defInput[d].default);
+	}
+};
+
+//シナリオ設定ボタンの設置
+function dispSenarioButton(){
+	var disp = "";
+	for( var d in defSenario ){
+		disp += "<p>■" + defSenario[d].group + "</p><div style='padding-left:10px;'>";
+		for ( var e in defSenario[d].data ) {
+			disp += "<input type='button' class='d" + d + ( defSenario[d].data[e].default == 1 ? " select" : "" ) + "' value='" + defSenario[d].data[e].title + "' onclick='btnSenario(" + d + "," + e + ");$(this).addClass(\"select\");'>";
+			if ( defSenario[d].data[e].default == 1 ) {
+				btnSenario( d ,e, true );
+			}
+		}
+		disp += "</div>";
+	}
+	$("div#senarioButtons").html( disp );
+	$("div#G2_senarioButtons").html( disp );
+};
 
 
 // 計算開始=======================================
@@ -72,6 +119,11 @@ function calcStart() {
 	$("#v_settei").prop("checked",false);
 	$(".vresult").show();
 	$(".vresult").css("opacity", 0.9);
+
+	//正面を前に表示する
+	this.layerz(0);
+
+	this.graph_init_mesh();
 
 	sumwatt = 0;
 	totaltime = 0;
@@ -98,21 +150,14 @@ function calcStart() {
 };
 
 //結果表示cfdgraphの呼び出し（複数ある場合は並べる) ===========
-function graphInit(){
-	getInputs();
-	for( var i=0 ; i<pararel ; i++ ) {
-		graph[i].init(paramsets);
-	}
-}
-
 function graph_init_mesh(){
 	//設定パラメータの取得(共通)
 	getInputs();
-
 	graph[0].init(paramsets);
-	graph[1].init(paramsets);
+	if ( pararel == 2 ){
+		graph[1].init(paramsets_g2);
+	}
 }
-
 
 function graphupdate(xyz){
 	for( var i=0 ; i<pararel ; i++ ) {
@@ -122,49 +167,6 @@ function graphupdate(xyz){
 
 
 
-//初期設定================================================
-$( function() {
-
-	for ( var i=0 ; i<pararel ; i++ ){
-		cfd[i] = new CFD();				//計算インスタンス
-		graph[i] = new Graph(cfd[i]);	//結果表示インスタンス	
-	}
-	
-	setInputsDefault();
-	dispSenarioButton();
-	graphInit();
-
-	$(".vresult").hide();
-	$(".vresult").css("opacity", 0.6);
-
-});
-
-//入力コンポーネントの初期設定
-function setInputsDefault(){
-	//パラメータを設定する
-	for( var d in defInput ){
-		paramsets[d] = defInput[d].default;
-		$("#" + d ).val(defInput[d].default);
-	}
-};
-
-//シナリオ設定ボタンの設置
-function dispSenarioButton(){
-	var disp = "";
-	for( var d in defSenario ){
-		disp += "<p>■" + defSenario[d].group + "</p><div style='padding-left:10px;'>";
-		for ( var e in defSenario[d].data ) {
-			disp += "<input type='button' class='d" + d + ( defSenario[d].data[e].default == 1 ? " select" : "" ) + "' value='" + defSenario[d].data[e].title + "' onclick='btnSenario(" + d + "," + e + ");$(this).addClass(\"select\");'>";
-			if ( defSenario[d].data[e].default == 1 ) {
-				btnSenario( d ,e, true );
-			}
-		}
-		disp += "</div>";
-	}
-	$("div#senarioButtons").html( disp );
-};
-
-
 //画面操作での動作 ===============================================
 
 //入力欄からの値の読込と反映
@@ -172,7 +174,15 @@ function getInputs(){
 	//パラメータをHTMLから設定する
 	for( var d in defInput ){
 		paramsets[d] = parseFloat( $("#" + d ).val() );
+		paramsets_g2[d] = parseFloat( $("#" + d ).val() );
 	}
+	for( var d in defInput ){
+		if( $("#G2_" + d ).val() ){
+			paramsets_g2[d] = parseFloat( $("#G2_" + d ).val() );
+		}
+	}
+	console.log(paramsets);
+	console.log(paramsets_g2);
 
 	//global基準値の設定
 	nMeshX = paramsets.nMeshX;
@@ -209,7 +219,7 @@ function layerup( dy ) {
 			nowy++;
 			graphupdate(1);
 		}
-	} else {
+	} else if( dy < 0 ){
 		if ( nowy > 1 ) {
 			nowy--;
 			graphupdate(1);
@@ -228,7 +238,7 @@ function layerz( dz ) {
 			nowz++;
 			graphupdate(2);
 		}
-	} else {
+	} else if( dz < 0 ) {
 		if ( nowz > 1 ) {
 			nowz--;
 			graphupdate(2);
@@ -246,7 +256,7 @@ function layerx( dx ) {
 			nowx++;
 			graphupdate(0);
 		}
-	} else {
+	} else if( dx < 0 ) {
 		if ( nowx > 1 ) {
 			nowx--;
 			graphupdate(0);

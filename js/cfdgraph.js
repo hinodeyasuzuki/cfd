@@ -5,8 +5,9 @@
 class Graph {
 
     //フィールド定義==================================================
-    constructor(cfd){
+    constructor(cfd,prefix){
         this.cfd = cfd;
+        this.prefix = prefix;
 
         this.mesh_result = {};		//毎回の計算結果
         this.precalc = 0;
@@ -30,21 +31,11 @@ class Graph {
 
     //画面canvas初期設定
     canvasinit = function(){
-        $("#wall_base").height(cy).width(cx);
-        $("#wall2_base").height(cy).width(cx);
-        $("#floor_base").height(cy).width(cx);
-        $("#graphbase").height(cy).width(cx);
-
         for( var i=0 ; i<3 ; i++ ){
             this.canvas[i] = [];
-            this.canvas[i].graph = document.getElementById('graph'+i);
-            this.canvas[i].base = document.getElementById('graph'+i+'base');
-            this.canvas[i].layout = document.getElementById('layout'+i);
-            // if (typeof G_vmlCanvasManager != 'undefined') {
-            //     this.canvas[i].graph = G_vmlCanvasManager.initElement(this.canvas[i].graph);
-            //     this.canvas[i].base = G_vmlCanvasManager.initElement(this.canvas[i].base);
-            //     this.canvas[i].layout = G_vmlCanvasManager.initElement(this.canvas[i].layout);
-            // }
+            this.canvas[i].graph = document.getElementById(this.prefix+'graph'+i);
+            this.canvas[i].base = document.getElementById(this.prefix+'graph'+i+'base');
+            this.canvas[i].layout = document.getElementById(this.prefix+'layout'+i);
             this.canvas[i].ctxgraph = this.canvas[i].graph.getContext('2d');
             this.canvas[i].ctxbase = this.canvas[i].base.getContext('2d');
             this.canvas[i].ctxlayout = this.canvas[i].layout.getContext('2d');
@@ -52,7 +43,7 @@ class Graph {
 
         //legend
         this.canvas[3] = [];
-        this.canvas[3].camvas = document.getElementById('legend');
+        this.canvas[3].camvas = document.getElementById(this.prefix+'legend');
         if (typeof G_vmlCanvasManager != 'undefined') {
             this.canvas[3].camvas = G_vmlCanvasManager.initElement(this.canvas[3].camvas);
         }
@@ -254,8 +245,8 @@ class Graph {
                 + "左面 平均温度" + parseInt(temp["leftav"]*10)/10 +"℃　<br>"
                 + "正面 平均温度" + parseInt(temp["frontav"]*10)/10 +"℃　<br>"
                 + "部屋 平均温度" + parseInt(temp["totalav"]*10)/10 +"℃";
-        $("#step").html( disp );
-        $("#res").html( this.dump() );
+        $("#"+this.prefix+"step").html( disp );
+        $("#"+this.prefix+"res").html( this.dump() );
         this.graph();
     
     }

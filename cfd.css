@@ -34,20 +34,22 @@ div#graphs{
 div.field{
 	float:left;
 	display:inline-table;
-	width:68%;
-	min-width:605px;
-	height:950px;
+	width:610px;
+	height:750px;
 	background-color:#ddd;
 	position: relative;
 }
 
-
 div.control{
+	float:left;
+	padding:5px;
 	display:inline-table;
-	width:28%;
-	min-width:200px;
+	width:340px;
 	height:400px;
 	background-color:#bff;
+}
+div.control2{
+	background-color:#efe;
 }
 
 input[type="text"] {
@@ -59,8 +61,12 @@ input[type="text"] {
 	display:none;
 }
 
-div.move {
-	z-index:880;
+.vresult.base {
+	z-index:200;
+	opacity:0.6;	
+}
+.vresult.move {
+	z-index:400;
 	opacity:0.6;	
 }
 

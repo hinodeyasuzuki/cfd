@@ -31,6 +31,9 @@
 	<script src="./js/jquery-ui.min.js"></script>
 	<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.14.0/jquery-ui.min.js"></script> -->
+	<script>
+		var pararel = 1;
+	</script>
 	<script src="./js/cfdcalc.js"></script>
 	<script src="./js/scenario.js"></script>
 	<script src="./js/setting.js"></script>
@@ -56,23 +59,23 @@
 		</div>
 
 		<!-- wall left side with window -->
-		<div class="wall_base ">
+		<div class="wall_base">
 			<canvas class="setting" id="layout0" width="400" height="400"></canvas>
-			<canvas class="vresult" id="graph0base" width="400" height="400"></canvas>
+			<canvas class="vresult base" id="graph0base" width="400" height="400"></canvas>
 			<canvas class="vresult move left" id="graph0" width="400" height="400"></canvas>
 		</div>
 
 		<!-- front view of wall, code is top -->
 		<div class="front_base">
 			<canvas class="setting" id="layout2" width="400" height="400"></canvas>
-			<canvas class="vresult" id="graph2base" width="400" height="400"></canvas>
+			<canvas class="vresult base" id="graph2base" width="400" height="400"></canvas>
 			<canvas class="vresult move front" id="graph2" width="400" height="400"></canvas>
 		</div>
 
 		<!-- floor -->
 		<div class="floor_base">
 			<canvas class="setting" id="layout1" width="400" height="400"></canvas>
-			<canvas class="vresult" id="graph1base" width="400" height="400"></canvas>
+			<canvas class="vresult base" id="graph1base" width="400" height="400"></canvas>
 			<canvas class="vresult move floor" id="graph1" width="400" height="400"></canvas>
 		</div>
 	</div>
@@ -93,16 +96,7 @@
 		</tr>
 	</table>
 
-	<div style="position:relative;top:700px;margin:10px;padding:10px;background-color:#fff;">
-		<h3>表示フィールドの概要</h3>
-		<p>　家屋のうちの、壁で囲われた直方体の一部屋を計算エリアとしています。表示では立方体の3面が表示されていますが、部屋のサイズに応じて実際に計算・表示されるのは、白色を除いた薄黄色の範囲です。表示サイズは最長軸の長さに合わせて自動的に調整されています。</p>
-		<p>　画面設定で、レイアウトと結果画面のレイヤー表示をON/OFFできます。レイアウト画面では、水色が窓、薄黄色が壁面と床面を表します。</p>
-		<p>　結果画面では、メッシュの色を温度、矢印の長さを風速で表示します。</p>
-		<p>　計算等に関する詳しい説明は、<a href="about.html">解説ページ</a>を参照してください。</p>
-	</div>
-	
 </div><!--// field with legend-->
-
 
 
 <!----------------------- control - settings　-------------->
@@ -122,7 +116,6 @@
 		<div id="senarioButtons"></div>
 	</div>
 	
-
 	<!-- control - detail setting -->
 	<div class="tabcontents" id="tab2c" style="display:none;">
 		<h2>詳細設定値</h2>
@@ -229,20 +222,14 @@
 		</tr>
 		</table>
 	</div>
+</div>
 
+<div class="control control2">
 	<!-- control - display setting ( common ) -->
-	<h2>画面設定</h2>
+	 <br />
+	<h2>画面表示</h2>
 	<p>　表示する内容とレイヤー（層）を変更できます。計算中でも変更可能です。</p>
 	<table>
-<!--
-	<tr>
-		<th>画面表示</th>
-		<td>
-			<input type="checkbox" id="v_settei" checked="checked" onclick="setteiviewChange();">レイアウト・設定画面<br>
-			<input type="checkbox" id="v_result" onclick="resultviewChange();">結果画面
-		</td>
-	</tr>
--->
 	<tr>
 		<td><br>水平面の移動<br>
 			<div id="layery"></div><br>
@@ -331,6 +318,16 @@
 	<h2>計算結果の数値表  <input type="button" value="表示/非表示" onclick="$('#res').toggle();"></h2>
 	<textarea id="res" style="display:none"  rows=20 cols=80></textarea>
 </div><!--// detail_matrix -->
+
+
+<div style="margin:10px;padding:10px;background-color:#fff;">
+	<h3>表示フィールドの概要</h3>
+	<p>　家屋のうちの、壁で囲われた直方体の一部屋を計算エリアとしています。表示では立方体の3面が表示されていますが、部屋のサイズに応じて実際に計算・表示されるのは、白色を除いた薄黄色の範囲です。表示サイズは最長軸の長さに合わせて自動的に調整されています。</p>
+	<p>　画面設定で、レイアウトと結果画面のレイヤー表示をON/OFFできます。レイアウト画面では、水色が窓、薄黄色が壁面と床面を表します。</p>
+	<p>　結果画面では、メッシュの色を温度、矢印の長さを風速で表示します。</p>
+	<p>　計算等に関する詳しい説明は、<a href="about.html">解説ページ</a>を参照してください。</p>
+</div>
+
 
 
 <!-- footer -->

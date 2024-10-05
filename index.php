@@ -33,4 +33,8 @@ fwrite($fp,
 );
 fclose($fp);
 
-include "index_template.php";
+if( @$_GET["g"] == 2 ){
+	include "index_2g_template.php";
+} else {
+	include "index_template.php";
+}

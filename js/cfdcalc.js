@@ -529,36 +529,34 @@ class CFD {
 					if ( this.isCellAir(i,j,k) ) {
 						//1611 CL追加
 
-					if ( this.fgPoissonConvection == 1 ) {	
-						// 160210 中心差分でないと値がでない
-						//中心差分
-						a = (this.Vel[x][i+1][j][k] - this.Vel[x][i-1][j][k]) /2 / this.delta_x;
-						b = (this.Vel[y][i][j+1][k] - this.Vel[y][i][j-1][k]) /2 / this.delta_y;
-						c = (this.Vel[z][i][j][k+1] - this.Vel[z][i][j][k-1]) /2 / this.delta_z;
+						if ( this.fgPoissonConvection == 1 ) {	
+							// 160210 中心差分でないと値がでない
+							//中心差分
+							a = (this.Vel[x][i+1][j][k] - this.Vel[x][i-1][j][k]) /2 / this.delta_x;
+							b = (this.Vel[y][i][j+1][k] - this.Vel[y][i][j-1][k]) /2 / this.delta_y;
+							c = (this.Vel[z][i][j][k+1] - this.Vel[z][i][j][k-1]) /2 / this.delta_z;
 
-					} else {
-						//前進差分
-						if( this.Vel[x][i][j][k] > 0 ) {
-							a = (this.Vel[x][i][j][k] - this.Vel[x][i-1][j][k]) / this.delta_x;
 						} else {
-							a = (this.Vel[x][i+1][j][k] - this.Vel[x][i][j][k]) / this.delta_x;
+							//前進差分
+							if( this.Vel[x][i][j][k] > 0 ) {
+								a = (this.Vel[x][i][j][k] - this.Vel[x][i-1][j][k]) / this.delta_x;
+							} else {
+								a = (this.Vel[x][i+1][j][k] - this.Vel[x][i][j][k]) / this.delta_x;
+							}
+							if( this.Vel[y][i][j][k] > 0 ) {
+								b = (this.Vel[y][i][j][k] - this.Vel[y][i][j-1][k]) / this.delta_y;
+							} else {
+								b = (this.Vel[y][i][j+1][k] - this.Vel[y][i][j][k]) / this.delta_y;
+							}
+							if( this.Vel[z][i][j][k] > 0 ) {
+								c = (this.Vel[z][i][j][k] - this.Vel[z][i][j][k-1]) / this.delta_z;
+							} else {
+								c = (this.Vel[z][i][j][k+1] - this.Vel[z][i][j][k]) / this.delta_z;
+							}
 						}
-						if( this.Vel[y][i][j][k] > 0 ) {
-							b = (this.Vel[y][i][j][k] - this.Vel[y][i][j-1][k]) / this.delta_y;
-						} else {
-							b = (this.Vel[y][i][j+1][k] - this.Vel[y][i][j][k]) / this.delta_y;
-						}
-						if( this.Vel[z][i][j][k] > 0 ) {
-							c = (this.Vel[z][i][j][k] - this.Vel[z][i][j][k-1]) / this.delta_z;
-						} else {
-							c = (this.Vel[z][i][j][k+1] - this.Vel[z][i][j][k]) / this.delta_z;
-						}
-					}
 
-					//170630 rou追加
-					this.D[i][j][k] = (a + b + c) * this.rou / this.delta_t;
-					// if ( this.D[i][j][k] > maxD )
-					// 	maxD = this.D[i][j][k];
+						//170630 rou追加
+						this.D[i][j][k] = (a + b + c) * this.rou / this.delta_t;
 					}
 				}
 			}
