@@ -17,12 +17,14 @@ var z = 2;
 var dotx = 400;
 var doty = 400;
 var dotz = 400;
-var nMeshX = 8;			//メッシュ数(入力値で変更)
+
+//初期値
+var nMeshX = 12;			//メッシュ数(入力値で変更)
 var nMeshY = 8;
-var nMeshZ = 8;
-var size_x = 3;			//物理スケール （m）
-var size_y = 3;
-var size_z = 3;
+var nMeshZ = 9;
+var size_x = 3.6;			//物理スケール （m）
+var size_y = 2.4;
+var size_z = 2.7;
 
 //エアコン吹き出しサイズ m
 var ac_width = 0.8;
