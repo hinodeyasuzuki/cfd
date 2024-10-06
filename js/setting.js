@@ -34,6 +34,9 @@ var ac_height = 0.2;
 var cx = 400;
 var cy = 400;
 
+//計算バッチの時間(秒) 5-20
+var batch_sec = 20;
+
 //1メッシュあたりの画面上のドット数（軸ごと）
 var mesux, mesuy, mesuz;
 

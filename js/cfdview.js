@@ -128,12 +128,26 @@ function calcStart() {
 	sumwatt = 0;
 	totaltime = 0;
 
+	var starttime = new Date();
+	var nowtime = starttime;
+
 	//時間ループ(単位：分)
 	timer = setInterval( function() {
 		//グラフがすべて準備OKの場合再計算許可
 		var restart = true;
 		for( var i=0 ; i<pararel ; i++ ) {
 			restart &= graph[i].batch_end;
+		}
+		
+		if( restart ){
+			nowtime = new Date();
+			if( nowtime.getTime() - starttime.getTime() > 500 ){
+				batch_sec /= 2;
+			}
+			if( nowtime.getTime() - starttime.getTime() < 100 ){
+				batch_sec *= 2;
+			}
+			starttime = nowtime;
 		}
 
 		//計算開始
@@ -182,8 +196,6 @@ function getInputs(){
 			paramsets_g2[d] = parseFloat( $("#G2_" + d ).val() );
 		}
 	}
-	console.log(paramsets);
-	console.log(paramsets_g2);
 
 	//global基準値の設定
 	nMeshX = paramsets.nMeshX;
@@ -193,6 +205,7 @@ function getInputs(){
 	size_y = paramsets.size_y;
 	size_z = paramsets.size_z;
 	ACwall = paramsets.ACwall;
+	batch_sec = paramsets.batch_sec;
 	meshUnitCalc();		//setting.js
 };
 

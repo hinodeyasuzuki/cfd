@@ -3,12 +3,13 @@ var defInput = {
 	"maxtime" : { title:"最大計算回数", "default":40000 },
 	"maxtime_minute" : { title:"最大計算時間(分)", "default":20 },
 	"delta_t" : { title:"単位計算時間(秒)", "default":0.01 },
+	"batch_sec" : { title:"バッチ計算時間(秒)", "default":20 },
 	"size_x" : { title:"部屋幅X(m)", "default":3 },
 	"size_y" : { title:"部屋高さY(m)", "default":3 },
 	"size_z" : { title:"部屋奥行Z(m)", "default":3 },
-	"nMeshX" : { title:"計算分割数X", "default":15 },
-	"nMeshY" : { title:"計算分割数X", "default":6 },
-	"nMeshZ" : { title:"計算分割数X", "default":12 },
+	"nMeshX" : { title:"計算分割数X", "default":12 },
+	"nMeshY" : { title:"計算分割数X", "default":8 },
+	"nMeshZ" : { title:"計算分割数X", "default":9 },
 	
 	"InsidePhi" : { title:"室内温度（℃）", "default":15 },
 	"ObsPhi" : { title:"障害物/パネルヒータ温度", "default":15 },
@@ -123,12 +124,14 @@ var defSenario = [
 	{ 
 		title:"高速",
 		default:1,
+		batch_sec:20,
 		nMeshX:nMeshX,
 		nMeshY:nMeshY,
 		nMeshZ:nMeshZ,
 	},
 	{ 
 		title:"詳細",
+		batch_sec:5,
 		nMeshX:nMeshX*2,
 		nMeshY:nMeshY*2,
 		nMeshZ:nMeshZ*2,
@@ -208,6 +211,7 @@ var defSenario = [
 		ObsPhi:10,
 		FloorPhi:10,
 		maxtime_minute:20,
+		batch_sec:5,
 	},
 	{
 		title:"弱風",
@@ -217,6 +221,7 @@ var defSenario = [
 		ObsPhi:10,
 		FloorPhi:10,
 		maxtime_minute:20,
+		batch_sec:10,
 	},
 	{
 		title:"自動送風",
@@ -226,6 +231,7 @@ var defSenario = [
 		ObsPhi:10,
 		FloorPhi:10,
 		maxtime_minute:20,
+		batch_sec:5,
 	},
 	{
 		title:"なし（室温18℃）",
@@ -237,6 +243,7 @@ var defSenario = [
 		ObsPhi:18,
 		FloorPhi:18,
 		maxtime_minute:60,
+		batch_sec:20,
 	}
 	]
 },

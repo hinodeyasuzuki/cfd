@@ -54,7 +54,10 @@ class Graph {
     //フィールド初期設定　meshtype[][][] を設定
     init_mesh = function(){
 
+        //メッシュの設定
         this.meshtype = this.init_3d();
+
+        //結果表示用
         this.Phi = this.init_3d();
         this.Prs = this.init_3d();
         this.Vel = Array( 3 );

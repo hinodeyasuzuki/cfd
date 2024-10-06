@@ -180,7 +180,7 @@ class CFD {
 
 	//単位時間分の計算---------------------------------------
 	meshcalc = function() {
-		var sec = 20;
+		var sec = batch_sec;	//5秒ごとに値を返す->外から設定
 		var error = 0;
 		while(1){
 			this.count++;
@@ -199,7 +199,7 @@ class CFD {
 		var heatin = {};
 		heatin.heatleftin = ( this.heatleftcount ? this.sumheatleft / this.heatleftcount : 0 );
 		heatin.heatfrontin = ( this.heatleftcount ? this.sumheatfront / this.heatleftcount : 0 );
-		//シミュレーション内時間1分ごとに値を返す
+		//シミュレーション内時間ごとに値を返す
 		var returntoview = { 
 			"error": error,
 			"count": this.count,

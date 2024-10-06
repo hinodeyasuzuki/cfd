@@ -123,7 +123,10 @@
 
 
 <p style="clear:both;margin:10px;"></p>
-<div style="text-align:center;"><input type="button" value="計算開始" style="height:50px;width:200px;" onclick="calcStart();"></div>
+<div style="text-align:center;">
+	<input type="button" value="計算開始" style="height:50px;width:200px;" onclick="calcStart();">
+	<input type="button" value="計算終了" style="height:50px;width:200px;" onclick="clearInterval( timer );">
+</div>
 
 <!----------------------- control - settings　-------------->
 <p style="clear:both"></p>
@@ -228,6 +231,9 @@
 			</tr>
 			<tr>
 				<th>最大計算時間（分）</th><td><input type="text" id="maxtime_minute" value="10"></td>
+			</tr>
+			<tr>
+				<th>バッチ時間（秒）</th><td><input type="text" id="batch_sec" value="20"></td>
 			</tr>
 			<tr>
 				<td colspan=2></td>

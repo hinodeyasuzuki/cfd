@@ -81,225 +81,220 @@
 
 
 <!----------------------- control - settings　-------------->
+<div class="controls">
+	<div style="text-align:center;position:relative;top:-1.5em;">
+		<input type="button" value="計算開始" style="height:50px;width:100px;" onclick="calcStart();">
+		<input type="button" value="計算終了" style="height:50px;width:100px;" onclick="clearInterval( timer );">
+	</div>
+	<div class="control">
+		
+		<div class="tab">
+			<span id="tab1" class="selected" onclick="tabChange(1);">簡易設定</span>
+			<span id="tab2" onclick="tabChange(2);">詳細設定</span>
+			<span id="tab3" onclick="tabChange(3);">計算結果</span>
+		</div>
 
-<div class="control">
-	<div class="tab">
-		<span id="tab1" class="selected" onclick="tabChange(1);">簡易設定</span>
-		<span id="tab2" onclick="tabChange(2);">詳細設定</span>
-		<span id="tab3" onclick="tabChange(3);">計算結果</span>
+		<!-- control - easy setting -->
+		<div class="tabcontents" id="tab1c">
+			<h2>簡易シナリオ設定</h2>
+			<p>　条件設定を選択してください。必要に応じて「詳細設定」で確認・設定できます。</p>
+			<div id="senarioButtons"></div>
+		</div>
+		
+		<!-- control - detail setting -->
+		<div class="tabcontents" id="tab2c" style="display:none;">
+			<h2>詳細設定値</h2>
+			<p>　詳細な条件設定ができます。</p>
+			<table id="detailSet">
+			<tr>
+				<th>部屋横X(m)</th><td><input type="text" id="size_x" value="3"></td>
+			</tr>
+			<tr>
+				<th>部屋高さY(m)</th><td><input type="text" id="size_y" value="3"></td>
+			</tr>
+			<tr>
+				<th>部屋奥行Z(m)</th><td><input type="text" id="size_z" value="3"></td>
+			</tr>
+			<tr>
+				<th>計算分割数X</th><td><input type="text" id="nMeshX" value="8"></td>
+			</tr>
+			<tr>
+				<th>計算分割数Y</th><td><input type="text" id="nMeshY" value="8"></td>
+			</tr>
+			<tr>
+				<th>計算分割数Z</th><td><input type="text" id="nMeshZ" value="8"></td>
+			</tr>
+			<tr>
+				<th>屋外気温（℃）</th><td><input type="text" id="InletPhi" value="5"></td>
+			</tr>
+			<tr>
+				<th>室内気温（℃）</th><td><input type="text" id="InsidePhi" value="17"></td>
+			</tr>
+			<tr>
+				<th>床面温度（℃）</th><td><input type="text" id="FloorPhi" value="17"></td>
+			</tr>
+
+			<tr>
+				<th>障害物温度（℃）</th><td><input type="text" id="ObsPhi" value="17"></td>
+			</tr>
+
+			<tr>
+				<th>窓の断熱性能</th><td>
+					<select id="windowKset">
+						<option value="6">アルミ枠単板ガラス</option>
+						<option value="3">アルミ枠複層ガラス</option>
+						<option value="2">樹脂枠複層ガラス</option>
+						<option value="1.5">樹脂枠Low-e複層ガラス</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<th>外壁の断熱性能</th><td>
+					<select id="wallKset">
+						<option value="2.5">無断熱</option>
+						<option value="1">グラスウール30mm</option>
+						<option value="0.6">グラスウール50mm</option>
+						<option value="0.3">グラスウール100mm</option>
+						<option value="0.15">グラスウール200mm</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<th>障害物設置</th><td>
+					<select id="ObsSet">
+						<option value=1>設置する</option>
+						<option value=2>設置しない</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<th>エアコン設置</th><td>
+					<select id="ACwall">
+						<option value=1>窓側</option>
+						<option value=2>正面</option>
+						<option value=3>右面</option>
+						<option value=4 selected>設置しない</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<th>エアコン風速(m/s)</th><td><input type="text" id="ACwind" value="2"></td>
+			</tr>
+			<tr>
+				<th>サーキュレータ風速(m/s)</th><td><input type="text" id="CirculatorWind" value="0"></td>
+			</tr>
+			<tr>
+				<th>最大計算時間（分）</th><td><input type="text" id="maxtime_minute" value="10"></td>
+			</tr>
+			<tr>
+				<th>バッチ時間（秒）</th><td><input type="text" id="batch_sec" value="20"></td>
+			</tr>
+			<tr>
+				<td colspan=2></td>
+			</tr>
+			</table>
+		</div>
+
+		<!-- control - calclation execute -->
+		<div class="tabcontents" id="tab3c" style="display:none">
+			<h2>計算実行状況</h2>
+			<div id="step">未実行</div>
+		</div>
 	</div>
 
-	<!-- control - easy setting -->
-	<div class="tabcontents" id="tab1c">
-		<h2>簡易シナリオ設定</h2>
-		<p>　条件設定を選択してください。必要に応じて「詳細設定」で確認・設定できます。</p>
-		<div style="text-align:right;"><input type="button" value="計算開始" style="height:30px;" onclick="calcStart();"></div>
-		<div id="senarioButtons"></div>
-	</div>
-	
-	<!-- control - detail setting -->
-	<div class="tabcontents" id="tab2c" style="display:none;">
-		<h2>詳細設定値</h2>
-		<p>　詳細な条件設定ができます。</p>
-		<div style="text-align:right;"><input type="button" value="計算開始" style="height:30px;" onclick="calcStart();"></div>
-		<table id="detailSet">
+	<div class="control control2">
+		<!-- control - display setting ( common ) -->
+		<br />
+		<h2>結果画面レイヤー</h2>
+		<p>　表示する内容とレイヤー（層）を変更できます。計算中でも変更可能です。</p>
+		<table>
 		<tr>
-			<th>部屋横X(m)</th><td><input type="text" id="size_x" value="3"></td>
+			<td><br>水平面の移動<br>
+				<div id="layery"></div><br>
+				<input type="button" value="　上　" onclick="layerup(1);"><br>
+				↑<br>
+				↓<br>
+				<input type="button" value="　下　" onclick="layerup(-1);">
+			</td>
+			<td><br>正面の移動（奥行き）<br>
+				<div id="layerz"></div><br>
+				　　　　　<input type="button" value="　奥　" onclick="layerz(1);"><br>
+				　　　　／<br>
+				　　　／<br>
+				<input type="button" value="　手前　" onclick="layerz(-1);">
+			</td>
 		</tr>
 		<tr>
-			<th>部屋高さY(m)</th><td><input type="text" id="size_y" value="3"></td>
+			<td>左側面の移動</td>
+			<td><input type="button" value="　左　" onclick="layerx(-1);">←→<input type="button" value="　右　" onclick="layerx(1);"></td>
 		</tr>
 		<tr>
-			<th>部屋奥行Z(m)</th><td><input type="text" id="size_z" value="3"></td>
+			<td>矢印の大きさ</td>
+			<td><input type="button" value="　拡大　"  onclick="graphresize(0.7);">←→<input type="button" value="　縮小　" onclick="graphresize(1.3);"></td>
 		</tr>
-		<tr>
-			<th>計算分割数X</th><td><input type="text" id="nMeshX" value="8"></td>
-		</tr>
-		<tr>
-			<th>計算分割数Y</th><td><input type="text" id="nMeshY" value="8"></td>
-		</tr>
-		<tr>
-			<th>計算分割数Z</th><td><input type="text" id="nMeshZ" value="8"></td>
-		</tr>
-		<tr>
-			<th>屋外気温（℃）</th><td><input type="text" id="InletPhi" value="5"></td>
-		</tr>
-		<tr>
-			<th>室内気温（℃）</th><td><input type="text" id="InsidePhi" value="17"></td>
-		</tr>
-		<tr>
-			<th>床面温度（℃）</th><td><input type="text" id="FloorPhi" value="17"></td>
-		</tr>
+		</table>	
+	</div><!--// control -->
 
-		<tr>
-			<th>障害物温度（℃）</th><td><input type="text" id="ObsPhi" value="17"></td>
-		</tr>
 
-		<tr>
-			<th>窓の断熱性能</th><td>
-				<select id="windowKset">
-					<option value="6">アルミ枠単板ガラス</option>
-					<option value="3">アルミ枠複層ガラス</option>
-					<option value="2">樹脂枠複層ガラス</option>
-					<option value="1.5">樹脂枠Low-e複層ガラス</option>
-				</select>
-			</td>
-		</tr>
-		<tr>
-			<th>外壁の断熱性能</th><td>
-				<select id="wallKset">
-					<option value="2.5">無断熱</option>
-					<option value="1">グラスウール30mm</option>
-					<option value="0.6">グラスウール50mm</option>
-					<option value="0.3">グラスウール100mm</option>
-					<option value="0.15">グラスウール200mm</option>
-				</select>
-			</td>
-		</tr>
-		<tr>
-			<th>障害物設置</th><td>
-				<select id="ObsSet">
-					<option value=1>設置する</option>
-					<option value=2>設置しない</option>
-				</select>
-			</td>
-		</tr>
-		<tr>
-			<th>エアコン設置</th><td>
-				<select id="ACwall">
-					<option value=1>窓側</option>
-					<option value=2>正面</option>
-					<option value=3>右面</option>
-					<option value=4 selected>設置しない</option>
-				</select>
-			</td>
-		</tr>
-		<tr>
-			<th>エアコン風速(m/s)</th><td><input type="text" id="ACwind" value="2"></td>
-		</tr>
-		<tr>
-			<th>サーキュレータ風速(m/s)</th><td><input type="text" id="CirculatorWind" value="0"></td>
-		</tr>
-		<tr>
-			<th>最大計算時間（分）</th><td><input type="text" id="maxtime_minute" value="10"></td>
-		</tr>
-		<tr>
-			<td colspan=2></td>
-		</tr>
-		</table>
-	</div>
-
-	<!-- control - calclation execute -->
-	<div class="tabcontents" id="tab3c" style="display:none">
-		<h2>計算実行状況</h2>
+	<!-- detail setting not use -->
+	<div id="detail" style="display:none">
 		<table border=0>
 		<tr>
-		<td>
-			<input type="button" value="計算開始" style="height:30px;" onclick="calcStart();"><br>
-		</td>
-		<td>
-			<div id="step">設定した条件で、計算を実行します。</div>
-		</td>
+			<th>計算単位時間（秒）</th><td><input type="text" id="delta_t" value="0.3"></td>
+			<th>最大計算回数</th><td><input type="text" id="maxtime" value="40000"></td>
+			<th></th><td></td>
+		</tr>
+		<tr>
+			<th>窓の腰高さ</th><td><input type="text" id="WindowYr" value="1"></td>
+			<th>窓の高さ</th><td><input type="text" id="WindowHr" value="1"></td>
+		</tr>
+		<tr>
+			<th></th><td></td>
+			<th>窓の左からの位置</th><td><input type="text" id="WindowZr" value="1"></td>
+			<th>窓の幅</th><td><input type="text" id="WindowWr" value="1"></td>
+		</tr>
+		<tr>
+			<th>正面窓の腰高さ</th><td><input type="text" id="Window2Yr" value="0"></td>
+			<th>正面窓の高さ</th><td><input type="text" id="Window2Hr" value="0"></td>
+		</tr>
+		<tr>
+			<th></th><td></td>
+			<th>正面窓の左からの位置</th><td><input type="text" id="Window2Xr" value="0"></td>
+			<th>正面窓の幅</th><td><input type="text" id="Window2Wr" value="0"></td>
+		</tr>
+		<tr>
+			<th>障害物のX座標</th><td><input type="text" id="ObsX1r" value="1"></td>
+		</tr>
+		<tr>
+			<th>障害物のY高さ</th><td><input type="text" id="ObsYr" value="0.4"></td>
+		</tr>
+		<tr>
+			<th>障害物のX厚さ</th><td><input type="text" id="ObsX2r" value="0.4"></td>
+		</tr>
+		<tr>
+			<th>障害物のZ幅</th><td><input type="text" id="ObsZwr" value="1.5"></td>
+		</tr>
+		<tr>
+			<th>障害物のZ位置</th><td><input type="text" id="ObsZ1r" value="0.5"></td>
+		</tr>
+		<tr>
+			<th></th><td></td>
+		</tr>
+		<tr>
+			<th></th><td></td>
 		</tr>
 		</table>
+	</div><!--// detail setting not use -->
+
+
+
+	<!-- detail result -->
+	<div class="detail_matrix">
+		<p style="clear:both;"></p>
+		<h2>計算結果の数値表  <input type="button" value="表示/非表示" onclick="$('#res').toggle();"></h2>
+		<textarea id="res" style="display:none"  rows=20 cols=80></textarea>
 	</div>
 </div>
-
-<div class="control control2">
-	<!-- control - display setting ( common ) -->
-	 <br />
-	<h2>結果画面レイヤー</h2>
-	<p>　表示する内容とレイヤー（層）を変更できます。計算中でも変更可能です。</p>
-	<table>
-	<tr>
-		<td><br>水平面の移動<br>
-			<div id="layery"></div><br>
-			<input type="button" value="　上　" onclick="layerup(1);"><br>
-			↑<br>
-			↓<br>
-			<input type="button" value="　下　" onclick="layerup(-1);">
-		</td>
-		<td><br>正面の移動（奥行き）<br>
-			<div id="layerz"></div><br>
-			　　　　　<input type="button" value="　奥　" onclick="layerz(1);"><br>
-			　　　　／<br>
-			　　　／<br>
-			<input type="button" value="　手前　" onclick="layerz(-1);">
-		</td>
-	</tr>
-	<tr>
-		<td>左側面の移動</td>
-		<td><input type="button" value="　左　" onclick="layerx(-1);">←→<input type="button" value="　右　" onclick="layerx(1);"></td>
-	</tr>
-	<tr>
-		<td>矢印の大きさ</td>
-		<td><input type="button" value="　拡大　"  onclick="graphresize(0.7);">←→<input type="button" value="　縮小　" onclick="graphresize(1.3);"></td>
-	</tr>
-	</table>
-	
-	
-</div><!--// control -->
-
-
-<!-- detail setting not use -->
-<div id="detail" style="display:none">
-	<table border=0>
-	<tr>
-		<th>計算単位時間（秒）</th><td><input type="text" id="delta_t" value="0.3"></td>
-		<th>最大計算回数</th><td><input type="text" id="maxtime" value="40000"></td>
-		<th></th><td></td>
-	</tr>
-	<tr>
-		<th>窓の腰高さ</th><td><input type="text" id="WindowYr" value="1"></td>
-		<th>窓の高さ</th><td><input type="text" id="WindowHr" value="1"></td>
-	</tr>
-	<tr>
-		<th></th><td></td>
-		<th>窓の左からの位置</th><td><input type="text" id="WindowZr" value="1"></td>
-		<th>窓の幅</th><td><input type="text" id="WindowWr" value="1"></td>
-	</tr>
-	<tr>
-		<th>正面窓の腰高さ</th><td><input type="text" id="Window2Yr" value="0"></td>
-		<th>正面窓の高さ</th><td><input type="text" id="Window2Hr" value="0"></td>
-	</tr>
-	<tr>
-		<th></th><td></td>
-		<th>正面窓の左からの位置</th><td><input type="text" id="Window2Xr" value="0"></td>
-		<th>正面窓の幅</th><td><input type="text" id="Window2Wr" value="0"></td>
-	</tr>
-	<tr>
-		<th>障害物のX座標</th><td><input type="text" id="ObsX1r" value="1"></td>
-	</tr>
-	<tr>
-		<th>障害物のY高さ</th><td><input type="text" id="ObsYr" value="0.4"></td>
-	</tr>
-	<tr>
-		<th>障害物のX厚さ</th><td><input type="text" id="ObsX2r" value="0.4"></td>
-	</tr>
-	<tr>
-		<th>障害物のZ幅</th><td><input type="text" id="ObsZwr" value="1.5"></td>
-	</tr>
-	<tr>
-		<th>障害物のZ位置</th><td><input type="text" id="ObsZ1r" value="0.5"></td>
-	</tr>
-	<tr>
-		<th></th><td></td>
-	</tr>
-	<tr>
-		<th></th><td></td>
-	</tr>
-	</table>
-</div><!--// detail setting not use -->
-
-
-
-<!-- detail result -->
-<div class="detail_matrix">
-	<p style="clear:both;"></p>
-	<h2>計算結果の数値表  <input type="button" value="表示/非表示" onclick="$('#res').toggle();"></h2>
-	<textarea id="res" style="display:none"  rows=20 cols=80></textarea>
-</div><!--// detail_matrix -->
-
 
 <div style="margin:10px;padding:10px;background-color:#fff;">
 	<h3>表示フィールドの概要</h3>
@@ -308,8 +303,6 @@
 	<p>　結果画面では、メッシュの色を温度、矢印の長さを風速で表示します。</p>
 	<p>　計算等に関する詳しい説明は、<a href="about.html">解説ページ</a>を参照してください。</p>
 </div>
-
-
 
 <!-- footer -->
 <div class="footer">
