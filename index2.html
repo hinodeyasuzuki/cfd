@@ -1,32 +1,9 @@
-<?php
-// cfd main code
-//					Hinodeya Insittute for Ecolife.co. 2016
-//	js file is defined in index.php
-//
-//--div structure--------------------------
-//	.header
-//	.field
-//		#graphs
-//			wall_base
-//			front_base
-//			floor_base
-//		table
-//	.control	
-//		.tab
-//		.tabcontents #tab1c
-//		.tabcontents #tab2c
-//		.tabcontents #tab3c
-//	.detail_matrix
-//	.footer
-//
-//
-?><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 	<meta charset="UTF-8">
 	<title>室内空気の流れ計算（エアコン、送風、断熱の効果）比較</title>
 	<link rel="stylesheet" href="" media="screen">
-	<!-- <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.14.0/themes/smoothness/jquery-ui.css"> -->
 	<script src="./js/jquery.min.js"></script>
 	<script src="./js/jquery-ui.min.js"></script>
 	<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
@@ -46,13 +23,33 @@
 <body>
 <div class="header">
 	<h1>室内空気の流れ計算　並列比較</h1>
-	<div style="text-align: right;top: -20px;position: relative;line-height: 0px;"><a href="about.html">[解説]</a>  <a href="https://www.hinodeya-ecolife.com/">有限会社ひのでやエコライフ研究所</a> </div>
+	<div style="text-align: right;top: -20px;position: relative;line-height: 0px;">
+        <a href="index.html">[単体シミュレーション]</a>  
+        <a href="about.html">[解説]</a>  
+        <a href="https://www.hinodeya-ecolife.com/">有限会社ひのでやエコライフ研究所</a> 
+    </div>
 </div><!--// header -->
 
 
 <!-----------------------　field - display result　-------------->
 <div class="field">
-	<div id="graphs"><!-- display wall graphs -->
+	<!-- legend -->
+	<table border=0 style="position:absolute;top:0px;">
+		<tr>
+			<td>            
+            <canvas id="legend" width="600" height="40" style="position:relative"></canvas>
+			<table border=0><tr>
+				<td width="120px">10℃←</td>
+				<td width="100px">15℃</td>
+				<td width="80px" align="right">→25℃</td>
+				<td width="250px">　　　1m/sの長さ　　画面1</td>
+			</tr></table>
+			</td>
+			<td></td>
+		</tr>
+	</table>	
+
+    <div id="graphs"><!-- display wall graphs -->
 		<div class="gtab">
 			<span id="gtab1" class="selected" onclick="gtabChange(1);">レイアウト</span>
 			<span id="gtab2" onclick="gtabChange(2);">結果</span>
@@ -80,25 +77,26 @@
 		</div>
 	</div>
 
+</div><!--// field with legend-->
+
+<div class="field field2">
 	<!-- legend -->
 	<table border=0 style="position:absolute;top:0px;">
 		<tr>
 			<td>
-			<canvas id="legend" width="600" height="40" style="position:relative"></canvas>
+            <canvas id="G2_legend" width="600" height="40" style="position:relative"></canvas>
 			<table border=0><tr>
 				<td width="120px">10℃←</td>
 				<td width="100px">15℃</td>
 				<td width="80px" align="right">→25℃</td>
-				<td width="250px">　　　1m/sの長さ</td>
+				<td width="250px">　　　1m/sの長さ　　画面2</td>
 			</tr></table>
 			</td>
 			<td></td>
 		</tr>
-	</table>	
-</div><!--// field with legend-->
+	</table>
 
-<div class="field field2">
-	<div id="graphs"><!-- display wall graphs -->
+    <div id="graphs"><!-- display wall graphs -->
 		<!-- wall left side with window -->
 		<div class="wall_base">
 			<canvas class="setting" id="G2_layout0" width="400" height="400"></canvas>
@@ -121,23 +119,11 @@
 		</div>
 	</div>
 
-	<!-- legend -->
-	<table border=0 style="position:absolute;top:0px;">
-		<tr>
-			<td>
-			<canvas id="G2_legend" width="600" height="40" style="position:relative"></canvas>
-			<table border=0><tr>
-				<td width="120px">10℃←</td>
-				<td width="100px">15℃</td>
-				<td width="80px" align="right">→25℃</td>
-				<td width="250px">　　　1m/sの長さ</td>
-			</tr></table>
-			</td>
-			<td></td>
-		</tr>
-	</table>
 </div><!--// field with legend-->
 
+
+<p style="clear:both;margin:10px;"></p>
+<div style="text-align:center;"><input type="button" value="計算開始" style="height:50px;width:200px;" onclick="calcStart();"></div>
 
 <!----------------------- control - settings　-------------->
 <p style="clear:both"></p>
@@ -151,9 +137,8 @@
 
 		<!-- control - easy setting -->
 		<div class="tabcontents" id="tab1c">
-			<h2>簡易シナリオ設定</h2>
-			<p>　条件設定を選択してください。必要に応じて「詳細設定」で確認・設定できます。</p>
-			<div style="text-align:right;"><input type="button" value="計算開始" style="height:30px;" onclick="calcStart();"></div>
+			<h2>簡易シナリオ設定（共通）</h2>
+			<p>　条件設定を選択してください。必要に応じて「詳細設定」で確認・設定できます。画面1、2の両方に反映されます。</p>
 			<div id="senarioButtons"></div>
 		</div>
 		
@@ -161,9 +146,8 @@
 		<div class="tabcontents" id="tab2c" style="display:none;">
 			<h2>詳細設定値1</h2>
 			<p>　詳細な条件設定ができます。</p>
-			<div style="text-align:right;"><input type="button" value="計算開始" style="height:30px;" onclick="calcStart();"></div>
-			<table id="detailSet">
 
+            <table id="detailSet">
 			<tr>
 				<th>部屋横X(m)</th><td><input type="text" id="size_x" value="3"></td>
 			</tr>
@@ -253,52 +237,11 @@
 
 		<!-- control - calclation execute -->
 		<div class="tabcontents" id="tab3c" style="display:none">
-			<h2>計算実行状況</h2>
-			<table border=0>
-			<tr>
-			<td>
-				<input type="button" value="計算開始" style="height:30px;" onclick="calcStart();"><br>
-			</td>
-			<td>
-				<div id="step">設定した条件で、計算を実行します。</div>
-			</td>
-			</tr>
-			</table>
+			<h2>結果概要1</h2>
+			<div id="step">未実行</div>
 		</div>
 
 	</div>
-	<div class="control control2">
-		<!-- control - display setting ( common ) -->
-		<h2>画面設定</h2>
-		<p>　表示する内容とレイヤー（層）を変更できます。計算中でも変更可能です。</p>
-		<table>
-		<tr>
-			<td><br>水平面の移動<br>
-				<div id="layery"></div><br>
-				<input type="button" value="　上　" onclick="layerup(1);"><br>
-				↑<br>
-				↓<br>
-				<input type="button" value="　下　" onclick="layerup(-1);">
-			</td>
-			<td><br>正面の移動（奥行き）<br>
-				<div id="layerz"></div><br>
-				　　　　　<input type="button" value="　奥　" onclick="layerz(1);"><br>
-				　　　　／<br>
-				　　　／<br>
-				<input type="button" value="　手前　" onclick="layerz(-1);">
-			</td>
-		</tr>
-		<tr>
-			<td>左側面の移動</td>
-			<td><input type="button" value="　左　" onclick="layerx(-1);">←→<input type="button" value="　右　" onclick="layerx(1);"></td>
-		</tr>
-		<tr>
-			<td>矢印の大きさ</td>
-			<td><input type="button" value="　拡大　"  onclick="graphresize(0.7);">←→<input type="button" value="　縮小　" onclick="graphresize(1.3);"></td>
-		</tr>
-		</table>
-	</div><!--// control -->
-
 
 	<!-- detail setting not use -->
 	<div id="detail" style="display:none">
@@ -362,25 +305,24 @@
 
 <div class="controls">
 	<div class="control">
-		<div class="tab">
-			<span id="tab1" class="selected" onclick="tabChange(1);">簡易設定</span>
-			<span id="tab2" onclick="tabChange(2);">詳細設定</span>
-			<span id="tab3" onclick="tabChange(3);">計算結果</span>
-		</div>
-
 		<!-- control - easy setting -->
-		<div class="tabcontents" id="tab1c">
+        <div class="tab" style="opacity:0">
+            <span id="tab1" class="selected" onclick="tabChange(1);">簡易設定</span>
+            <span id="tab2" onclick="tabChange(2);">詳細設定</span>
+            <span id="tab3" onclick="tabChange(3);">計算結果</span>
+        </div>
+
+        <div class="tabcontents" id="tab1c">
 			<h2>簡易シナリオ設定</h2>
-			<p>　（共通）</p>
-			<div style="text-align:right;"><input type="button" value="計算開始" style="height:30px;" onclick="calcStart();"></div>
+			<p>　2画面目の詳細設定も、簡易設定で上書きされます。</p>
 		</div>
 		
 		<!-- control - detail setting -->
 		<div class="tabcontents" id="tab2c" style="display:none;">
 			<h2>詳細設定値2</h2>
 			<p>　詳細な条件設定ができます。</p>
-			<div style="text-align:right;"><input type="button" value="計算開始" style="height:30px;" onclick="calcStart();"></div>
-			<table id="detailSet">
+
+            <table id="detailSet">
 			<tr>
 				<th>部屋横X(m)※</th><td></td>
 			</tr>
@@ -469,53 +411,11 @@
 
 		<!-- control - calclation execute -->
 		<div class="tabcontents" id="tab3c" style="display:none">
-			<h2>計算実行状況</h2>
-			<table border=0>
-			<tr>
-			<td>
-				<input type="button" value="計算開始" style="height:30px;" onclick="calcStart();"><br>
-			</td>
-			<td>
-				<div id="G2_step">設定した条件で、計算を実行します。</div>
-			</td>
-			</tr>
-			</table>
+			<h2>結果概要2</h2>
+			<div id="G2_step">未実行</div>
 		</div>
 
 	</div>
-	<div class="control control2">
-		<!-- control - display setting ( common ) -->
-		<h2>画面設定</h2>
-		<p>　表示する内容とレイヤー（層）を変更できます。計算中でも変更可能です。</p>
-		<table>
-		<tr>
-			<td><br>水平面の移動<br>
-				<div id="layery"></div><br>
-				<input type="button" value="　上　" onclick="layerup(1);"><br>
-				↑<br>
-				↓<br>
-				<input type="button" value="　下　" onclick="layerup(-1);">
-			</td>
-			<td><br>正面の移動（奥行き）<br>
-				<div id="layerz"></div><br>
-				　　　　　<input type="button" value="　奥　" onclick="layerz(1);"><br>
-				　　　　／<br>
-				　　　／<br>
-				<input type="button" value="　手前　" onclick="layerz(-1);">
-			</td>
-		</tr>
-		<tr>
-			<td>左側面の移動</td>
-			<td><input type="button" value="　左　" onclick="layerx(-1);">←→<input type="button" value="　右　" onclick="layerx(1);"></td>
-		</tr>
-		<tr>
-			<td>矢印の大きさ</td>
-			<td><input type="button" value="　拡大　"  onclick="graphresize(0.7);">←→<input type="button" value="　縮小　" onclick="graphresize(1.3);"></td>
-		</tr>
-		</table>
-		
-		
-	</div><!--// control -->
 
 
 	<!-- detail setting not use -->
@@ -576,6 +476,44 @@
 		<textarea id="G2_res" style="display:none"  rows=20 cols=80></textarea>
 	</div><!--// detail_matrix -->
 
+</div>
+
+<div class="controls">
+	<div class="control">
+        <div class="control control2">
+            <!-- control - display setting ( common ) -->
+            <h2>画面設定（共通）</h2>
+            <p>　表示する内容とレイヤー（層）を変更できます。計算中でも変更可能です。</p>
+            <table>
+            <tr>
+                <td><br>水平面の移動<br>
+                    <div id="layery"></div><br>
+                    <input type="button" value="　上　" onclick="layerup(1);"><br>
+                    ↑<br>
+                    ↓<br>
+                    <input type="button" value="　下　" onclick="layerup(-1);">
+                </td>
+                <td><br>正面の移動（奥行き）<br>
+                    <div id="layerz"></div><br>
+                    　　　　　<input type="button" value="　奥　" onclick="layerz(1);"><br>
+                    　　　　／<br>
+                    　　　／<br>
+                    <input type="button" value="　手前　" onclick="layerz(-1);">
+                </td>
+            </tr>
+            <tr>
+                <td>左側面の移動</td>
+                <td><input type="button" value="　左　" onclick="layerx(-1);">←→<input type="button" value="　右　" onclick="layerx(1);"></td>
+            </tr>
+            <tr>
+                <td>矢印の大きさ</td>
+                <td><input type="button" value="　拡大　"  onclick="graphresize(0.7);">←→<input type="button" value="　縮小　" onclick="graphresize(1.3);"></td>
+            </tr>
+            </table>
+                        
+        </div><!--// control -->
+    
+    </div>
 </div>
 
 

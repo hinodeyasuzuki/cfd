@@ -4,8 +4,7 @@
 }
 
 div.controls{
-    width:610px;
+    width:400px;
     float:left;
+    margin-top:3em;
 } 
-div.control{
-}

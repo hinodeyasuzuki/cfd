@@ -176,6 +176,7 @@ function getInputs(){
 		paramsets[d] = parseFloat( $("#" + d ).val() );
 		paramsets_g2[d] = parseFloat( $("#" + d ).val() );
 	}
+	//2画面の場合の読み込み
 	for( var d in defInput ){
 		if( $("#G2_" + d ).val() ){
 			paramsets_g2[d] = parseFloat( $("#G2_" + d ).val() );
@@ -204,6 +205,7 @@ function btnSenario(n, p, onlyset){
 		if ( d == "title" ) continue;
 		if ( d == "default" ) continue;
 		$("#" + d ).val(def[d]);
+		$("#G2_" + d ).val(def[d]);
 	}
 	if( !onlyset ){
 		graph_init_mesh();
