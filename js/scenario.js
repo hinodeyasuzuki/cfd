@@ -115,6 +115,21 @@ var defSenario = [
 		ObsYr:0.4,
 		ObsZwr:2.8,
 		ObsZ1r:0.4,
+	},
+	{ 
+		title:"吹き抜け８畳",
+		size_x:3.6,
+		size_y:4.8,
+		size_z:3.6,
+		nMeshX:12,
+		nMeshY:16,
+		nMeshZ:12,
+		floor:2,
+		ObsX1r:0.8,
+		ObsX2r:0.4,
+		ObsYr:0.4,
+		ObsZwr:2.8,
+		ObsZ1r:0.4,
 	}
 	]
 },

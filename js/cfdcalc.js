@@ -9,8 +9,9 @@
 //　・3D　レギュラー格子、フラクショナルステップ、CIP使わず風上差分
 //　・シミュレーション内時間で1秒ごとにデータを返し、最大時間で終了
 //
-//
-//
+//	meshset(data)	create mesh
+//	meshcalc		計算実行（指定時間）
+//	
 class CFD {
 	constructor() {
 		//計算方法フラグ
@@ -34,19 +35,19 @@ class CFD {
 		this.totaltime = 0;				//経過時間
 		this.acheatsum = 0;				//エアコン出力(W)
 		this.acheatcount = 0;			//エアコン出力(W)
-		this.sumheatleft = 0;			// left window heat loss
+		this.sumheatleft = 0;			// left window heat lossF
 		this.sumheatfront = 0;			// front window heat loss
 		this.heatleftcount = 0;
 
 		//物理定数
 		this.Re = 1000.0;				//レイノルズ数
 
-		this.Riw = 0.11;					//室内側熱伝導抵抗　壁	㎡・K／W
-		this.Rif = 0.15;					//室内側熱伝導抵抗　床
-		this.Ric = 0.09;					//室内側熱伝導抵抗　天井
+		this.Riw = 0.11;				//室内側熱伝導抵抗　壁	㎡・K／W
+		this.Rif = 0.15;				//室内側熱伝導抵抗　床
+		this.Ric = 0.09;				//室内側熱伝導抵抗　天井
 
-		this.sh_air = 1.006;				//比熱　空気J/gK
-		this.sh_obs = 0;					//熱容量　障害物 J/m3K
+		this.sh_air = 1.006;			//比熱　空気J/gK
+		this.sh_obs = 0;				//熱容量　障害物 J/m3K
 		this.sh_wall = 783000;			//熱容量　壁 J/m3K
 		this.sh_ceil = 783000;			//熱容量　天井 J/m3K
 		this.sh_floor = 783000;			//熱容量　床 J/m3K
@@ -65,18 +66,18 @@ class CFD {
 
 
 		//不使用設定
-		this.Dd = 0.001	;			//拡散係数　m2/s
-		this.nu = 0.000155;			//空気の動粘性係数 m2/s
+		this.Dd = 0.001	;				//拡散係数　m2/s
+		this.nu = 0.000155;				//空気の動粘性係数 m2/s
 
 		//計算条件
 		this.ObsPhi =20;				//障害物の温度
-		this.InletPhi = 10;			//窓の外の温度
-		this.FloorPhi = 18;			//床の温度
+		this.InletPhi = 10;				//窓の外の温度
+		this.FloorPhi = 18;				//床の温度
 
 		//圧力（空気の周囲の温度との差）YUP方向が上とする
-		this.g = 9.8;				// m/s2
+		this.g = 9.8;					// m/s2
 		this.tz = 273.15;
-		this.prsair = 0;			//101325;	//標準気圧 Pa N/m2
+		this.prsair = 0;				//101325;	//標準気圧 Pa N/m2
 
 		this.delta_t_max = 5;
 		this.delta_t_min = 0.001;
@@ -89,20 +90,29 @@ class CFD {
 	//計算呼び出し========================
 
 	//パラメータ設定
+	//	data.val 		メッシュ計算条件設定
+	//	data.meshtype	3Dメッシュ配列
+	//
+	//	返り値　なし
 	meshset = function(data) {
 		//呼び出し時のパラメータの設定
 		var ret = data.val;
-		this.delta_t = ret.delta_t;
-		this.InsidePhi = ret.InsidePhi;
-		this.ACwind = ret.ACwind;
-		this.CirculatorWind = ret.CirculatorWind;
-		this.WindowK = ret.windowKset;
-		this.ObsPhi = ret.ObsPhi;
-		this.InletPhi = ret.InletPhi;
-		this.FloorPhi = ret.FloorPhi;
-		this.meshtype = data.meshtype;
+		this.delta_t = ret.delta_t;			//1ステップ時間(s)
+		this.InsidePhi = ret.InsidePhi;		//室内初期温度
+		this.ACwind = ret.ACwind;			//エアコン風速	
+		this.CirculatorWind = ret.CirculatorWind;	//サーキュレータ風速
+		this.WindowK = ret.windowKset;		//窓の熱貫流率
+		this.ObsPhi = ret.ObsPhi;			//室内障害物温度
+		this.InletPhi = ret.InletPhi;		//外気温度
+		this.FloorPhi = ret.FloorPhi;		//床温度
+		this.meshtype = data.meshtype;		//メッシュ3D
 
-		this.init_mesh();						//初期化
+		this.init_mesh();					//配列の作成
+	}
+
+	paramset = function(data){
+		//途中時点でのパラメータ設定(時間軸に応じた外気温の低下）
+
 	}
 
 	//mesh initialize 
@@ -179,18 +189,21 @@ class CFD {
 
 
 	//単位時間分の計算---------------------------------------
+	// 終了時間は グローバル変数の batch_secで渡される
 	meshcalc = function() {
-		var sec = batch_sec;	//5秒ごとに値を返す->外から設定
+		var sec = batch_sec;
 		var error = 0;
+
 		while(1){
 			this.count++;
 			this.totaltime += this.delta_t;
 			if( this.calculate() > 0 ) {
+				//stop in case of calculation error
 				error = 1;
 				break;
 			}
 			if ( Math.floor(this.totaltime/sec) > Math.floor((this.totaltime - this.delta_t)/sec ) ) {
-				//sec seconds
+				//stop by time over
 				break;
 			}
 		}
@@ -199,7 +212,8 @@ class CFD {
 		var heatin = {};
 		heatin.heatleftin = ( this.heatleftcount ? this.sumheatleft / this.heatleftcount : 0 );
 		heatin.heatfrontin = ( this.heatleftcount ? this.sumheatfront / this.heatleftcount : 0 );
-		//シミュレーション内時間ごとに値を返す
+
+		//シミュレーション内時間ごとに値を返す（配列を一式返す）
 		var returntoview = { 
 			"error": error,
 			"count": this.count,
@@ -358,7 +372,6 @@ class CFD {
 		//エアコンの方向の設定
 		var acx = 0;
 		var acz = 0;		
-		j = nMeshY-2;
 
 		if ( this.ACwind > 0 ) {
 			this.acv = this.ACwind;
@@ -375,61 +388,63 @@ class CFD {
 		var adj = 1;
 		
 		for( i=1 ; i<=nMeshX ; i++ ) {
-			for( k=1 ; k<=nMeshZ ; k++ ) {
-				if ( this.meshtype[i][j][k] == AC ) {
-					if ( this.Phi[i][j+1][k] < 22 ) {	//入口温度
-						if ( this.ACwind > 0 ) {
-							this.acheatsum += 2800;
-							this.Phi[i][j][k] = this.Phi[i][j+1][k];
-							this.Phi[i][j-1][k] = this.Phi[i][j+1][k]+this.act;
-							adj = 1;
-						} else {
-							//自動調整
-							if ( this.Phi[i][j+1][k] < 20 && this.totaltime > 300 ) {
-								//最初の5分はフル動作
-								this.acheatsum += 1400;
-								adj = 0.5;
-							} else {
+			for ( j=1 ; j<nMeshY ; j++ ){
+				for( k=1 ; k<=nMeshZ ; k++ ) {
+					if ( this.meshtype[i][j][k] == AC ) {
+						if ( this.Phi[i][j+1][k] < 22 ) {	//入口温度22℃未満
+							if ( this.ACwind > 0 ) {
 								this.acheatsum += 2800;
+								this.Phi[i][j][k] = this.Phi[i][j+1][k];
+								this.Phi[i][j-1][k] = this.Phi[i][j+1][k]+this.act;
 								adj = 1;
+							} else {
+								//自動調整
+								if ( this.Phi[i][j+1][k] < 20 && this.totaltime > 300 ) {
+									//最初の5分はフル動作
+									this.acheatsum += 1400;
+									adj = 0.5;
+								} else {
+									this.acheatsum += 2800;
+									adj = 1;
+								}
+								this.Phi[i][j][k] = this.Phi[i][j+1][k];
+								this.Phi[i][j-1][k] = this.Phi[i][j+1][k]+this.act;
 							}
-							this.Phi[i][j][k] = this.Phi[i][j+1][k];
-							this.Phi[i][j-1][k] = this.Phi[i][j+1][k]+this.act;
-						}
-					} else {
-						this.Phi[i][j][k] = this.Phi[i][j+1][k];
-						this.Phi[i][j-1][k] = this.Phi[i][j+1][k];
-						if ( this.ACwind > 0 ) {
-							adj = 1;
 						} else {
-							adj = 0.5;
+							this.Phi[i][j][k] = this.Phi[i][j+1][k];
+							this.Phi[i][j-1][k] = this.Phi[i][j+1][k];
+							if ( this.ACwind > 0 ) {
+								adj = 1;
+							} else {
+								adj = 0.5;
+							}
 						}
-					}
 
-					if ( i == 2 ) {
-						acx = 1;
-						this.Vel[x][i][j-1][k] = this.acv * dir * adj;
-						this.Vel[x][i][j+1][k] = -this.acv * dir * adj;
+						if ( i == 2 ) {
+							acx = 1;
+							this.Vel[x][i][j-1][k] = this.acv * dir * adj;
+							this.Vel[x][i][j+1][k] = -this.acv * dir * adj;
+						}
+						if ( i == nMeshX-1 ) {
+							acx = -1;
+							this.Vel[x][i][j-1][k] = -this.acv * dir * adj;
+							this.Vel[x][i][j+1][k] = this.acv * dir * adj;
+						}
+						if ( k == 2 ) {
+							acz = 1;
+							this.Vel[z][i][j-1][k] = this.acv * dir * adj;
+							this.Vel[z][i][j+1][k] = -this.acv * dir * adj;
+						}
+						if ( k == nMeshZ-1 ) {
+							acz = -1;
+							this.Vel[z][i][j-1][k] = -this.acv * dir * adj;
+							this.Vel[z][i][j+1][k] = this.acv * dir * adj;
+						}
+						this.Vel[y][i][j+1][k] = -this.acv * Math.sqrt( 1 - dir*dir) * adj;
+						this.Vel[y][i][j][k] = -this.acv;
+						this.Vel[y][i][j-1][k] = -this.acv* Math.sqrt( 1 - dir*dir) * adj;
+						this.acheatcount++;
 					}
-					if ( i == nMeshX-1 ) {
-						acx = -1;
-						this.Vel[x][i][j-1][k] = -this.acv * dir * adj;
-						this.Vel[x][i][j+1][k] = this.acv * dir * adj;
-					}
-					if ( k == 2 ) {
-						acz = 1;
-						this.Vel[z][i][j-1][k] = this.acv * dir * adj;
-						this.Vel[z][i][j+1][k] = -this.acv * dir * adj;
-					}
-					if ( k == nMeshZ-1 ) {
-						acz = -1;
-						this.Vel[z][i][j-1][k] = -this.acv * dir * adj;
-						this.Vel[z][i][j+1][k] = this.acv * dir * adj;
-					}
-					this.Vel[y][i][j+1][k] = -this.acv * Math.sqrt( 1 - dir*dir) * adj;
-					this.Vel[y][i][j][k] = -this.acv;
-					this.Vel[y][i][j-1][k] = -this.acv* Math.sqrt( 1 - dir*dir) * adj;
-					this.acheatcount++;
 				}
 			}
 		}

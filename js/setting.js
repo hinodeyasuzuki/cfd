@@ -1,3 +1,5 @@
+//グローバル変数定義
+
 //形式定義
 var INSIDE = 1;		//室内空気
 var BOTTOM = 2;		//床
@@ -9,11 +11,12 @@ var OBSTACLE = 7;	//障害物
 var AC = 8;			//エアコン（下面から送風、上面から吸収）
 var CL = 9;			//サーキュレータ（Xプラスから吸収、上面Yから送風）
 
+//方向
 var x = 0;
 var y = 1;
 var z = 2;
 
-//メッシュ
+//表示ドット数
 var dotx = 400;
 var doty = 400;
 var dotz = 400;
@@ -40,7 +43,7 @@ var batch_sec = 20;
 //1メッシュあたりの画面上のドット数（軸ごと）
 var mesux, mesuy, mesuz;
 
-//メッシュユニットサイズ計算-------------------
+//メッシュユニットサイズ計算(メッシュサイズが変更となった場合）-------------------
 meshUnitCalc = function(){
     var mdx = size_x, mdy = size_y, mdz = size_z;
     if ( size_x < size_y ) {
