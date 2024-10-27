@@ -4,6 +4,8 @@
 
 3D air flow simulation in house on browser.
 
+new version was launched. please check vuejs
+
 ## demo
 
 https://hinodeyasuzuki.github.io/cfd/
