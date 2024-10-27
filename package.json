@@ -1,0 +1,22 @@
+{
+  "name": "cfdvue",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "file-saver": "^2.0.5",
+    "pinia": "^2.2.4",
+    "vue": "^3.5.11",
+    "vue-3-slider-component": "^1.0.1",
+    "vue3-slider": "^1.10.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.1.4",
+    "vite": "^5.4.8"
+  }
+}

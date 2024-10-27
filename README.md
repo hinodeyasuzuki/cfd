@@ -10,6 +10,24 @@ https://hinodeyasuzuki.github.io/cfd/
 
 
 ## 実稼働サイト
-http://www.hinodeya-ecolife.com/cfd/
+https://www.hinodeya-ecolife.com/cfd/
 
+
+## Project Setup
+
+```sh
+npm install
+```
+
+### Compile and Hot-Reload for Development
+
+```sh
+npm run dev
+```
+
+### Compile and Minify for Production
+
+```sh
+npm run build
+```
 
