@@ -33,6 +33,9 @@
     <h1>空気の流れ3Dシミュレーション</h1>
     <p class="right">　有限会社ひのでやエコライフ研究所 2024年10月26日</p>
     <div class="video">
+      <iframe width="640" height="480" src="https://www.youtube.com/embed/IeOZPcOplO4?si=_xlLywIFsVd53mTo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
+    <div class="video">
       <iframe width="640" height="480" src="https://www.youtube.com/embed/jyDNxVD4fVQ?si=U2w_1bYNxS-ZFzKd" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
     </div>
     <h2><a href="./index.html">シミュレーション画面</a></h2>
@@ -48,7 +51,7 @@ $params = [
   [
     "name" => "エアコンの風速の強弱の違い",
     "caption" => "8畳間、風速3m/sと1m/sの違い。弱風では床まで風が届かない。",
-    "json" => '{"setval":{"maxtime":40000,"maxtime_minute":20,"delta_t":0.01,"batch_sec":3.9506172839506175,"realX":3.6,"realY":2.4,"realZ":3.6,"maxreal":3,"canvasfieldX":400,"canvasfieldY":266.6666666666667,"nMeshX":12,"nMeshY":8,"nMeshZ":12,"InsidePhi":10,"ObsPhi":10,"InletPhi":5,"FloorPhi":10,"WindowYr":0.9,"WindowHr":0.9,"WindowZr":0.9,"WindowWr":0.9,"Window2Yr":0.9,"Window2Hr":0.9,"Window2Xr":0.5,"Window2Wr":2,"ACwall":3,"ACwind":3,"ACheat":true,"ACdir":1,"CirculatorWind":0,"windowKset":6,"wallKset":2.5,"atrium":false,"floor":1},"setval2":{"maxtime":40000,"maxtime_minute":20,"delta_t":0.01,"batch_sec":3.9506172839506175,"realX":3.6,"realY":2.4,"realZ":3.6,"maxreal":3,"canvasfieldX":400,"canvasfieldY":266.6666666666667,"nMeshX":12,"nMeshY":8,"nMeshZ":12,"InsidePhi":10,"ObsPhi":10,"InletPhi":5,"FloorPhi":10,"WindowYr":0.9,"WindowHr":0.9,"WindowZr":0.9,"WindowWr":0.9,"Window2Yr":0.9,"Window2Hr":0.9,"Window2Xr":0.5,"Window2Wr":2,"ACwall":3,"ACwind":"1","ACheat":true,"ACdir":1,"CirculatorWind":0,"windowKset":6,"wallKset":2.5,"atrium":false,"floor":1},"graph":{"temperature":[11,23],"colordelete":[false,false],"arrowunit_multi":3,"startfix":false,"onlytemp":false,"showz":false,"layerz":6,"pararel":2}}',
+    "json" => '{"setval":{"maxtime":40000,"maxtime_minute":20,"delta_t":0.01,"batch_sec":2,"realX":3.6,"realY":2.4,"realZ":3.6,"maxreal":3,"canvasfieldX":400,"canvasfieldY":266.6666666666667,"nMeshX":12,"nMeshY":8,"nMeshZ":12,"InsidePhi":10,"ObsPhi":10,"InletPhi":5,"FloorPhi":10,"WindowYr":0.9,"WindowHr":0.9,"WindowZr":0.9,"WindowWr":0.9,"Window2Yr":0.9,"Window2Hr":0.9,"Window2Xr":0.5,"Window2Wr":2,"ACwall":3,"ACwind":3,"ACheat":true,"ACdir":1,"CirculatorWind":0,"windowKset":6,"wallKset":2.5,"atrium":false,"floor":1},"setval2":{"maxtime":40000,"maxtime_minute":20,"delta_t":0.01,"batch_sec":3.9506172839506175,"realX":3.6,"realY":2.4,"realZ":3.6,"maxreal":3,"canvasfieldX":400,"canvasfieldY":266.6666666666667,"nMeshX":12,"nMeshY":8,"nMeshZ":12,"InsidePhi":10,"ObsPhi":10,"InletPhi":5,"FloorPhi":10,"WindowYr":0.9,"WindowHr":0.9,"WindowZr":0.9,"WindowWr":0.9,"Window2Yr":0.9,"Window2Hr":0.9,"Window2Xr":0.5,"Window2Wr":2,"ACwall":3,"ACwind":"1","ACheat":true,"ACdir":1,"CirculatorWind":0,"windowKset":6,"wallKset":2.5,"atrium":false,"floor":1},"graph":{"temperature":[11,23],"colordelete":[false,false],"arrowunit_multi":3,"startfix":false,"onlytemp":false,"showz":false,"layerz":6,"pararel":2}}',
   ],
   [
     "name" => "広い部屋での、エアコンの風速設定の違い",

@@ -79,18 +79,8 @@ const upload = async (event) => {
     return
   }
   const logData = await getFileData(file);
-
   const jsondata = JSON.parse(logData);
-  let key;
-  for (key in jsondata.setval) {
-    store.setval[key] = jsondata.setval[key];
-  }
-  for (key in jsondata.setval2) {
-    store.setval2[key] = jsondata.setval2[key];
-  }
-  for (key in jsondata.graph) {
-    store.graph[key] = jsondata.graph[key];
-  }
+  paramstore(jsondata);
 
   store.structure.init(store.setval);
   store.page = 'setting' + store.graph.pararel;
@@ -124,16 +114,7 @@ const url = new URL(window.location.href);
 const param = url.searchParams.get('param');
 if (param) {
   const jsondata = JSON.parse(decodeURIComponent(param));
-  let key;
-  for (key in jsondata.setval) {
-    store.setval[key] = jsondata.setval[key];
-  }
-  for (key in jsondata.setval2) {
-    store.setval2[key] = jsondata.setval2[key];
-  }
-  for (key in jsondata.graph) {
-    store.graph[key] = jsondata.graph[key];
-  }
+  paramstore(jsondata);
 
   // delete query parameters   
   const url = new URL(window.location.href)
@@ -143,10 +124,26 @@ if (param) {
   store.page = 'setdetail';
 }
 
+function paramstore(jsondata) {
+  let key;
+  for (key in jsondata.setval) {
+    store.setval[key] = jsondata.setval[key];
+    store.setval.batch_sec_org = jsondata.setval.batch_sec;
+  }
+  for (key in jsondata.setval2) {
+    store.setval2[key] = jsondata.setval2[key];
+    store.setval2.batch_sec_org = jsondata.setval2.batch_sec;
+  }
+  for (key in jsondata.graph) {
+    store.graph[key] = jsondata.graph[key];
+  }
+}
+
 </script>
 
 <template>
-  <h1>{{ store.title }} 簡易設定</h1>
+  <h1>{{ store.title }}</h1>
+  <h2>簡易設定</h2>
   <div class="wrapper">
     <div class="setting">
 
@@ -166,18 +163,18 @@ if (param) {
       </template>
       
       <p class="clear"></p>
-      <input type="button" value="シミュレーション開始" @click="store.page='graph'">
-      <input type="button" value="詳細設定" @click="store.page='setdetail'">
-      <input type="button" value="2画面比較設定" @click="store.graph.pararel=2;store.page = 'setdetail'">
+      <input type="button" value="シミュレーション実行" @click="store.page='graph'">
+      <input type="button" value="詳細計算設定" @click="store.page='setdetail'">
+      <input type="button" value="2画面比較" @click="store.graph.pararel=2;store.page = 'setdetail'">
     </div>
 
     <canvas id="mesh" width="600" height="600"></canvas>
 
     <p>視点移動：
-      <input type="button" value="左" @click="move(1, 0)">
-      <input type="button" value="右" @click="move(-1, 0)">
-      <input type="button" value="上" @click="move(0, -1)">
-      <input type="button" value="下" @click="move(0, 1)">
+      <input type="button" value="◀" @click="move(1, 0)">
+      <input type="button" value="▶" @click="move(-1, 0)">
+      <input type="button" value="▲" @click="move(0, -1)">
+      <input type="button" value="▼" @click="move(0, 1)">
     </p>
 
   </div>

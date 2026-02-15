@@ -29,6 +29,7 @@ export const Store = defineStore('store', {
       maxtime: 40000,
       maxtime_minute : 20,
       delta_t : 0.005,
+      batch_sec_org : 20,
       batch_sec : 20,
       realX : 3,
       realY : 3,
@@ -98,22 +99,22 @@ export const Store = defineStore('store', {
       var data = {};
       data.setval = this.setval;
       data.setval2 = this.setval2;
-      unset(data.setval['canvasfieldX']);
-      unset(data.setval['canvasfieldY']);
-      unset(data.setval2['canvasfieldX']);
-      unset(data.setval2['canvasfieldY']);
-      unset(data.setval['ObsSet']);
-      unset(data.setval['ObsX1r']);
-      unset(data.setval['ObsX2r']);
-      unset(data.setval['ObsYr']);
-      unset(data.setval['ObsZwr']);
-      unset(data.setval['ObsZ1r']);
-      unset(data.setval2['ObsSet']);
-      unset(data.setval2['ObsX1r']);
-      unset(data.setval2['ObsX2r']);
-      unset(data.setval2['ObsYr']);
-      unset(data.setval2['ObsZwr']);
-      unset(data.setval2['ObsZ1r']);
+      delete data.setval.canvasfieldX;
+      delete data.setval.canvasfieldY;
+      delete data.setval2.canvasfieldX;
+      delete data.setval2.canvasfieldY;
+      delete data.setval.ObsSet;
+      delete data.setval.ObsX1r;
+      delete data.setval.ObsX2r;
+      delete data.setval.ObsYr;
+      delete data.setval.ObsZwr;
+      delete data.setval.ObsZ1r;
+      delete data.setval2.ObsSet;
+      delete data.setval2.ObsX1r;
+      delete data.setval2.ObsX2r;
+      delete data.setval2.ObsYr;
+      delete data.setval2.ObsZwr;
+      delete data.setval2.ObsZ1r;
       data.graph = this.graph;
       return JSON.stringify(data);
     },

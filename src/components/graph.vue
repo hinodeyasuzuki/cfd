@@ -32,9 +32,6 @@ var steptime = 0;
 const cfd = new CFD();
 const cfd2 = new CFD();
 
-store.structure.init(store.setval);
-store.structure2.init(store.setval2);
-
 onMounted(() => {
   canvas = document.getElementById('myCanvas');
   ctx = canvas.getContext('2d');
@@ -43,11 +40,19 @@ onMounted(() => {
   canvas3 = document.getElementById('colors');
   ctx3 = canvas3.getContext('2d');
 
+  structureInit();
   colordisp();
   draw();
   calcStart();
 });
 
+const structureInit = function() {
+  store.setval.batch_sec = store.setval.batch_sec_org;
+  store.setval2.batch_sec = store.setval2.batch_sec_org;
+  store.structure.init(store.setval);
+  store.structure2.init(store.setval2);
+  store.fgstop = false;
+}
 
 
 // start calculation =======================================
@@ -93,7 +98,7 @@ const calcStart = function () {
 
     //時間上限に達したら終了
     if (endcalc) {
-      clearInterval(timer);
+      calcStop();
     }
 
     //html update
@@ -277,7 +282,7 @@ function draw(){
   }
 }
 
-//one graph
+//one graph draw
 function drawone(ctx,cfd) {
   var startX = 0, startY = 0, endX = 0, endY = 0, dt;
   var i, j, k;
@@ -311,11 +316,13 @@ function drawone(ctx,cfd) {
 
         ctx.beginPath();
 
-        //set color
+        //set color and line width
         if (store.graph.layerz == k || !store.graph.showz) {
           ctx.strokeStyle = getColor(cfd.Phi[i][j][k], 1);
+          ctx.lineWidth = store.graph.showz ? 2 : 1;
         } else {
           ctx.strokeStyle = getColor(cfd.Phi[i][j][k], 0.2);
+          ctx.lineWidth = 1;
         }
         ctx.fillStyle = getColor(cfd.Phi[i][j][k], 0.5);
 
@@ -387,38 +394,42 @@ const savedata = function(){
 
 <template>
   <h1>{{ store.title }}</h1>
+  <h2>シミュレーション</h2>
   <p>
-    <input type="button" :value="store.fgstop ? '計算再開' : '一時停止'" @click="store.fgstop = !store.fgstop">
-    <input type="button" value="停止" @click="calcStop();">
-    <input type="button" value="戻る" @click="back(true);">
-    <input v-if="store.fgstop" type="button" value="設定保存" @click="savedata();">
+    <input type="button" :disabled="!store.fgstop" value="◀▶再度計算" @click="structureInit();calcStart();">
+    <input type="button" :value="store.fgstop ? (disp.sec==0 ? '▶計算開始' : '▶計算再開') : '□一時停止'" @click="store.fgstop = !store.fgstop">
+    <input type="button" :disabled="store.fgstop" value="■停止" @click="calcStop();">
+    <input type="button" value="▲計算設定" @click="back(true);">
+    <input v-if="store.fgstop" type="button" value="▼設定保存" @click="savedata();">
   </p>
 
   <div class="graph" id="g1">
-    <p>{{ parseInt(disp.sec / 60) }}分{{ parseInt(disp.sec % 60) }}秒　計算：{{ disp.count }}回</p>
-    <p>全体：最大風速 {{ disp.vmax_show }} m/s 最高温度 {{ disp.tmax_show }}℃ 最低温度 {{ disp.tmin_show }}℃　平均{{ disp.tave }}℃</p>
-    <p>床面：最大風速 {{ disp.floor[0] }} m/s 最高温度 {{ disp.floor[1] }}℃ 最低温度 {{ disp.floor[2] }}℃　平均{{ disp.floor[3] }}℃</p>
-    <p>熱流入出　左：{{ Math.round(disp.leftin) }} W / 奥：{{ Math.round(disp.frontin) }} W </p>
-    <p v-if="store.setval.ACwall">エアコン：累積：{{ Math.round(disp.ackwh*1000)}}Wh　{{ Math.round(disp.acheat) }} W</p>
-
+    <template v-if="disp.sec">
+      <p>{{ parseInt(disp.sec / 60) }}分{{ parseInt(disp.sec % 60) }}秒　計算：{{ disp.count }}回</p>
+      <p>全体：最大風速 {{ disp.vmax_show }} m/s 最高温度 {{ disp.tmax_show }}℃ 最低温度 {{ disp.tmin_show }}℃　平均{{ disp.tave }}℃</p>
+      <p>床面：最大風速 {{ disp.floor[0] }} m/s 最高温度 {{ disp.floor[1] }}℃ 最低温度 {{ disp.floor[2] }}℃　平均{{ disp.floor[3] }}℃</p>
+      <p>熱流入出　左：{{ Math.round(disp.leftin) }} W / 奥：{{ Math.round(disp.frontin) }} W </p>
+      <p v-if="store.setval.ACwall">エアコン：累積：{{ Math.round(disp.ackwh*1000)}}Wh　{{ Math.round(disp.acheat) }} W</p>
+  </template>
     <canvas id="myCanvas" width="600" height="600"></canvas>
   </div>
 
   <div class="graph" id="g2" v-show="store.graph.pararel == 2">
-    <p>{{ parseInt(disp2.sec / 60) }}分{{ parseInt(disp2.sec % 60) }}秒　計算：{{ disp2.count }}回</p>
-    <p>全体：最大風速 {{ disp2.vmax_show }} m/s 最高温度 {{ disp2.tmax_show }}℃ 最低温度 {{ disp2.tmin_show }}℃　平均{{ disp2.tave }}℃</p>
-    <p>床面：最大風速 {{ disp2.floor[0] }} m/s 最高温度 {{ disp2.floor[1] }}℃ 最低温度 {{ disp2.floor[2] }}℃　平均{{ disp2.floor[3] }}℃</p>
-    <p>熱流入出　左：{{ Math.round(disp2.leftin) }} W / 奥：{{ Math.round(disp2.frontin) }} W </p>
-    <p v-if="store.setval.ACwall">エアコン：累積{{ Math.round(disp2.ackwh*1000) }}Wh　{{ Math.round(disp2.acheat) }} W</p>
-
+    <template v-if="disp2.sec">
+      <p>{{ parseInt(disp2.sec / 60) }}分{{ parseInt(disp2.sec % 60) }}秒　計算：{{ disp2.count }}回</p>
+      <p>全体：最大風速 {{ disp2.vmax_show }} m/s 最高温度 {{ disp2.tmax_show }}℃ 最低温度 {{ disp2.tmin_show }}℃　平均{{ disp2.tave }}℃</p>
+      <p>床面：最大風速 {{ disp2.floor[0] }} m/s 最高温度 {{ disp2.floor[1] }}℃ 最低温度 {{ disp2.floor[2] }}℃　平均{{ disp2.floor[3] }}℃</p>
+      <p>熱流入出　左：{{ Math.round(disp2.leftin) }} W / 奥：{{ Math.round(disp2.frontin) }} W </p>
+      <p v-if="store.setval.ACwall">エアコン：累積{{ Math.round(disp2.ackwh*1000) }}Wh　{{ Math.round(disp2.acheat) }} W</p>
+    </template>
     <canvas id="myCanvas2" width="600" height="600"></canvas>
   </div>
 
   <p>視点移動：
-    <input type="button" value="左" @click="move(1, 0)">
-    <input type="button" value="右" @click="move(-1, 0)">
-    <input type="button" value="上" @click="move(0, -1)">
-    <input type="button" value="下" @click="move(0, 1)">
+    <input type="button" value="◀" @click="move(-1, 0)">
+    <input type="button" value="▶" @click="move(1, 0)">
+    <input type="button" value="▲" @click="move(0, 1)">
+    <input type="button" value="▼" @click="move(0, -1)">
   </p>
 
   <div class="clear control">
@@ -460,6 +471,10 @@ const savedata = function(){
 .control {
   width:600px;
   max-width:100%;
+}
+#colors{
+  position:relative;
+  top:20px;
 }
 td{
   width:40px;

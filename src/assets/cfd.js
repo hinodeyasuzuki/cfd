@@ -50,11 +50,12 @@ export class CFD {
     this.Ric = 0.09;				//室内側熱伝導抵抗　天井
 
     this.sh_air = 1.006;			//比熱　空気J/gK
-    this.sh_obs = 0;				//熱容量　障害物 J/m3K
+    this.sh_obs = 783000;				//熱容量　障害物 J/m3K
     this.sh_wall = 783000;			//熱容量　壁 J/m3K
     this.sh_ceil = 783000;			//熱容量　天井 J/m3K
     this.sh_floor = 783000;			//熱容量　床 J/m3K
     this.sh_thick = 0.02;			//熱容量を考慮する厚さ m （2cm程度が適当）
+    this.sh_thick_window = 0.005;		//窓の熱容量を考慮する厚さ m （0.5cm程度が適当） 
     this.WindowK = 6.0;				//熱貫流率　W/m2K
     this.wallK = 2.5;				//熱貫流率　W/m2K
 
@@ -416,6 +417,7 @@ export class CFD {
     //暖房能力2.8kWと想定 act温度上昇 
     if ( this.addair ) {
       this.act = acw / ( this.sh_air * this.rou * 1000 * this.acv * this.conf.ac_width * this.conf.ac_height );
+      // console.log(this.act);
       //吹き出し口
     } else {
       this.act = 0;
@@ -440,7 +442,7 @@ export class CFD {
                 //冷暖房温度加算（出口＝下の温度を変化させる）
                 if ( this.ACwind > 0 ) {
                   this.acheatsum += acw * hadj;
-                  this.Phi[i][j][k] = this.Phi[i][j+1][k];
+                  this.Phi[i][j][k] = ( this.Phi[i][j+1][k] * 4 + this.Phi[i+1][j+1][k] + this.Phi[i-1][j+1][k] + this.Phi[i][j+1][k+1] + this.Phi[i][j+1][k-1] ) / 8;
                   this.Phi[i][j-1][k] = this.Phi[i][j+1][k] + (this.setval.ACheat ? 1 : -1 ) * this.act * hadj;
                   adj = 1;
                 } else {
@@ -453,11 +455,11 @@ export class CFD {
                     this.acheatsum += acw * hadj;
                     adj = 1;
                   }
-                  this.Phi[i][j][k] = this.Phi[i][j+1][k];
+                  this.Phi[i][j][k] = ( this.Phi[i][j+1][k] * 4 + this.Phi[i+1][j+1][k] + this.Phi[i-1][j+1][k] + this.Phi[i][j+1][k+1] + this.Phi[i][j+1][k-1] ) / 8;
                   this.Phi[i][j-1][k] = this.Phi[i][j+1][k] + (this.setval.ACheat ? 1 : -1 ) * this.act * hadj;
                 }
               } else {
-                this.Phi[i][j][k] = this.Phi[i][j+1][k];
+                this.Phi[i][j][k] = ( this.Phi[i][j+1][k] * 4 + this.Phi[i+1][j+1][k] + this.Phi[i-1][j+1][k] + this.Phi[i][j+1][k+1] + this.Phi[i][j+1][k-1] ) / 8;
                 this.Phi[i][j-1][k] = this.Phi[i][j+1][k];
                 if ( this.ACwind > 0 ) {
                   adj = 1;
@@ -897,6 +899,7 @@ export class CFD {
     var coulant;
     var maxcoulant = 0;
     var fixwall;
+    var dtemp = 0;
 
     var heatparm   = this.delta_t / ( this.Riw * this.sh_air * this.rou * 1000 );
     var heatparm_f = this.delta_t / ( this.Rif * this.sh_air * this.rou * 1000 );
@@ -983,101 +986,118 @@ export class CFD {
             }
             if ( maxcoulant < coulant ) maxcoulant = coulant;
     
-            //外壁からの流入
-            // 室内側熱抵抗0.11m2K/W 　空気比熱　1.006J/gK　
-            // 170629 heatparm_w を使う場合には delta_*で割らない
+            //外壁・内壁・天井・床・物体との熱移動
+            // 室内側熱抵抗: Riw=0.11m²K/W（壁）, Rif=0.15m²K/W（床）, Ric=0.09m²K/W（天井）
+            // 空気: 比熱 sh_air 1.006J/gK, 密度 rou 1.293kg/m³
+            // 壁・床・天井: 厚さ sh_thick 0.02m, 容積比熱 sh_wall 783kJ/m³K（杉材相当）
+            // 熱流束: q = ΔT × K [W/m²] または q = ΔT / R [W/m²]
+            // 温度変化: ΔT = q × Δt / (ρ × cp) [K]
+
+            //X方向（左右）の熱移動
             if ( this.meshtype[i-1][j][k] != this.conf.INSIDE && this.meshtype[i-1][j][k] != this.conf.CL ) {
               //左側が空気でない
               if ( this.meshtype[i-1][j][k] == this.conf.OUTSIDE ) {
-                //外壁（左）
-                this.tmp[0][i][j][k] += ( xm - pphi ) * this.wallK * heatparm_w / this.delta_x;
-                this.sumheatleft += ( xm - pphi ) * this.wallK * this.delta_x*this.delta_z ;
+                //外壁（左）: 熱貫流率を使用
+                dtemp = ( xm - pphi ) * this.wallK * heatparm_w / this.delta_x;
+                this.tmp[0][i][j][k] += dtemp;
+                this.tmp[0][i-1][j][k] -= dtemp *this.sh_air * this.rou * this.delta_x / (this.sh_wall/1000 * this.sh_thick);
+                this.sumheatleft += ( xm - pphi ) * this.wallK * this.delta_y * this.delta_z;
               } else if ( this.meshtype[i-1][j][k] == this.conf.WINDOW ) {
-                //窓（左）
-                this.tmp[0][i][j][k] += ( xm - pphi )  * this.WindowK * heatparm_w / this.delta_x;
-                this.sumheatleft += ( xm - pphi )  * this.WindowK * this.delta_x*this.delta_z ;
+                //窓（左）: 熱貫流率を使用
+                dtemp = ( xm - pphi ) * this.WindowK * heatparm_w / this.delta_x;
+                this.tmp[0][i][j][k] += dtemp;
+                this.tmp[0][i-1][j][k] -= dtemp *this.sh_air * this.rou * this.delta_x / (this.sh_window/1000 * this.sh_thick_window);
+                this.sumheatleft += ( xm - pphi ) * this.WindowK * this.delta_y * this.delta_z;
               } else {
-                this.tmp[0][i][j][k] += ( xm - pphi ) / this.delta_x * heatparm / this.delta_x;
-                this.sumheatleft += ( xm - pphi ) / this.delta_y * this.Riw * this.delta_x*this.delta_z ;
+                //内壁・障害物（左）: 熱抵抗を使用
+                dtemp = ( xm - pphi ) / this.delta_x * heatparm;
+                this.tmp[0][i][j][k] += dtemp;
+                this.tmp[0][i-1][j][k] -= dtemp *this.sh_air * this.rou * this.delta_x / (this.sh_obs/1000 * this.sh_thick);
               }
             }
-            if ( this.meshtype[i+1][j][k] != this.conf.INSIDE ) {
-              this.tmp[0][i][j][k] += ( xp - pphi ) / this.delta_x * heatparm;
+            if ( this.meshtype[i+1][j][k] != this.conf.INSIDE && this.meshtype[i+1][j][k] != this.conf.CL ) {
+              //右側が空気でない
+              if ( this.meshtype[i+1][j][k] == this.conf.OUTSIDE ) {
+                //外壁（右）: 熱貫流率を使用
+                dtemp = ( xp - pphi ) * this.wallK * heatparm_w / this.delta_x;
+                this.tmp[0][i][j][k] += dtemp;
+                this.tmp[0][i+1][j][k] -= dtemp *this.sh_air * this.rou * this.delta_x / (this.sh_wall/1000 * this.sh_thick);
+                this.sumheatright += ( xp - pphi ) * this.wallK * this.delta_y * this.delta_z;
+              } else if ( this.meshtype[i+1][j][k] == this.conf.WINDOW ) {
+                //窓（右）: 熱貫流率を使用
+                dtemp = ( xp - pphi ) * this.WindowK * heatparm_w / this.delta_x;
+                this.tmp[0][i][j][k] += dtemp;
+                this.tmp[0][i+1][j][k] -= dtemp *this.sh_air * this.rou * this.delta_x / (this.sh_window/1000 * this.sh_thick_window);
+                this.sumheatright += ( xp - pphi ) * this.WindowK * this.delta_y * this.delta_z;
+              } else {
+                //内壁・障害物（右）: 熱抵抗を使用
+                dtemp = ( xp - pphi ) / this.delta_x * heatparm;
+                this.tmp[0][i][j][k] += dtemp;
+                this.tmp[0][i+1][j][k] -= dtemp *this.sh_air * this.rou * this.delta_x / (this.sh_obs/1000 * this.sh_thick);
+              }
             }
-
-            if ( this.meshtype[i][j-1][k] != this.conf.INSIDE && this.meshtype[i][j-1][k] != this.conf.CL ) {
-              //床だったら
-              this.tmp[0][i][j][k] += ( ym - pphi )  / this.delta_y * heatparm_f;
-            }
-            if ( this.meshtype[i][j+1][k] != this.conf.INSIDE ) {
-              //天井だったら
-              this.tmp[0][i][j][k] += ( yp - pphi ) / this.delta_y * heatparm_c;
-            }
-
+            //Z方向（前後）の熱移動
             if ( this.meshtype[i][j][k-1] != this.conf.INSIDE && this.meshtype[i][j][k-1] != this.conf.CL ) {
-              this.tmp[0][i][j][k] += ( zm - pphi ) / this.delta_z * heatparm;
-            }
-            if ( this.meshtype[i][j][k+1] != this.conf.INSIDE && this.meshtype[i][j][k+1] != this.conf.CL) {
-              //奥が空気でない
-              if ( this.meshtype[i][j][k+1] == this.conf.OUTSIDE ) {
-                //外壁
-                this.tmp[0][i][j][k] += ( zp - pphi ) * this.wallK  * heatparm_w;
-                this.sumheatfront += ( zp - pphi ) * this.wallK* this.delta_y*this.delta_x ;
-              } else if ( this.meshtype[i][j][k+1] == this.conf.WINDOW ) {
-                //窓（正面）
-                this.tmp[0][i][j][k] += ( zp - pphi )  * this.WindowK * heatparm_w;
-                this.sumheatfront += ( zp - pphi ) * this.WindowK* this.delta_y*this.delta_x ;
+              //手前側が空気でない
+              if ( this.meshtype[i][j][k-1] == this.conf.OUTSIDE ) {
+                //外壁（手前）: 熱貫流率を使用
+                dtemp = ( zm - pphi ) * this.wallK * heatparm_w / this.delta_z;
+                this.tmp[0][i][j][k] += dtemp;
+                this.tmp[0][i][j][k-1] -= dtemp *this.sh_air * this.rou * this.delta_z / (this.sh_wall/1000 * this.sh_thick);
+              } else if ( this.meshtype[i][j][k-1] == this.conf.WINDOW ) {
+                //窓（手前）: 熱貫流率を使用
+                dtemp = ( zm - pphi ) * this.WindowK * heatparm_w / this.delta_z;
+                this.tmp[0][i][j][k] += dtemp;
+                this.tmp[0][i][j][k-1] -= dtemp *this.sh_air * this.rou * this.delta_z / (this.sh_window/1000 * this.sh_thick_window);
               } else {
-                //内壁
-                this.tmp[0][i][j][k] += ( zp - pphi )  / this.delta_z * heatparm;
-                this.sumheatfront += ( zp - pphi ) / this.delta_z * this.Riw* this.delta_y*this.delta_x ;
+                //内壁・障害物（手前）: 熱抵抗を使用
+                dtemp = ( zm - pphi ) / this.delta_z * heatparm;
+                this.tmp[0][i][j][k] += dtemp;
+                this.tmp[0][i][j][k-1] -= dtemp *this.sh_air * this.rou * this.delta_z / (this.sh_obs/1000 * this.sh_thick);
+              }
+            }
+            if ( this.meshtype[i][j][k+1] != this.conf.INSIDE && this.meshtype[i][j][k+1] != this.conf.CL ) {
+              //奥側が空気でない
+              if ( this.meshtype[i][j][k+1] == this.conf.OUTSIDE ) {
+                //外壁（奥：正面）: 熱貫流率を使用
+                dtemp = ( zp - pphi ) * this.wallK * heatparm_w / this.delta_z;
+                this.tmp[0][i][j][k] += dtemp;
+                this.tmp[0][i][j][k+1] -= dtemp *this.sh_air * this.rou * this.delta_z / (this.sh_wall/1000 * this.sh_thick);
+                this.sumheatfront += ( zp - pphi ) * this.wallK * this.delta_x * this.delta_y;
+              } else if ( this.meshtype[i][j][k+1] == this.conf.WINDOW ) {
+                //窓（奥：正面）: 熱貫流率を使用
+                dtemp = ( zp - pphi ) * this.WindowK * heatparm_w / this.delta_z;
+                this.tmp[0][i][j][k] += dtemp;
+                this.tmp[0][i][j][k+1] -= dtemp *this.sh_air * this.rou * this.delta_z / (this.sh_window/1000 * this.sh_thick_window);
+                this.sumheatfront += ( zp - pphi ) * this.WindowK * this.delta_x * this.delta_y;
+              } else {
+                //内壁・障害物（奥）: 熱抵抗を使用
+                dtemp = ( zp - pphi ) / this.delta_z * heatparm;
+                this.tmp[0][i][j][k] += dtemp;
+                this.tmp[0][i][j][k+1] -= dtemp *this.sh_air * this.rou * this.delta_z / (this.sh_obs/1000 * this.sh_thick);
               }
             }
 
-          } else if ( this.meshtype[i][j][k] == this.conf.OBSTACLE ) {
-            //物体の空気からの熱移動を評価(-1 +1が有効)
-            xp = this.Phi[i+1][j][k];
-            xm = this.Phi[i-1][j][k];
-            yp = this.Phi[i][j+1][k];
-            ym = this.Phi[i][j-1][k];
-            zp = this.Phi[i][j][k+1];
-            zm = this.Phi[i][j][k-1];
-            if ( this.ObsPhi != this.InsidePhi ) {
-              //温度設定がされている場合には処理しない
-            } else if ( this.isCellAir( i-1,j,k ) ||  this.isCellAir( i+1,j,k ) ) {
-              this.tmp[0][i][j][k] = ( xp+ xm ) / 2;
-            } else if ( this.isCellAir( i,j-1,k ) ||  this.isCellAir( i,j+1,k ) ) {
-              this.tmp[0][i][j][k] = ( yp + ym ) / 2;
-            } else if ( this.isCellAir( i,j-1,k ) ||  this.isCellAir( i,j+1,k ) ) {
-              this.tmp[0][i][j][k] = ( zp + zm ) / 2;
-            } else {
-              this.tmp[0][i][j][k] = ( xp + xm + yp + ym +zp + zm ) / 6;
-            }
 
-          } else if ( this.meshtype[i][j][k] == this.conf.SIDE ) {
-            //壁の空気からの熱移動を評価
-            // 温度は使わないので、空気温度を設定する
-            if ( this.meshtype[i][j][Math.max(k-1,0)] == this.conf.INSIDE) {
-              //壁面温度を外気温として扱う（奥）
-              //tmp[0][i][j][k] = Phi[i][j][k] + (Phi[i][j][k-1]-Phi[i][j][k]) / Riw * delta_t / ( sh_wall * sh_thick );
-            } else if ( this.meshtype[i][j][Math.min(k+1,this.nMeshZ+1)] == this.conf.INSIDE) {
-              this.tmp[0][i][j][k] += (this.Phi[i][j][k+1]-pphi) / this.Riw * this.delta_t / ( this.sh_wall * this.sh_thick );
-            } else if ( this.meshtype[Math.max(i-1,0)][j][k] == this.conf.INSIDE) {
-              this.tmp[0][i][j][k] += (this.Phi[i-1][j][k]-pphi) / this.Riw * this.delta_t / ( this.sh_wall * this.sh_thick );
-            } else if ( this.meshtype[Math.min(i+1,this.nMeshX+1)][j][k] == this.conf.INSIDE) {
-              //壁面温度を外気温として扱う（左）
-              //tmp[0][i][j][k] += (Phi[i+1][j][k]-Phi[i][j][k]) / Riw * delta_t / ( sh_wall * sh_thick );
-
+            //Y方向（上下）の熱移動
+            if ( this.meshtype[i][j-1][k] != this.conf.INSIDE && this.meshtype[i][j-1][k] != this.conf.CL ) {
+              //床: 床用熱抵抗を使用
+              dtemp = ( ym - pphi ) / this.delta_y * heatparm_f;
+              this.tmp[0][i][j][k] += dtemp;
+              this.tmp[0][i][j-1][k] -= dtemp *this.sh_air * this.rou * this.delta_y / (this.sh_floor/1000 * this.sh_thick_floor);
             }
-          } else if ( this.meshtype[i][j][k] == this.conf.TOP ) {
-            this.tmp[0][i][j][k] += (this.Phi[i][j-1][k]-pphi) / this.Ric * this.delta_t / ( this.sh_wall * this.sh_thick );
-          } else if ( this.meshtype[i][j][k] == this.conf.BOTTOM ) {
-            this.tmp[0][i][j][k] += (this.Phi[i][j+1][k]-pphi) / this.Rif * this.delta_t / ( this.sh_wall * this.sh_thick );
+            if ( this.meshtype[i][j+1][k] != this.conf.INSIDE && this.meshtype[i][j+1][k] != this.conf.CL ) {
+              //天井: 天井用熱抵抗を使用
+              dtemp = ( yp - pphi ) / this.delta_y * heatparm_c;
+              this.tmp[0][i][j][k] += dtemp;
+              this.tmp[0][i][j+1][k] -= dtemp *this.sh_air * this.rou * this.delta_y / (this.sh_ceiling/1000 * this.sh_thick_ceiling);
+            }
           }
         }
         //窓・外壁については温度は評価しない（外部から固定設定する）
       }
     }
+
     this.heatleftcount++;
 
     for( i=0 ; i<=this.nMeshX+1 ; i++ ) {
@@ -1113,12 +1133,14 @@ export class CFD {
   time_step_correction = function(maxcoulant) {
     if ( this.fgFixCoulant ) {
       if ( maxcoulant > this.coulant_min ) {
+        //計算ステップを短くして詳細に計算
         this.delta_t *= 0.9;
         if( this.delta_t < this.delta_t_min ) {
           this.delta_t = this.delta_t_min;
         }
       }
       if ( maxcoulant < this.coulant_max ) {
+        //計算ステップを長くして効率的に計算
         this.delta_t *= 1.1;
         if( this.delta_t > this.delta_t_max ) {
           this.delta_t = this.delta_t_max;

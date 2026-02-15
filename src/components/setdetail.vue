@@ -28,13 +28,15 @@ onMounted(() => {
 watch(() => store.setval, () => {
   store.structure.init(store.setval);
   for (let name in store.setval) {
-    if( store.detaildisp2[name] ) continue;
+    if( detaildisp2.value[name] ) continue;
     store.setval2[name] = store.setval[name];
   }
   draw();
 }, { deep: true }
 );
 watch(() => store.setval2, () => {
+  // setval2が空の場合はスキップ
+  if( !store.setval2.maxtime ) return;
   store.structure2.init(store.setval2);
   draw2();
 }, { deep: true }
@@ -66,7 +68,8 @@ function draw2() {
 </script>
 
 <template>
-  <h1>{{ store.title }}　詳細設定</h1>
+  <h1>{{ store.title }}</h1>
+  <h2>詳細計算設定</h2>
   <div class="wrapper">
     <div class="setting">
 
@@ -89,20 +92,20 @@ function draw2() {
       </template>
 
       <p class="clear"></p>
-      <input type="button" value="シミュレーション開始" @click="store.page = 'graph'">
-      <input type="button" v-if="store.graph.pararel == 2" value="1画面化" @click="store.graph.pararel = 1">
-      <input type="button" v-if="store.graph.pararel == 1" value="2画面化" @click="store.graph.pararel = 2">
+      <input type="button" value="シミュレーション実行" @click="store.page = 'graph'">
+      <input type="button" v-if="store.graph.pararel == 2" value="1画面" @click="store.graph.pararel = 1">
+      <input type="button" v-if="store.graph.pararel == 1" value="2画面比較" @click="store.graph.pararel = 2">
       <input type="button" value="初期化" @click="store.page = 'setting'">
     </div>
 
     <canvas id="mesh" width="600" height="600"></canvas>
-    <canvas id="mesh2" width="600" height="600"></canvas>
+    <canvas :style="{ opacity: store.graph.pararel == 2 ? 1 : 0 }" id="mesh2" width="600" height="600"></canvas>
 
     <p>視点移動：
-    <input type="button" value="左" @click="move(1, 0)">
-    <input type="button" value="右" @click="move(-1, 0)">
-    <input type="button" value="上" @click="move(0, -1)">
-    <input type="button" value="下" @click="move(0, 1)"></p>
+    <input type="button" value="◀" @click="move(-1, 0)">
+    <input type="button" value="▶" @click="move(1, 0)">
+    <input type="button" value="▲" @click="move(0, 1)">
+    <input type="button" value="▼" @click="move(0, -1)"></p>
 
   </div>
 </template>
