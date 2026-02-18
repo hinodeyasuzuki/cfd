@@ -24,7 +24,7 @@ export const Store = defineStore('store', {
       pararel: 1,
     },
 
-    //cfd simulation set
+    //cfd simulation setting  for graph.vue/cfd.js/structure.js
     setval : {    
       maxtime: 40000,
       maxtime_minute : 20,
@@ -115,8 +115,24 @@ export const Store = defineStore('store', {
       delete data.setval2.ObsYr;
       delete data.setval2.ObsZwr;
       delete data.setval2.ObsZ1r;
+      // delete data.setval2.meshtype;
       data.graph = this.graph;
       return JSON.stringify(data);
+    },
+
+    paramstore: function(jsondata) {
+      let key;
+      for (key in jsondata.setval) {
+        this.setval[key] = jsondata.setval[key];
+        this.setval.batch_sec_org = jsondata.setval.batch_sec;
+      }
+      for (key in jsondata.setval2) {
+        this.setval2[key] = jsondata.setval2[key];
+        this.setval2.batch_sec_org = jsondata.setval2.batch_sec;
+      }
+      for (key in jsondata.graph) {
+        this.graph[key] = jsondata.graph[key];
+      }
     },
 
   },

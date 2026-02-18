@@ -1,4 +1,4 @@
-// sceanario.js
+// sceanario.js　設定値（シナリオ、選択肢）
 //    simulation scnenario selet define, use in setting.vue,setdetail.vue
 
 export class Scenario {

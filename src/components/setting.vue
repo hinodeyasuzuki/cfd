@@ -1,7 +1,10 @@
 <script setup>
+// データ読み込み（ファイル/パラメータ)
+// シナリオ設定
 import { ref, watch, onMounted, nextTick } from "vue"
 import { Store } from "@/stores/store"
 import { Scenario } from "@/assets/scenario.js"
+import FileUpload from "@/components/FileUpload.vue"
 
 const store = Store();
 const scenario = new Scenario();
@@ -70,43 +73,10 @@ const draw = () => {
 }
 
 //file upload(read)=========================
-const upload = async (event) => {
-  const files = event.target.files || event.dataTransfer.files
-  const file = files[0]
-
-  if (!checkFile(file)) {
-    alert("ファイルを読み込めませんでした")
-    return
-  }
-  const logData = await getFileData(file);
-  const jsondata = JSON.parse(logData);
-  paramstore(jsondata);
-
+const onFileLoad = (jsondata) => {
+  store.paramstore(jsondata);
   store.structure.init(store.setval);
-  store.page = 'setting' + store.graph.pararel;
-}
-
-const getFileData = function (file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsText(file)
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = error => reject(error)
-  })
-}
-
-const checkFile = function (file) {
-  if (!file) {
-    return false
-  }
-  if (file.type !== 'application/json') {
-    return false
-  }
-  const SIZE_LIMIT = 5000000 // 5MB
-  if (file.size > SIZE_LIMIT) {
-    return false
-  }
-  return true
+  store.page = 'setdetail';
 }
 
 //Direct set by GET parameters ==============================
@@ -114,30 +84,17 @@ const url = new URL(window.location.href);
 const param = url.searchParams.get('param');
 if (param) {
   const jsondata = JSON.parse(decodeURIComponent(param));
-  paramstore(jsondata);
+  store.paramstore(jsondata);
 
   // delete query parameters   
   const url = new URL(window.location.href)
   history.replaceState(null, '', url.pathname) 
 
   store.structure.init(store.setval);
+
   store.page = 'setdetail';
 }
 
-function paramstore(jsondata) {
-  let key;
-  for (key in jsondata.setval) {
-    store.setval[key] = jsondata.setval[key];
-    store.setval.batch_sec_org = jsondata.setval.batch_sec;
-  }
-  for (key in jsondata.setval2) {
-    store.setval2[key] = jsondata.setval2[key];
-    store.setval2.batch_sec_org = jsondata.setval2.batch_sec;
-  }
-  for (key in jsondata.graph) {
-    store.graph[key] = jsondata.graph[key];
-  }
-}
 
 </script>
 
@@ -147,7 +104,7 @@ function paramstore(jsondata) {
   <div class="wrapper">
     <div class="setting">
 
-      <p>ファイルの読み込み：　<input ref="file" type="file" @change="upload" /></p>
+      <p><FileUpload @load="onFileLoad" /></p>
       <br />
       
       <template v-for="(item, name) in scenario.def">

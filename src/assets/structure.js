@@ -1,5 +1,8 @@
-// structure.js
+// structure.js メッシュ（構造設定・描画）
 //    create boxcel by parameters
+//
+//    initi() meshtype の構築
+//    draw_mesh() 簡易3D画面作成
 
 import { Store } from "@/stores/store"
 import { Config } from "@/assets/config.js"
@@ -64,6 +67,23 @@ export class Structure {
     //エアコン送風口
     var ac_outsize = this.conf.ac_width * this.conf.ac_height;
     var ac_mesh = ac_outsize /unitX / unitZ;
+
+    //A フィールド指定がある場合------------------------------
+    if( this.setval.meshtype ){
+      //格子点のタイプ・Phi初期値(属性による設定)
+      //XZのあとにYで送られてくる
+      for( var j=0 ; j<=nMeshY+1 ; j++ ) {
+        for( var i=0 ; i<=nMeshX+1 ; i++ ) {
+          for( var k=0 ; k<=nMeshZ+1 ; k++ ) {
+            this.meshtype[i][j][k] = this.setval.meshtype[i][j][k];
+          }
+        }
+      }
+      console.log(this.meshtype);
+      return;
+    }
+
+    //B 以下フィールド指定がない場合（フィールド構造から生成する）----------
 
     //格子点のタイプ・Phi初期値(属性による設定)
     for( var i=0 ; i<=nMeshX+1 ; i++ ) {
@@ -169,6 +189,7 @@ export class Structure {
         }
       }
     }
+    console.log(this.meshtype);
   };
 
 

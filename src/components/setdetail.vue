@@ -4,6 +4,7 @@
 import { ref, watch, onMounted } from "vue"
 import { Store } from "@/stores/store"
 import { Scenario } from "@/assets/scenario.js"
+import FileUpload from "@/components/FileUpload.vue"
 
 const store = Store();
 const scenario = new Scenario();
@@ -24,6 +25,13 @@ onMounted(() => {
   draw2();
 });
 
+//file upload(read)=========================
+const onFileLoad = (jsondata) => {
+  store.paramstore(jsondata);
+  store.structure.init(store.setval);
+  store.page = 'setdetail';
+}
+
 //view update by input  =============================
 watch(() => store.setval, () => {
   store.structure.init(store.setval);
@@ -41,7 +49,6 @@ watch(() => store.setval2, () => {
   draw2();
 }, { deep: true }
 );
-
 
 //view move =============================
 var ctx, ctx2;
@@ -70,6 +77,7 @@ function draw2() {
 <template>
   <h1>{{ store.title }}</h1>
   <h2>詳細計算設定</h2>
+  <p><FileUpload @load="onFileLoad" /></p>
   <div class="wrapper">
     <div class="setting">
 
@@ -77,6 +85,7 @@ function draw2() {
         <div class="title">
           <h3>{{ val }}</h3>
         </div>
+
         <div class="item">
           <input type="text" v-if="!selects[name]" v-model.number="store.setval[name]">
           <select v-if="selects[name]" v-model="store.setval[name]">

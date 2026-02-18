@@ -9,8 +9,8 @@
 //　・3D　レギュラー格子、フラクショナルステップ、CIP使わず風上差分
 //　・シミュレーション内時間で1秒ごとにデータを返し、最大時間で終了
 //
-//	meshset(data)	create mesh
-//	meshcalc		計算実行（指定時間）
+//	meshset(data) メッシュデータから計算フィールドの構築
+//	meshcalc()	  計算実行（指定時間）
 //	
 
 import { Config } from "@/assets/config.js"
@@ -1036,6 +1036,7 @@ export class CFD {
                 this.tmp[0][i+1][j][k] -= dtemp *this.sh_air * this.rou * this.delta_x / (this.sh_obs/1000 * this.sh_thick);
               }
             }
+
             //Z方向（前後）の熱移動
             if ( this.meshtype[i][j][k-1] != this.conf.INSIDE && this.meshtype[i][j][k-1] != this.conf.CL ) {
               //手前側が空気でない
@@ -1077,7 +1078,6 @@ export class CFD {
                 this.tmp[0][i][j][k+1] -= dtemp *this.sh_air * this.rou * this.delta_z / (this.sh_obs/1000 * this.sh_thick);
               }
             }
-
 
             //Y方向（上下）の熱移動
             if ( this.meshtype[i][j-1][k] != this.conf.INSIDE && this.meshtype[i][j-1][k] != this.conf.CL ) {
