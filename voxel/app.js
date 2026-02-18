@@ -32,13 +32,13 @@ const state = {
   meshtype: [],
   pickMap: [],
   history: [],
-  selectedType: VoxelType.SIDE,
+  selectedType: VoxelType.WINDOW,
   
   // CFD simulation parameters
   maxtime: 40000,
   maxtime_minute: 20,
   delta_t: 0.005,
-  batch_sec: 22.5,
+  batch_sec: 2,
   
   InsidePhi: 30,
   ObsPhi: 30,
@@ -152,6 +152,7 @@ function getFrontKey(front) {
 
 // レイキャスト結果からセル座標を取得する
 function getPickCellFromRay() {
+  if (!pickMesh) return null;
   const hit = raycaster.intersectObject(pickMesh);
   if (hit.length === 0) return null;
   const instanceId = hit[0].instanceId;
@@ -216,6 +217,8 @@ function getPickCell() {
   if (mode === "innerWall") return getPickCellFromInnerWall();
   if (mode === "floor1") return getPickCellFromLayer(1);
   if (mode === "floor2") return getPickCellFromLayer(2);
+  if (mode === "floor3") return getPickCellFromLayer(3);
+  if (mode === "floor4") return getPickCellFromLayer(4);
   return getPickCellFromRay();
 }
 
@@ -638,7 +641,8 @@ function openSimulation() {
   const encodedParam = encodeURIComponent(jsonString);
   
   // メインのシミュレーション画面のパス（相対パス）
-  const simulationUrl = `../dist/index.html?param=${encodedParam}`;
+  // const simulationUrl = `../index.html?param=${encodedParam}`;
+  const simulationUrl = `../index.html`;
   
   // 新しいタブで開く
   window.open(simulationUrl, '_blank');
@@ -750,7 +754,7 @@ function initVoxelButtons() {
     });
   });
   if (buttons.length > 0) {
-    setSelectedType(Number(buttons[0].dataset.type));
+    setSelectedType(state.selectedType);
   }
 }
 
@@ -873,7 +877,8 @@ function initUI() {
 
   document.getElementById("exportJson").addEventListener("click", exportJson);
   document.getElementById("saveFile").addEventListener("click", saveFile);
-  document.getElementById("openSimulation").addEventListener("click", openSimulation);
+  const openSimBtn = document.getElementById("openSimulation");
+  if (openSimBtn) openSimBtn.addEventListener("click", openSimulation);
   initVoxelButtons();
 }
 

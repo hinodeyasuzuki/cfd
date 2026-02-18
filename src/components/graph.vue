@@ -22,6 +22,7 @@ var arrowunit = 20;
 
 //計算用変数
 var timer;
+var timerclose = ref(false);
 var ctx, ctx2,ctx3;
 var canvas, canvas2, canvas3;
 
@@ -57,6 +58,7 @@ const structureInit = function() {
 
 // start calculation =======================================
 const calcStart = function () {  
+  timerclose.value = false;
   //field set
   cfd.init(store.setval, store.structure.meshtype);
   cfd2.init(store.setval2, store.structure2.meshtype);
@@ -128,6 +130,7 @@ const back = function (clear) {
 //stop calculation
 const calcStop = function () {
   store.fgstop = true;
+  timerclose.value = true;
   clearInterval(timer);
 };
 
@@ -397,7 +400,7 @@ const savedata = function(){
   <h2>シミュレーション</h2>
   <p>
     <input type="button" :disabled="!store.fgstop" value="◀▶再度計算" @click="structureInit();calcStart();">
-    <input type="button" :value="store.fgstop ? (disp.sec==0 ? '▶計算開始' : '▶計算再開') : '□一時停止'" @click="store.fgstop = !store.fgstop">
+    <input type="button" :disabled="timerclose" :value="store.fgstop ? (disp.sec==0 ? '▶計算開始' : '▶計算再開') : '□一時停止'" @click="store.fgstop = !store.fgstop">
     <input type="button" :disabled="store.fgstop" value="■停止" @click="calcStop();">
     <input type="button" value="▲計算設定" @click="back(true);">
     <input v-if="store.fgstop" type="button" value="▼設定保存" @click="savedata();">

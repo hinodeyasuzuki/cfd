@@ -579,6 +579,8 @@ export class CFD {
 
     //内部壁面の速度境界条件（壁等への垂直方向の風はない）
     //これをなくすと、壁面での圧力がなくなり、方向転換がされない
+    // randam項はゆれ。不安定平衡を避けるため
+    let vrandom = 0.001;
     for( i=1 ; i<=this.nMeshX ; i++ ) {
       for( j=1 ; j<=this.nMeshY ; j++ ) {
         for( k=1 ; k<=this.nMeshZ ; k++ ) {
@@ -590,10 +592,10 @@ export class CFD {
               va = Math.sqrt( vx*vx + vy*vy + vz*vz );
               vd = Math.sqrt( vy*vy + vz*vz );
               this.Vel[x][i][j][k] = 0.0;
-              if(  vd < 0.01 ) {
-                this.Vel[y][i][j][k] = Math.random() * 0.02-0.01;
-                this.Vel[z][i][j][k] = Math.random() * 0.02-0.01;
-                vd = 0.1;
+              if(  vd < vrandom ) {
+                this.Vel[y][i][j][k] = Math.random() * vrandom*2 - vrandom;
+                this.Vel[z][i][j][k] = Math.random() * vrandom*2 - vrandom;
+                vd = Math.sqrt( this.Vel[y][i][j][k]*this.Vel[y][i][j][k] + this.Vel[z][i][j][k]*this.Vel[z][i][j][k] );
               }
               this.Vel[y][i][j][k] *= va / vd;
               this.Vel[z][i][j][k] *= va / vd;
@@ -605,10 +607,10 @@ export class CFD {
               va = Math.sqrt( vx*vx + vy*vy + vz*vz );
               vd = Math.sqrt( vx*vx + vz*vz );
               this.Vel[y][i][j][k] = 0.0;
-              if( vd < 0.01 ) {
-                this.Vel[x][i][j][k] = Math.random() * 0.02-0.01;
-                this.Vel[z][i][j][k] = Math.random() * 0.02-0.01;
-                vd = 0.1;
+              if( vd < vrandom ) {
+                this.Vel[x][i][j][k] = Math.random() * vrandom*2 - vrandom;
+                this.Vel[z][i][j][k] = Math.random() * vrandom*2 - vrandom;
+                vd = Math.sqrt( this.Vel[x][i][j][k]*this.Vel[x][i][j][k] + this.Vel[z][i][j][k]*this.Vel[z][i][j][k] );
               }
               this.Vel[x][i][j][k] *= va / vd;
               this.Vel[z][i][j][k] *= va / vd;
@@ -620,10 +622,10 @@ export class CFD {
               va = Math.sqrt( vx*vx + vy*vy + vz*vz );
               vd = Math.sqrt( vx*vx + vy*vy );
               this.Vel[z][i][j][k] = 0.0;
-              if( vd < 0.01 ) {
-                this.Vel[x][i][j][k] = Math.random() * 0.02-0.01;
-                this.Vel[y][i][j][k] = Math.random() * 0.02-0.01;
-                vd = 0.1;
+              if( vd < vrandom ) {
+                this.Vel[x][i][j][k] = Math.random() * vrandom*2 - vrandom;
+                this.Vel[y][i][j][k] = Math.random() * vrandom*2 - vrandom;
+                vd = Math.sqrt( this.Vel[x][i][j][k]*this.Vel[x][i][j][k] + this.Vel[y][i][j][k]*this.Vel[y][i][j][k] );
               }
               this.Vel[x][i][j][k] *= va / vd;
               this.Vel[y][i][j][k] *= va / vd;
