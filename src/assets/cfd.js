@@ -38,7 +38,8 @@ export class CFD {
     this.totaltime = 0;				//経過時間
     this.acheatsum = 0;				//エアコン出力(W)
     this.acheatcount = 0;			//エアコン出力(W)
-    this.sumheatleft = 0;			// left window heat lossF
+    this.sumheatleft = 0;			// left window heat loss
+    this.sumheatright = 0;			// right window heat loss
     this.sumheatfront = 0;			// front window heat loss
     this.heatleftcount = 0;
 
@@ -197,6 +198,10 @@ export class CFD {
     this.acheatcount = 0;
     this.count = 0;
     this.totaltime = 0;
+    this.sumheatleft = 0;
+    this.sumheatright = 0;
+    this.sumheatfront = 0;
+    this.heatleftcount = 0;
   };
 
   //create 3D array
@@ -982,7 +987,7 @@ export class CFD {
               fixwall = ( k==this.nMeshZ ? this.nMeshZ : k+1 );
               //fixwall =  k+1;
               if ( vzij[fixwall] < 0 ) {
-                coulant = -vzij[k+1] * this.delta_t / this.delta_z;
+                coulant = -vzij[fixwall] * this.delta_t / this.delta_z;
                 this.tmp[0][i][j][k] += ( zp - pphi ) * coulant;
               }
             }
