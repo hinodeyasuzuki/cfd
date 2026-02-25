@@ -22,8 +22,8 @@ export class CFD {
     this.fgCalcTempAround = 2;		//温度計算　1:一次精度 2:風上差分での評価
     this.fgPoissonConvection = 1;	//Poisson対流項  1:中心差分 2:前進差分
     this.fgFixCoulant = true;		//coulant条件による自動タイムステップ変更 通常はtrue
-    this.coulant_min = 0.7;			//　最小基準
-    this.coulant_max = 0.8;			//  最大基準　1で発散
+    this.coulant_min = 0.3;			//　最小基準
+    this.coulant_max = 0.7;			//  最大基準　1で発散
 
     this.acv = 1;					//エアコン流速 m/s（仮設定）
     this.act = 5;					//エアコン 加温℃（流量で再計算）
@@ -1152,6 +1152,7 @@ export class CFD {
         if( this.delta_t > this.delta_t_max ) {
           this.delta_t = this.delta_t_max;
         }
+        console.log("delta_t: " + maxcoulant + " -> " + this.delta_t);
       }
     }
   }
