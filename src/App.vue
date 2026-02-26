@@ -14,6 +14,26 @@ store.structure2 = new Structure();
 for( let name in store.setval ){
   store.setval2[name] = store.setval[name];
 }
+
+// sessionStorageからVoxelデータを読み込む
+onMounted(() => {
+  const cfdVoxelData = sessionStorage.getItem('cfdVoxelData');
+  if (cfdVoxelData) {
+    try {
+      const jsonData = JSON.parse(cfdVoxelData);
+      store.paramstore(jsonData);
+      // structureを初期化
+      store.structure.init(store.setval);
+      store.structure2.init(store.setval2);
+      // 詳細設定画面に遷移（データを確認できるように）
+      store.page = 'setdetail';
+      // データの読み込み後、sessionStorageから削除
+      sessionStorage.removeItem('cfdVoxelData');
+    } catch (error) {
+      console.error('Failed to parse CFD voxel data from sessionStorage:', error);
+    }
+  }
+});
 </script>
 
 <template>

@@ -116,7 +116,7 @@
         <h2>エアコン設定</h2>
         <div class="row">
           <label>風速
-            <input id="ACwind" type="number" min="0" max="10" step="0.5" value="1" />
+            <input id="ACwind" type="number" min="0" max="10" step="0.5" value="2" />
           </label>
           <label>風向き
             <select id="ACdir">
@@ -125,23 +125,18 @@
             </select>
           </label>
         </div>
-        <div class="row">
-          <label class="checkbox">
-            <input id="ACheat" type="checkbox" />
-            エアコン暖房
-          </label>
-        </div>
       </section>
 
 
       <section>
         <h2>出力</h2>
         <div class="row">
-          <button id="exportJson">JSON出力</button>
           <button id="saveFile">ファイル保存</button>
           <button id="openSimulation">シミュレーション起動</button>
         </div>
-        <textarea id="output" rows="10" readonly></textarea>
+        <div class="row">
+          <button id="resetField" style="background-color: #ef4444; color: white;">フィールド初期化</button>
+        </div>
       </section>
 
       <section>

@@ -127,6 +127,14 @@ const back = function (clear) {
   store.page = 'setdetail';
 };
 
+//3D設計に戻る
+const backTo3DDesign = function () {
+  calcStop();
+  // 現在の設定をsessionStorageに保存
+  store.saveToSessionStorage();
+  window.location.href = './voxel/index.html';
+};
+
 //stop calculation
 const calcStop = function () {
   store.fgstop = true;
@@ -403,6 +411,7 @@ const savedata = function(){
     <input type="button" :disabled="timerclose" :value="store.fgstop ? (disp.sec==0 ? '▶計算開始' : '▶計算再開') : '□一時停止'" @click="store.fgstop = !store.fgstop">
     <input type="button" :disabled="store.fgstop" value="■停止" @click="calcStop();">
     <input type="button" value="▲計算設定" @click="back(true);">
+    <input type="button" value="◀3D設計に戻る" @click="backTo3DDesign();">
     <input v-if="store.fgstop" type="button" value="▼設定保存" @click="savedata();">
   </p>
 

@@ -135,6 +135,30 @@ export const Store = defineStore('store', {
       }
     },
 
+    saveToSessionStorage: function() {
+      const data = {};
+      data.setval = this.setval;
+      data.setval2 = this.setval2;
+      delete data.setval.canvasfieldX;
+      delete data.setval.canvasfieldY;
+      delete data.setval2.canvasfieldX;
+      delete data.setval2.canvasfieldY;
+      delete data.setval.ObsSet;
+      delete data.setval.ObsX1r;
+      delete data.setval.ObsX2r;
+      delete data.setval.ObsYr;
+      delete data.setval.ObsZwr;
+      delete data.setval.ObsZ1r;
+      delete data.setval2.ObsSet;
+      delete data.setval2.ObsX1r;
+      delete data.setval2.ObsX2r;
+      delete data.setval2.ObsYr;
+      delete data.setval2.ObsZwr;
+      delete data.setval2.ObsZ1r;
+      data.graph = this.graph;
+      sessionStorage.setItem('cfdSimulationData', JSON.stringify(data));
+    },
+
   },
   getters: {
   },

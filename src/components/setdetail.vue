@@ -101,7 +101,7 @@ function draw2() {
       </template>
 
       <p class="clear"></p>
-      <input type="button" value="シミュレーション実行" @click="store.page = 'graph'">
+      <input type="button" value="シミュレーション実行" @click="store.page='graph'">
       <input type="button" v-if="store.graph.pararel == 2" value="1画面" @click="store.graph.pararel = 1">
       <input type="button" v-if="store.graph.pararel == 1" value="2画面比較" @click="store.graph.pararel = 2">
       <input type="button" value="初期化" @click="store.page = 'setting'">

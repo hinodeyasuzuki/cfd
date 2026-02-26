@@ -33,6 +33,7 @@ const state = {
   pickMap: [],
   history: [],
   selectedType: VoxelType.WINDOW,
+  loadedFromSession: false,  // sessionStorageから読み込んだかどうか
   
   // CFD simulation parameters
   maxtime: 40000,
@@ -460,7 +461,11 @@ function setHighlightCell(cell) {
 
 // シーン全体を再構築して初期状態に戻す
 function rebuildScene() {
-  createMeshtype();
+  // sessionStorageから読み込んだmeshtypeがある場合はスキップ
+  if (!state.loadedFromSession || !state.meshtype || state.meshtype.length === 0) {
+    createMeshtype();
+  }
+  updateACheatByState();
   state.history = [];
   buildPickMesh();
   buildGridHelpers();
@@ -545,6 +550,7 @@ function updateVoxel(cell, type) {
   if (prev === type) return;
   state.history.push({ x: cell.x, y: cell.y, z: cell.z, prev });
   state.meshtype[cell.x][cell.y][cell.z] = type;
+  updateACheatByState();
   buildVoxels();
 }
 
@@ -553,7 +559,16 @@ function undoVoxel() {
   const last = state.history.pop();
   if (!last) return;
   state.meshtype[last.x][last.y][last.z] = last.prev;
+  updateACheatByState();
   buildVoxels();
+}
+
+// AC暖房は「冬」かつACボクセルがある場合のみ有効
+function updateACheatByState() {
+  const hasAC = state.meshtype?.some((plane) =>
+    plane.some((row) => row.some((cell) => cell === VoxelType.AC))
+  );
+  state.ACheat = state.ACtype === 2 && !!hasAC;
 }
 
 // ポインタ移動時の入力処理とハイライト更新
@@ -614,13 +629,6 @@ function onPointerUp(event) {
   pointerDownPos = null;
 }
 
-// メッシュ情報をJSON文字列として出力する (setting.vue互換形式)
-function exportJson() {
-  const output = document.getElementById("output");
-  const jsonData = generateJsonData();
-  output.value = JSON.stringify(jsonData);
-}
-
 // JSONデータをファイルとして保存する
 function saveFile() {
   const jsonData = generateJsonData();
@@ -634,14 +642,15 @@ function saveFile() {
   URL.revokeObjectURL(url);
 }
 
-// シミュレーション画面をGETパラメータ付きで開く
+// シミュレーション画面をsessionStorage経由で開く
 function openSimulation() {
   const jsonData = generateJsonData();
   const jsonString = JSON.stringify(jsonData);
-  const encodedParam = encodeURIComponent(jsonString);
   
-  // メインのシミュレーション画面のパス（相対パス）
-  // const simulationUrl = `../index.html?param=${encodedParam}`;
+  // sessionStorageにデータを保存
+  sessionStorage.setItem('cfdVoxelData', jsonString);
+  
+  // メインのシミュレーション画面を開く
   const simulationUrl = `../index.html`;
   
   // 新しいタブで開く
@@ -814,10 +823,13 @@ function initUI() {
   ACtype.addEventListener("change", () => {
     state.ACtype = Number(ACtype.value);
     updateTemperatureByACtype(state.ACtype);
+    updateACheatByState();
   });
   
-  // Initialize temperature based on ACtype
-  updateTemperatureByACtype(state.ACtype);
+  // Initialize temperature based on ACtype (sessionStorageから読み込んでいない場合のみ)
+  if (!state.loadedFromSession) {
+    updateTemperatureByACtype(state.ACtype);
+  }
 
   // Temperature settings
   const InsidePhi = document.getElementById("InsidePhi");
@@ -825,7 +837,11 @@ function initUI() {
   const FloorPhi = document.getElementById("FloorPhi");
   const ObsPhi = document.getElementById("ObsPhi");
   
-  // Initial values are set by updateTemperatureByACtype above
+  // Set values from state (sessionStorageから読み込んだ場合も反映)
+  InsidePhi.value = state.InsidePhi;
+  InletPhi.value = state.InletPhi;
+  FloorPhi.value = state.FloorPhi;
+  ObsPhi.value = state.ObsPhi;
   
   InsidePhi.addEventListener("input", () => {
     state.InsidePhi = Number(InsidePhi.value);
@@ -858,12 +874,10 @@ function initUI() {
   // AC settings
   const ACwind = document.getElementById("ACwind");
   const ACdir = document.getElementById("ACdir");
-  const ACheat = document.getElementById("ACheat");
   
   // Set initial values
   ACwind.value = state.ACwind;
   ACdir.value = state.ACdir;
-  ACheat.checked = state.ACheat;
   
   ACwind.addEventListener("input", () => {
     state.ACwind = Number(ACwind.value);
@@ -871,14 +885,12 @@ function initUI() {
   ACdir.addEventListener("change", () => {
     state.ACdir = Number(ACdir.value);
   });
-  ACheat.addEventListener("change", () => {
-    state.ACheat = ACheat.checked;
-  });
 
-  document.getElementById("exportJson").addEventListener("click", exportJson);
   document.getElementById("saveFile").addEventListener("click", saveFile);
   const openSimBtn = document.getElementById("openSimulation");
   if (openSimBtn) openSimBtn.addEventListener("click", openSimulation);
+  const resetBtn = document.getElementById("resetField");
+  if (resetBtn) resetBtn.addEventListener("click", resetField);
   initVoxelButtons();
 }
 
@@ -904,6 +916,103 @@ window.addEventListener("keydown", (event) => {
   }
 });
 
+// sessionStorageからシミュレーションデータを読み込む
+function loadFromSessionStorage() {
+  const cfdSimulationData = sessionStorage.getItem('cfdSimulationData');
+  if (cfdSimulationData) {
+    try {
+      const jsonData = JSON.parse(cfdSimulationData);
+      
+      // setvalからstateを復元
+      if (jsonData.setval) {
+        const sv = jsonData.setval;
+        // メッシュサイズ（+2して戻す）
+        state.nMeshX = (sv.nMeshX || 12) + 2;
+        state.nMeshY = (sv.nMeshY || 8) + 2;
+        state.nMeshZ = (sv.nMeshZ || 9) + 2;
+        state.unitSize = sv.realX ? sv.realX / sv.nMeshX : 0.3;
+        
+        // 温度設定
+        state.InsidePhi = sv.InsidePhi || 15;
+        state.ObsPhi = sv.ObsPhi || 15;
+        state.InletPhi = sv.InletPhi || 5;
+        state.FloorPhi = sv.FloorPhi || 15;
+        
+        // その他のパラメータ
+        state.ACwind = sv.ACwind || 1;
+        state.ACheat = false;
+        state.ACdir = sv.ACdir || 1;
+        state.windowKset = sv.windowKset || 6;
+        state.wallKset = sv.wallKset || 2.5;
+        state.maxtime = sv.maxtime || 40000;
+        state.maxtime_minute = sv.maxtime_minute || 20;
+        state.delta_t = sv.delta_t || 0.005;
+        state.batch_sec = sv.batch_sec || 2;
+        
+        // meshtypeを復元
+        if (sv.meshtype && Array.isArray(sv.meshtype)) {
+          state.meshtype = sv.meshtype;
+        }
+        
+        // ACtype判定（温度から推測）
+        if (sv.InletPhi > 25) {
+          state.ACtype = 1; // 夏
+        } else {
+          state.ACtype = 2; // 冬
+        }
+      }
+      
+      // graphパラメータを復元
+      if (jsonData.graph) {
+        state.temperature = jsonData.graph.temperature || [17, 29];
+        state.colordelete = jsonData.graph.colordelete || [false, false];
+        state.arrowunit_multi = jsonData.graph.arrowunit_multi || 0;
+        state.startfix = jsonData.graph.startfix || false;
+        state.onlytemp = jsonData.graph.onlytemp || false;
+        state.showz = jsonData.graph.showz || false;
+        state.layerz = jsonData.graph.layerz || 5;
+        state.pararel = jsonData.graph.pararel || 0;
+      }
+      
+      // sessionStorageから削除
+      sessionStorage.removeItem('cfdSimulationData');
+      
+      // フラグを立てる
+      state.loadedFromSession = true;
+
+      updateACheatByState();
+      
+      console.log('Loaded voxel data from simulation');
+    } catch (error) {
+      console.error('Failed to parse simulation data:', error);
+    }
+  }
+}
+
+// 初期化（フィールドを初期状態に戻す）
+function resetField() {
+  if (!confirm('フィールドを初期化しますか？')) return;
+  
+  // stateを初期値に戻す
+  state.nMeshX = 14;
+  state.nMeshY = 8;
+  state.nMeshZ = 14;
+  state.unitSize = 0.3;
+  state.history = [];
+  state.selectedType = VoxelType.WINDOW;
+  state.loadedFromSession = false;
+  state.ACheat = false;
+  
+  // UI要素も更新
+  document.getElementById('nMeshX').value = state.nMeshX;
+  document.getElementById('nMeshY').value = state.nMeshY;
+  document.getElementById('nMeshZ').value = state.nMeshZ;
+  document.getElementById('unitSize').value = state.unitSize;
+  
+  rebuildScene();
+}
+
+loadFromSessionStorage();
 initUI();
 rebuildScene();
 animate();
