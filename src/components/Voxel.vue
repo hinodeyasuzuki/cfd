@@ -1,5 +1,10 @@
-import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
-import { OrbitControls } from "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js";
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { Store } from '@/stores/store';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+const store = Store();
 
 const VoxelType = {
   INSIDE: 1,
@@ -24,7 +29,9 @@ const VoxelColors = {
   [VoxelType.CL]: 0xef4444,
 };
 
-const state = {
+const canvasRef = ref(null);
+
+const state = ref({
   nMeshX: 14,
   nMeshY: 8,
   nMeshZ: 14,
@@ -33,9 +40,8 @@ const state = {
   pickMap: [],
   history: [],
   selectedType: VoxelType.WINDOW,
-  loadedFromSession: false,  // sessionStorageから読み込んだかどうか
+  loadedFromSession: false,
   
-  // CFD simulation parameters
   maxtime: 40000,
   maxtime_minute: 20,
   delta_t: 0.005,
@@ -68,7 +74,6 @@ const state = {
   title: "CFD設定",
   floor: 1,
   
-  // Graph parameters
   temperature: [17, 29],
   colordelete: [false, false],
   arrowunit_multi: 0,
@@ -77,42 +82,14 @@ const state = {
   showz: false,
   layerz: 5,
   pararel: 0,
-};
-
-const canvas = document.getElementById("scene");
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(window.devicePixelRatio);
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0f1115);
-
-const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
-camera.position.set(10, 8, 14);
-
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.addEventListener("start", () => {
-  controlsMoved = true;
-});
-controls.addEventListener("change", () => {
-  const key = getFrontKey(getFrontPlanes());
-  if (key !== state.frontKey) {
-    state.frontKey = key;
-    buildVoxels();
-  }
+  
+  frontKey: null,
 });
 
-const light = new THREE.DirectionalLight(0xffffff, 0.9);
-light.position.set(10, 15, 5);
-scene.add(light);
-scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-
-const gridGroup = new THREE.Group();
-const voxelGroup = new THREE.Group();
-scene.add(gridGroup, voxelGroup);
-
+let renderer, scene, camera, controls, gridGroup, voxelGroup;
 let pickMesh = null;
 let highlight = null;
+let animationId = null;
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -123,7 +100,7 @@ let controlsMoved = false;
 
 // カメラ位置から見えている境界面インデックスと状態を計算する
 function getFrontPlanes() {
-  const { nMeshX, nMeshY, nMeshZ, unitSize } = state;
+  const { nMeshX, nMeshY, nMeshZ, unitSize } = state.value;
   const sizeX = nMeshX * unitSize;
   const sizeY = nMeshY * unitSize;
   const sizeZ = nMeshZ * unitSize;
@@ -157,12 +134,12 @@ function getPickCellFromRay() {
   const hit = raycaster.intersectObject(pickMesh);
   if (hit.length === 0) return null;
   const instanceId = hit[0].instanceId;
-  return state.pickMap[instanceId] ?? null;
+  return state.value.pickMap[instanceId] ?? null;
 }
 
 // 指定層の水平プレーンとの交点からセルを求める
 function getPickCellFromLayer(layerOffset) {
-  const { nMeshX, nMeshY, nMeshZ, unitSize } = state;
+  const { nMeshX, nMeshY, nMeshZ, unitSize } = state.value;
   const yIndex = Math.min(Math.max(layerOffset, 0), nMeshY - 1);
   const y = (yIndex + 0.5) * unitSize;
   const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -y);
@@ -177,7 +154,7 @@ function getPickCellFromLayer(layerOffset) {
 
 // 内壁面との交差位置からセルを探索する
 function getPickCellFromInnerWall() {
-  const { nMeshX, nMeshY, nMeshZ, unitSize } = state;
+  const { nMeshX, nMeshY, nMeshZ, unitSize } = state.value;
   const candidates = [];
 
   const planes = [];
@@ -214,7 +191,7 @@ function getPickCellFromInnerWall() {
 
 // 選択中のピックモードに応じてセルを取得する
 function getPickCell() {
-  const mode = document.getElementById("pickLayer").value;
+  const mode = document.getElementById("pickLayer")?.value || 'ray';
   if (mode === "innerWall") return getPickCellFromInnerWall();
   if (mode === "floor1") return getPickCellFromLayer(1);
   if (mode === "floor2") return getPickCellFromLayer(2);
@@ -232,7 +209,7 @@ function getPickCellForType(type) {
 
 // フィールド全体が収まるようカメラを調整する
 function fitCameraToField() {
-  const { nMeshX, nMeshY, nMeshZ, unitSize } = state;
+  const { nMeshX, nMeshY, nMeshZ, unitSize } = state.value;
   const sizeX = nMeshX * unitSize;
   const sizeY = nMeshY * unitSize;
   const sizeZ = nMeshZ * unitSize;
@@ -254,20 +231,19 @@ function fitCameraToField() {
   controls.update();
 }
 
-
 // キャンバスサイズ変更時にレンダラーとカメラを更新する
 function resizeRenderer() {
+  const canvas = canvasRef.value;
+  if (!canvas) return;
   const { clientWidth, clientHeight } = canvas;
   renderer.setSize(clientWidth, clientHeight, false);
   camera.aspect = clientWidth / clientHeight;
   camera.updateProjectionMatrix();
 }
 
-window.addEventListener("resize", resizeRenderer);
-
 // 初期メッシュ種別配列を生成し境界を設定する
 function createMeshtype() {
-  const { nMeshX, nMeshY, nMeshZ } = state;
+  const { nMeshX, nMeshY, nMeshZ } = state.value;
   const data = Array.from({ length: nMeshX }, () =>
     Array.from({ length: nMeshY }, () => Array(nMeshZ).fill(VoxelType.INSIDE))
   );
@@ -291,7 +267,7 @@ function createMeshtype() {
     }
   }
 
-  state.meshtype = data;
+  state.value.meshtype = data;
 }
 
 // レイピック用のインスタンス化メッシュを構築する
@@ -300,7 +276,7 @@ function buildPickMesh() {
     scene.remove(pickMesh);
   }
 
-  const { nMeshX, nMeshY, nMeshZ, unitSize } = state;
+  const { nMeshX, nMeshY, nMeshZ, unitSize } = state.value;
   const geometry = new THREE.BoxGeometry(unitSize, unitSize, unitSize);
   const material = new THREE.MeshBasicMaterial({
     color: 0xffffff,
@@ -332,7 +308,7 @@ function buildPickMesh() {
   }
 
   instanced.frustumCulled = false;
-  state.pickMap = pickMap;
+  state.value.pickMap = pickMap;
   pickMesh = instanced;
   scene.add(pickMesh);
 }
@@ -340,7 +316,7 @@ function buildPickMesh() {
 // グリッドと境界ボックスを描画する
 function buildGridHelpers() {
   gridGroup.clear();
-  const { nMeshX, nMeshY, nMeshZ, unitSize } = state;
+  const { nMeshX, nMeshY, nMeshZ, unitSize } = state.value;
 
   const sizeX = nMeshX * unitSize;
   const sizeZ = nMeshZ * unitSize;
@@ -359,11 +335,11 @@ function buildGridHelpers() {
 // 現在のメッシュ種別に基づきボクセル群を配置する
 function buildVoxels() {
   voxelGroup.clear();
-  const { nMeshX, nMeshY, nMeshZ, unitSize, meshtype } = state;
+  const { nMeshX, nMeshY, nMeshZ, unitSize, meshtype } = state.value;
 
   const geometry = new THREE.BoxGeometry(unitSize, unitSize, unitSize);
   const front = getFrontPlanes();
-  state.frontKey = getFrontKey(front);
+  state.value.frontKey = getFrontKey(front);
 
   for (let x = 0; x < nMeshX; x += 1) {
     for (let y = 0; y < nMeshY; y += 1) {
@@ -439,7 +415,7 @@ function buildHighlight() {
   if (highlight) {
     scene.remove(highlight);
   }
-  const { unitSize } = state;
+  const { unitSize } = state.value;
   const geo = new THREE.BoxGeometry(unitSize * 1.02, unitSize * 1.02, unitSize * 1.02);
   const mat = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true });
   highlight = new THREE.Mesh(geo, mat);
@@ -454,19 +430,18 @@ function setHighlightCell(cell) {
     highlight.visible = false;
     return;
   }
-  const { unitSize } = state;
+  const { unitSize } = state.value;
   highlight.visible = true;
   highlight.position.set((cell.x + 0.5) * unitSize, (cell.y + 0.5) * unitSize, (cell.z + 0.5) * unitSize);
 }
 
 // シーン全体を再構築して初期状態に戻す
 function rebuildScene() {
-  // sessionStorageから読み込んだmeshtypeがある場合はスキップ
-  if (!state.loadedFromSession || !state.meshtype || state.meshtype.length === 0) {
+  if (!state.value.loadedFromSession || !state.value.meshtype || state.value.meshtype.length === 0) {
     createMeshtype();
   }
   updateACheatByState();
-  state.history = [];
+  state.value.history = [];
   buildPickMesh();
   buildGridHelpers();
   buildVoxels();
@@ -477,7 +452,7 @@ function rebuildScene() {
 
 // 壁面セルかどうかを判定する
 function isSideSurface(cell) {
-  const { nMeshX, nMeshZ } = state;
+  const { nMeshX, nMeshZ } = state.value;
   return cell.x === 0 || cell.x === nMeshX - 1 || cell.z === 0 || cell.z === nMeshZ - 1;
 }
 
@@ -488,7 +463,7 @@ function isBottomAllowed(cell) {
 
 // 天井タイプが配置可能な領域か確認する
 function isTopAllowed(cell) {
-  const { nMeshX, nMeshY, nMeshZ } = state;
+  const { nMeshX, nMeshY, nMeshZ } = state.value;
   return (
     cell.z === nMeshZ - 1 &&
     cell.x > 0 &&
@@ -500,7 +475,7 @@ function isTopAllowed(cell) {
 
 // 隣接セルに指定タイプが存在するか判定する
 function hasAdjacentType(cell, types) {
-  const { nMeshX, nMeshY, nMeshZ, meshtype } = state;
+  const { nMeshX, nMeshY, nMeshZ, meshtype } = state.value;
   const deltas = [
     [1, 0, 0],
     [-1, 0, 0],
@@ -546,29 +521,29 @@ function canPlaceVoxel(cell, type) {
 // 履歴を残しつつセルの種別を更新する
 function updateVoxel(cell, type) {
   if (!canPlaceVoxel(cell, type)) return;
-  const prev = state.meshtype[cell.x][cell.y][cell.z];
+  const prev = state.value.meshtype[cell.x][cell.y][cell.z];
   if (prev === type) return;
-  state.history.push({ x: cell.x, y: cell.y, z: cell.z, prev });
-  state.meshtype[cell.x][cell.y][cell.z] = type;
+  state.value.history.push({ x: cell.x, y: cell.y, z: cell.z, prev });
+  state.value.meshtype[cell.x][cell.y][cell.z] = type;
   updateACheatByState();
   buildVoxels();
 }
 
 // 直前の変更を取り消してボクセルを元に戻す
 function undoVoxel() {
-  const last = state.history.pop();
+  const last = state.value.history.pop();
   if (!last) return;
-  state.meshtype[last.x][last.y][last.z] = last.prev;
+  state.value.meshtype[last.x][last.y][last.z] = last.prev;
   updateACheatByState();
   buildVoxels();
 }
 
 // AC暖房は「冬」かつACボクセルがある場合のみ有効
 function updateACheatByState() {
-  const hasAC = state.meshtype?.some((plane) =>
+  const hasAC = state.value.meshtype?.some((plane) =>
     plane.some((row) => row.some((cell) => cell === VoxelType.AC))
   );
-  state.ACheat = state.ACtype === 2 && !!hasAC;
+  state.value.ACheat = state.value.ACtype === 2 && !!hasAC;
 }
 
 // ポインタ移動時の入力処理とハイライト更新
@@ -580,21 +555,25 @@ function onPointerMove(event) {
       pointerMoved = true;
     }
   }
+  const canvas = canvasRef.value;
+  if (!canvas) return;
   const rect = canvas.getBoundingClientRect();
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
-  const cell = getPickCellForType(state.selectedType);
+  const cell = getPickCellForType(state.value.selectedType);
   setHighlightCell(cell);
 }
 
 // ポインタ押下時にセル候補を保持する
 function onPointerDown(event) {
+  const canvas = canvasRef.value;
+  if (!canvas) return;
   const rect = canvas.getBoundingClientRect();
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
-  const cell = getPickCellForType(state.selectedType);
+  const cell = getPickCellForType(state.value.selectedType);
   if (!cell) {
     pendingCell = null;
     return;
@@ -614,17 +593,19 @@ function onPointerUp(event) {
     return;
   }
 
+  const canvas = canvasRef.value;
+  if (!canvas) return;
   const rect = canvas.getBoundingClientRect();
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
-  const cell = getPickCellForType(state.selectedType);
+  const cell = getPickCellForType(state.value.selectedType);
   if (!cell) {
     pendingCell = null;
     pointerDownPos = null;
     return;
   }
-  updateVoxel(cell, state.selectedType);
+  updateVoxel(cell, state.value.selectedType);
   pendingCell = null;
   pointerDownPos = null;
 }
@@ -647,96 +628,86 @@ function openSimulation() {
   const jsonData = generateJsonData();
   const jsonString = JSON.stringify(jsonData);
   
-  // sessionStorageにデータを保存
   sessionStorage.setItem('cfdVoxelData', jsonString);
   
-  // メインのシミュレーション画面を開く
-  const simulationUrl = `../index.html`;
+  // メインのシミュレーション画面に遷移
+  store.page = 'setdetail';
   
-  // 新しいタブで開く
-  window.open(simulationUrl, '_blank');
+  // storeにデータを設定
+  store.paramstore(jsonData);
+  store.structure.init(store.setval);
+  store.structure2.init(store.setval2);
 }
 
 // JSON データを生成する共通関数
 function generateJsonData() {
-  const realX = (state.nMeshX-2) * state.unitSize;
-  const realY = (state.nMeshY-2) * state.unitSize;
-  const realZ = (state.nMeshZ-2) * state.unitSize;
+  const realX = (state.value.nMeshX-2) * state.value.unitSize;
+  const realY = (state.value.nMeshY-2) * state.value.unitSize;
+  const realZ = (state.value.nMeshZ-2) * state.value.unitSize;
   const maxreal = Math.max(realX, realY, realZ);
   const canvasfieldX = 400;
   const canvasfieldY = 400 * realY / realX;
   
   let setval = {
-    maxtime: state.maxtime,
-    maxtime_minute: state.maxtime_minute,
-    delta_t: state.delta_t,
-    batch_sec: state.batch_sec,
+    maxtime: state.value.maxtime,
+    maxtime_minute: state.value.maxtime_minute,
+    delta_t: state.value.delta_t,
+    batch_sec: state.value.batch_sec,
     realX: realX,
     realY: realY,
     realZ: realZ,
     maxreal: maxreal,
     canvasfieldX: canvasfieldX,
     canvasfieldY: canvasfieldY,
-    nMeshX: state.nMeshX-2,
-    nMeshY: state.nMeshY-2,
-    nMeshZ: state.nMeshZ-2,
-    InsidePhi: state.InsidePhi,
-    ObsPhi: state.ObsPhi,
-    InletPhi: state.InletPhi,
-    FloorPhi: state.FloorPhi,
-    WindowYr: state.WindowYr,
-    WindowHr: state.WindowHr,
-    WindowZr: state.WindowZr,
-    WindowWr: state.WindowWr,
-    Window2Yr: state.Window2Yr,
-    Window2Hr: state.Window2Hr,
-    Window2Xr: state.Window2Xr,
-    Window2Wr: state.Window2Wr,
-    ACtype: state.ACtype,
-    ACwall: state.ACwall,
-    ACwind: state.ACwind,
-    ACheat: state.ACheat,
-    ACdir: state.ACdir,
-    CirculatorWind: state.CirculatorWind,
-    windowKset: state.windowKset,
-    wallKset: state.wallKset,
-    atrium: state.atrium,
-    title: state.title,
-    floor: state.floor,
-    meshtype: state.meshtype,
+    nMeshX: state.value.nMeshX-2,
+    nMeshY: state.value.nMeshY-2,
+    nMeshZ: state.value.nMeshZ-2,
+    InsidePhi: state.value.InsidePhi,
+    ObsPhi: state.value.ObsPhi,
+    InletPhi: state.value.InletPhi,
+    FloorPhi: state.value.FloorPhi,
+    WindowYr: state.value.WindowYr,
+    WindowHr: state.value.WindowHr,
+    WindowZr: state.value.WindowZr,
+    WindowWr: state.value.WindowWr,
+    Window2Yr: state.value.Window2Yr,
+    Window2Hr: state.value.Window2Hr,
+    Window2Xr: state.value.Window2Xr,
+    Window2Wr: state.value.Window2Wr,
+    ACtype: state.value.ACtype,
+    ACwall: state.value.ACwall,
+    ACwind: state.value.ACwind,
+    ACheat: state.value.ACheat,
+    ACdir: state.value.ACdir,
+    CirculatorWind: state.value.CirculatorWind,
+    windowKset: state.value.windowKset,
+    wallKset: state.value.wallKset,
+    atrium: state.value.atrium,
+    title: state.value.title,
+    floor: state.value.floor,
+    meshtype: state.value.meshtype,
   };
   
-  // setval2 is copy of setval (for 2-screen comparison)
-  // let setval2 = {...setval};
-  // if (state.ACdir === 2) {
-  //   setval2.ACdir = 1;
-  // }
-  
   let graph = {
-    temperature: state.temperature,
-    colordelete: state.colordelete,
-    arrowunit_multi: state.arrowunit_multi,
-    startfix: state.startfix,
-    onlytemp: state.onlytemp,
-    showz: state.showz,
-    layerz: state.layerz,
-    pararel: state.pararel,
+    temperature: state.value.temperature,
+    colordelete: state.value.colordelete,
+    arrowunit_multi: state.value.arrowunit_multi,
+    startfix: state.value.startfix,
+    onlytemp: state.value.onlytemp,
+    showz: state.value.showz,
+    layerz: state.value.layerz,
+    pararel: state.value.pararel,
   };
   
   return {
     setval: setval,
-    // setval2: setval2,
     graph: graph,
   };
 }
 
 // 選択中のボクセルタイプとUI表示を更新する
 function setSelectedType(type) {
-  state.selectedType = type;
-  document.querySelectorAll(".voxel-button").forEach((button) => {
-    const isSelected = Number(button.dataset.type) === type;
-    button.classList.toggle("selected", isSelected);
-  });
+  state.value.selectedType = type;
   const pickLayer = document.getElementById("pickLayer");
   if (pickLayer) {
     if (type === VoxelType.INSIDE) {
@@ -752,169 +723,43 @@ function setSelectedType(type) {
   }
 }
 
-// ボタン群の初期化とクリックハンドラ登録
-function initVoxelButtons() {
-  const buttons = document.querySelectorAll(".voxel-button");
-  buttons.forEach((button) => {
-    const color = button.dataset.color || "#888";
-    button.style.setProperty("--voxel-color", color);
-    button.addEventListener("click", () => {
-      setSelectedType(Number(button.dataset.type));
-    });
-  });
-  if (buttons.length > 0) {
-    setSelectedType(state.selectedType);
-  }
-}
-
 // ACtype変更時に温度初期値を設定
 function updateTemperatureByACtype(actype) {
-  const InsidePhi = document.getElementById("InsidePhi");
-  const InletPhi = document.getElementById("InletPhi");
-  const FloorPhi = document.getElementById("FloorPhi");
-  const ObsPhi = document.getElementById("ObsPhi");
-  
   if (actype === 1) {
     // 夏（冷房）
-    state.InsidePhi = 30;
-    state.InletPhi = 35;
-    state.FloorPhi = 30;
-    state.ObsPhi = 30;
+    state.value.InsidePhi = 30;
+    state.value.InletPhi = 35;
+    state.value.FloorPhi = 30;
+    state.value.ObsPhi = 30;
   } else if (actype === 2) {
     // 冬（暖房）
-    state.InsidePhi = 15;
-    state.InletPhi = 5;
-    state.FloorPhi = 15;
-    state.ObsPhi = 15;
+    state.value.InsidePhi = 15;
+    state.value.InletPhi = 5;
+    state.value.FloorPhi = 15;
+    state.value.ObsPhi = 15;
   }
-  
-  // Update UI
-  InsidePhi.value = state.InsidePhi;
-  InletPhi.value = state.InletPhi;
-  FloorPhi.value = state.FloorPhi;
-  ObsPhi.value = state.ObsPhi;
 }
 
-// UI入力群のイベントを初期化する
-function initUI() {
-  const nMeshX = document.getElementById("nMeshX");
-  const nMeshY = document.getElementById("nMeshY");
-  const nMeshZ = document.getElementById("nMeshZ");
-  const unitSize = document.getElementById("unitSize");
-  
-  // Set initial values from state
-  nMeshX.value = state.nMeshX;
-  nMeshY.value = state.nMeshY;
-  nMeshZ.value = state.nMeshZ;
-  unitSize.value = state.unitSize;
-
-  document.getElementById("createField").addEventListener("click", () => {
-    state.nMeshX = Number(nMeshX.value);
-    state.nMeshY = Number(nMeshY.value);
-    state.nMeshZ = Number(nMeshZ.value);
-    state.unitSize = Number(unitSize.value);
-    rebuildScene();
-  });
-
-  // ACtype settings
-  const ACtype = document.getElementById("ACtype");
-  ACtype.value = state.ACtype;
-  
-  ACtype.addEventListener("change", () => {
-    state.ACtype = Number(ACtype.value);
-    updateTemperatureByACtype(state.ACtype);
-    updateACheatByState();
-  });
-  
-  // Initialize temperature based on ACtype (sessionStorageから読み込んでいない場合のみ)
-  if (!state.loadedFromSession) {
-    updateTemperatureByACtype(state.ACtype);
-  }
-
-  // Temperature settings
-  const InsidePhi = document.getElementById("InsidePhi");
-  const InletPhi = document.getElementById("InletPhi");
-  const FloorPhi = document.getElementById("FloorPhi");
-  const ObsPhi = document.getElementById("ObsPhi");
-  
-  // Set values from state (sessionStorageから読み込んだ場合も反映)
-  InsidePhi.value = state.InsidePhi;
-  InletPhi.value = state.InletPhi;
-  FloorPhi.value = state.FloorPhi;
-  ObsPhi.value = state.ObsPhi;
-  
-  InsidePhi.addEventListener("input", () => {
-    state.InsidePhi = Number(InsidePhi.value);
-  });
-  InletPhi.addEventListener("input", () => {
-    state.InletPhi = Number(InletPhi.value);
-  });
-  FloorPhi.addEventListener("input", () => {
-    state.FloorPhi = Number(FloorPhi.value);
-  });
-  ObsPhi.addEventListener("input", () => {
-    state.ObsPhi = Number(ObsPhi.value);
-  });
-  
-  // Insulation settings
-  const windowKset = document.getElementById("windowKset");
-  const wallKset = document.getElementById("wallKset");
-  
-  // Set initial values
-  windowKset.value = state.windowKset;
-  wallKset.value = state.wallKset;
-  
-  windowKset.addEventListener("change", () => {
-    state.windowKset = Number(windowKset.value);
-  });
-  wallKset.addEventListener("change", () => {
-    state.wallKset = Number(wallKset.value);
-  });
-  
-  // AC settings
-  const ACwind = document.getElementById("ACwind");
-  const ACdir = document.getElementById("ACdir");
-  
-  // Set initial values
-  ACwind.value = state.ACwind;
-  ACdir.value = state.ACdir;
-  
-  ACwind.addEventListener("input", () => {
-    state.ACwind = Number(ACwind.value);
-  });
-  ACdir.addEventListener("change", () => {
-    state.ACdir = Number(ACdir.value);
-  });
-
-  document.getElementById("saveFile").addEventListener("click", saveFile);
-  const openSimBtn = document.getElementById("openSimulation");
-  if (openSimBtn) openSimBtn.addEventListener("click", openSimulation);
-  const resetBtn = document.getElementById("resetField");
-  if (resetBtn) resetBtn.addEventListener("click", resetField);
-  initVoxelButtons();
+// フィールド作成
+function createField() {
+  rebuildScene();
 }
 
-// 毎フレームのレンダリングループを回す
-function animate() {
-  requestAnimationFrame(animate);
-  controls.update();
-  renderer.render(scene, camera);
+// フィールド初期化
+function resetField() {
+  if (!confirm('フィールドを初期化しますか？')) return;
+  
+  state.value.nMeshX = 14;
+  state.value.nMeshY = 8;
+  state.value.nMeshZ = 14;
+  state.value.unitSize = 0.3;
+  state.value.history = [];
+  state.value.selectedType = VoxelType.WINDOW;
+  state.value.loadedFromSession = false;
+  state.value.ACheat = false;
+  
+  rebuildScene();
 }
-
-canvas.addEventListener("pointermove", onPointerMove);
-canvas.addEventListener("pointerdown", onPointerDown);
-canvas.addEventListener("pointerup", onPointerUp);
-window.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") {
-    undoVoxel();
-    return;
-  }
-  const isUndo = (event.ctrlKey || event.metaKey) && (event.key === "z" || event.key === "Z");
-  if (isUndo) {
-    event.preventDefault();
-    undoVoxel();
-  }
-});
 
 // sessionStorageからシミュレーションデータを読み込む
 function loadFromSessionStorage() {
@@ -923,63 +768,52 @@ function loadFromSessionStorage() {
     try {
       const jsonData = JSON.parse(cfdSimulationData);
       
-      // setvalからstateを復元
       if (jsonData.setval) {
         const sv = jsonData.setval;
-        // メッシュサイズ（+2して戻す）
-        state.nMeshX = (sv.nMeshX || 12) + 2;
-        state.nMeshY = (sv.nMeshY || 8) + 2;
-        state.nMeshZ = (sv.nMeshZ || 9) + 2;
-        state.unitSize = sv.realX ? sv.realX / sv.nMeshX : 0.3;
+        state.value.nMeshX = (sv.nMeshX || 12) + 2;
+        state.value.nMeshY = (sv.nMeshY || 8) + 2;
+        state.value.nMeshZ = (sv.nMeshZ || 9) + 2;
+        state.value.unitSize = sv.realX ? sv.realX / sv.nMeshX : 0.3;
         
-        // 温度設定
-        state.InsidePhi = sv.InsidePhi || 15;
-        state.ObsPhi = sv.ObsPhi || 15;
-        state.InletPhi = sv.InletPhi || 5;
-        state.FloorPhi = sv.FloorPhi || 15;
+        state.value.InsidePhi = sv.InsidePhi || 15;
+        state.value.ObsPhi = sv.ObsPhi || 15;
+        state.value.InletPhi = sv.InletPhi || 5;
+        state.value.FloorPhi = sv.FloorPhi || 15;
         
-        // その他のパラメータ
-        state.ACwind = sv.ACwind || 1;
-        state.ACheat = false;
-        state.ACdir = sv.ACdir || 1;
-        state.windowKset = sv.windowKset || 6;
-        state.wallKset = sv.wallKset || 2.5;
-        state.maxtime = sv.maxtime || 40000;
-        state.maxtime_minute = sv.maxtime_minute || 20;
-        state.delta_t = sv.delta_t || 0.005;
-        state.batch_sec = sv.batch_sec || 2;
+        state.value.ACwind = sv.ACwind || 1;
+        state.value.ACheat = false;
+        state.value.ACdir = sv.ACdir || 1;
+        state.value.windowKset = sv.windowKset || 6;
+        state.value.wallKset = sv.wallKset || 2.5;
+        state.value.maxtime = sv.maxtime || 40000;
+        state.value.maxtime_minute = sv.maxtime_minute || 20;
+        state.value.delta_t = sv.delta_t || 0.005;
+        state.value.batch_sec = sv.batch_sec || 2;
         
-        // meshtypeを復元
         if (sv.meshtype && Array.isArray(sv.meshtype)) {
-          state.meshtype = sv.meshtype;
+          state.value.meshtype = sv.meshtype;
         }
         
-        // ACtype判定（温度から推測）
         if (sv.InletPhi > 25) {
-          state.ACtype = 1; // 夏
+          state.value.ACtype = 1;
         } else {
-          state.ACtype = 2; // 冬
+          state.value.ACtype = 2;
         }
       }
       
-      // graphパラメータを復元
       if (jsonData.graph) {
-        state.temperature = jsonData.graph.temperature || [17, 29];
-        state.colordelete = jsonData.graph.colordelete || [false, false];
-        state.arrowunit_multi = jsonData.graph.arrowunit_multi || 0;
-        state.startfix = jsonData.graph.startfix || false;
-        state.onlytemp = jsonData.graph.onlytemp || false;
-        state.showz = jsonData.graph.showz || false;
-        state.layerz = jsonData.graph.layerz || 5;
-        state.pararel = jsonData.graph.pararel || 0;
+        state.value.temperature = jsonData.graph.temperature || [17, 29];
+        state.value.colordelete = jsonData.graph.colordelete || [false, false];
+        state.value.arrowunit_multi = jsonData.graph.arrowunit_multi || 0;
+        state.value.startfix = jsonData.graph.startfix || false;
+        state.value.onlytemp = jsonData.graph.onlytemp || false;
+        state.value.showz = jsonData.graph.showz || false;
+        state.value.layerz = jsonData.graph.layerz || 5;
+        state.value.pararel = jsonData.graph.pararel || 0;
       }
       
-      // sessionStorageから削除
       sessionStorage.removeItem('cfdSimulationData');
-      
-      // フラグを立てる
-      state.loadedFromSession = true;
-
+      state.value.loadedFromSession = true;
       updateACheatByState();
       
       console.log('Loaded voxel data from simulation');
@@ -989,30 +823,478 @@ function loadFromSessionStorage() {
   }
 }
 
-// 初期化（フィールドを初期状態に戻す）
-function resetField() {
-  if (!confirm('フィールドを初期化しますか？')) return;
-  
-  // stateを初期値に戻す
-  state.nMeshX = 14;
-  state.nMeshY = 8;
-  state.nMeshZ = 14;
-  state.unitSize = 0.3;
-  state.history = [];
-  state.selectedType = VoxelType.WINDOW;
-  state.loadedFromSession = false;
-  state.ACheat = false;
-  
-  // UI要素も更新
-  document.getElementById('nMeshX').value = state.nMeshX;
-  document.getElementById('nMeshY').value = state.nMeshY;
-  document.getElementById('nMeshZ').value = state.nMeshZ;
-  document.getElementById('unitSize').value = state.unitSize;
-  
-  rebuildScene();
+// キーボード入力処理
+function onKeyDown(event) {
+  if (event.key === "Escape") {
+    undoVoxel();
+    return;
+  }
+  const isUndo = (event.ctrlKey || event.metaKey) && (event.key === "z" || event.key === "Z");
+  if (isUndo) {
+    event.preventDefault();
+    undoVoxel();
+  }
 }
 
-loadFromSessionStorage();
-initUI();
-rebuildScene();
-animate();
+// 毎フレームのレンダリングループを回す
+function animate() {
+  animationId = requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// ACtype変更ハンドラ
+function onACTypeChange() {
+  updateTemperatureByACtype(state.value.ACtype);
+  updateACheatByState();
+}
+
+// 初期化
+onMounted(() => {
+  const canvas = canvasRef.value;
+  if (!canvas) return;
+
+  // Three.js初期化
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0f1115);
+
+  camera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
+  camera.position.set(10, 8, 14);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.addEventListener("start", () => {
+    controlsMoved = true;
+  });
+  controls.addEventListener("change", () => {
+    const key = getFrontKey(getFrontPlanes());
+    if (key !== state.value.frontKey) {
+      state.value.frontKey = key;
+      buildVoxels();
+    }
+  });
+
+  const light = new THREE.DirectionalLight(0xffffff, 0.9);
+  light.position.set(10, 15, 5);
+  scene.add(light);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+  gridGroup = new THREE.Group();
+  voxelGroup = new THREE.Group();
+  scene.add(gridGroup, voxelGroup);
+
+  // イベントリスナー
+  canvas.addEventListener("pointermove", onPointerMove);
+  canvas.addEventListener("pointerdown", onPointerDown);
+  canvas.addEventListener("pointerup", onPointerUp);
+  window.addEventListener("keydown", onKeyDown);
+  window.addEventListener("resize", resizeRenderer);
+
+  // sessionStorageから読み込み
+  loadFromSessionStorage();
+  
+  // 初期化してアニメーション開始
+  if (!state.value.loadedFromSession) {
+    updateTemperatureByACtype(state.value.ACtype);
+  }
+  rebuildScene();
+  animate();
+});
+
+// クリーンアップ
+onBeforeUnmount(() => {
+  const canvas = canvasRef.value;
+  if (canvas) {
+    canvas.removeEventListener("pointermove", onPointerMove);
+    canvas.removeEventListener("pointerdown", onPointerDown);
+    canvas.removeEventListener("pointerup", onPointerUp);
+  }
+  window.removeEventListener("keydown", onKeyDown);
+  window.removeEventListener("resize", resizeRenderer);
+  
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+  }
+  
+  if (renderer) {
+    renderer.dispose();
+  }
+});
+</script>
+
+<template>
+  <div class="voxel-container">
+    <aside class="panel">
+      <div class="header-section">
+        <h1>CFD Voxel Editor</h1>
+        <button @click="store.page='setting'" class="back-button">← メインメニューに戻る</button>
+      </div>
+      
+      <section>
+        <h2>フィールド設定</h2>
+        <div class="row">
+          <label>X (横)
+            <input v-model.number="state.nMeshX" type="number" min="10" max="60" />
+          </label>
+          <label>Y (高さ)
+            <input v-model.number="state.nMeshY" type="number" min="8" max="60" />
+          </label>
+          <label>Z (奥行)
+            <input v-model.number="state.nMeshZ" type="number" min="10" max="60" />
+          </label>
+        </div>
+        <div class="row">
+          <label>unitSize (m)
+            <input v-model.number="state.unitSize" type="number" min="0.05" step="0.05" />
+          </label>
+          <button @click="createField">フィールド作成</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>ボクセル種類</h2>
+        <div class="voxel-buttons">
+          <button 
+            type="button" 
+            class="voxel-button" 
+            :class="{ selected: state.selectedType === VoxelType.INSIDE }"
+            @click="setSelectedType(VoxelType.INSIDE)"
+            :style="{ '--voxel-color': '#111827' }"
+          >空気</button>
+          <button 
+            type="button" 
+            class="voxel-button" 
+            :class="{ selected: state.selectedType === VoxelType.BOTTOM }"
+            @click="setSelectedType(VoxelType.BOTTOM)"
+            :style="{ '--voxel-color': '#8a5a44' }"
+          >床</button>
+          <button 
+            type="button" 
+            class="voxel-button" 
+            :class="{ selected: state.selectedType === VoxelType.TOP }"
+            @click="setSelectedType(VoxelType.TOP)"
+            :style="{ '--voxel-color': '#4a5568' }"
+          >天井</button>
+          <button 
+            type="button" 
+            class="voxel-button" 
+            :class="{ selected: state.selectedType === VoxelType.OUTSIDE }"
+            @click="setSelectedType(VoxelType.OUTSIDE)"
+            :style="{ '--voxel-color': '#d1d5db' }"
+          >壁</button>
+          <button 
+            type="button" 
+            class="voxel-button" 
+            :class="{ selected: state.selectedType === VoxelType.WINDOW }"
+            @click="setSelectedType(VoxelType.WINDOW)"
+            :style="{ '--voxel-color': '#a7d8ff' }"
+          >窓</button>
+          <button 
+            type="button" 
+            class="voxel-button" 
+            :class="{ selected: state.selectedType === VoxelType.SIDE }"
+            @click="setSelectedType(VoxelType.SIDE)"
+            :style="{ '--voxel-color': '#d1d5db' }"
+          >内壁</button>
+          <button 
+            type="button" 
+            class="voxel-button" 
+            :class="{ selected: state.selectedType === VoxelType.OBSTACLE }"
+            @click="setSelectedType(VoxelType.OBSTACLE)"
+            :style="{ '--voxel-color': '#ff8acb' }"
+          >家具</button>
+          <button 
+            type="button" 
+            class="voxel-button" 
+            :class="{ selected: state.selectedType === VoxelType.AC }"
+            @click="setSelectedType(VoxelType.AC)"
+            :style="{ '--voxel-color': '#f59e0b' }"
+          >エアコン</button>
+          <button 
+            type="button" 
+            class="voxel-button" 
+            :class="{ selected: state.selectedType === VoxelType.CL }"
+            @click="setSelectedType(VoxelType.CL)"
+            :style="{ '--voxel-color': '#ef4444' }"
+          >暖房器具</button>
+        </div>
+        <label class="checkbox">
+          面の選択
+          <select id="pickLayer">
+            <option value="ray">クリック面</option>
+            <option value="innerWall">壁の内側</option>
+            <option value="floor1">床+1</option>
+            <option value="floor2">床+2</option>
+            <option value="floor3">床+3</option>
+            <option value="floor4">床+4</option>
+          </select>
+        </label>
+        <p class="hint">クリックで配置。INSIDEは表示しません。</p>
+      </section>
+
+      <section>
+        <h2>シミュレーション対象</h2>
+        <select v-model.number="state.ACtype" @change="onACTypeChange">
+          <option :value="1">夏（冷房）</option>
+          <option :value="2">冬（暖房）</option>
+        </select>
+
+        <h2>温度設定 (℃)</h2>
+        <div class="row">
+          <label>室内温度
+            <input v-model.number="state.InsidePhi" type="number" min="0" max="40" step="0.5" />
+          </label>
+          <label>室外温度
+            <input v-model.number="state.InletPhi" type="number" min="0" max="40" step="0.5" />
+          </label>
+        </div>
+        <div class="row">
+          <label>床温度
+            <input v-model.number="state.FloorPhi" type="number" min="0" max="40" step="0.5" />
+          </label>
+          <label>障害物温度
+            <input v-model.number="state.ObsPhi" type="number" min="0" max="40" step="0.5" />
+          </label>
+        </div>
+      </section>
+
+      <section>
+        <h2>断熱性設定</h2>
+        <div class="row">
+          <label>窓の断熱性
+            <select v-model.number="state.windowKset">
+              <option :value="6">シングルガラス</option>
+              <option :value="3">複層ガラス</option>
+              <option :value="1.5">low-eガラス</option>
+            </select>
+          </label>
+          <label>壁の断熱性
+            <select v-model.number="state.wallKset">
+              <option :value="2.5">無断熱</option>
+              <option :value="1.0">30mm</option>
+              <option :value="0.6">50mm</option>
+              <option :value="0.3">100mm</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section>
+        <h2>エアコン設定</h2>
+        <div class="row">
+          <label>風速
+            <input v-model.number="state.ACwind" type="number" min="0" max="10" step="0.5" />
+          </label>
+          <label>風向き
+            <select v-model.number="state.ACdir">
+              <option :value="1">下向き</option>
+              <option :value="2">水平方向</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section>
+        <h2>出力</h2>
+        <div class="row">
+          <button @click="saveFile">ファイル保存</button>
+          <button @click="openSimulation" class="simulation-btn">シミュレーション起動</button>
+        </div>
+        <div class="row">
+          <button @click="resetField" class="reset-btn">フィールド初期化</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>操作</h2>
+        <ul>
+          <li>左ドラッグ: 視点回転</li>
+          <li>右ドラッグ: 平行移動</li>
+          <li>ホイール: ズーム</li>
+          <li>セルクリック: 選択セルに配置</li>
+        </ul>
+      </section>
+    </aside>
+
+    <main class="viewport">
+      <canvas ref="canvasRef"></canvas>
+    </main>
+  </div>
+</template>
+
+<style scoped>
+* {
+  box-sizing: border-box;
+}
+
+.voxel-container {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  height: 100vh;
+  background: #0f1115;
+  color: #e6e7ea;
+}
+
+.panel {
+  background: #171a21;
+  padding: 16px;
+  overflow-y: auto;
+  border-right: 1px solid #2a2f3a;
+}
+
+.panel h1 {
+  font-size: 20px;
+  margin: 0 0 12px;
+}
+
+.header-section {
+  margin-bottom: 16px;
+}
+
+.back-button {
+  width: 100%;
+  margin-top: 8px;
+  background: #4a5568 !important;
+}
+
+.back-button:hover {
+  background: #5a6578 !important;
+}
+
+.panel h2 {
+  font-size: 14px;
+  margin: 16px 0 8px;
+  color: #b4b8c6;
+}
+
+.panel .row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.panel label {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  gap: 4px;
+  flex: 1;
+}
+
+.panel .checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.panel .checkbox select {
+  flex: 1;
+}
+
+.panel input,
+.panel select,
+.panel button,
+.panel textarea {
+  border-radius: 6px;
+  border: 1px solid #2a2f3a;
+  background: #0f1115;
+  color: #e6e7ea;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.panel button {
+  cursor: pointer;
+  background: #2b6cb0;
+  border: none;
+}
+
+.panel button:hover {
+  background: #2f79c5;
+}
+
+.simulation-btn {
+  background: #16a34a !important;
+}
+
+.simulation-btn:hover {
+  background: #15803d !important;
+}
+
+.reset-btn {
+  background: #ef4444 !important;
+  color: white !important;
+}
+
+.reset-btn:hover {
+  background: #dc2626 !important;
+}
+
+.panel textarea {
+  width: 100%;
+  margin-top: 8px;
+  resize: vertical;
+}
+
+.voxel-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.voxel-button {
+  border: 1px solid #2a2f3a;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  color: #e6e7ea;
+  text-align: left;
+  cursor: pointer;
+  background: #0f1115;
+  position: relative;
+}
+
+.voxel-button::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 6px;
+  background: var(--voxel-color, #888);
+  vertical-align: middle;
+}
+
+.voxel-button.selected {
+  outline: 2px solid #63b3ed;
+  border-color: transparent;
+}
+
+.hint {
+  font-size: 12px;
+  color: #8890a6;
+}
+
+.viewport {
+  position: relative;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+ul {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 12px;
+  color: #9aa3b8;
+}
+</style>

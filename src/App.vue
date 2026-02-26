@@ -4,6 +4,7 @@ import { Store } from "@/stores/store";
 import Setting from './components/setting.vue'
 import SetDetail from './components/setdetail.vue'
 import Graph from './components/graph.vue'
+import Voxel from './components/Voxel.vue'
 import { Structure } from "@/assets/structure"
 
 const store = Store();
@@ -40,6 +41,7 @@ onMounted(() => {
   <div class="wrapper">
     <Setting v-if="store.page=='setting'" />
     <SetDetail v-if="store.page=='setdetail'" />
+    <Voxel v-if="store.page=='voxel'" />
     <div  v-if="store.page=='graph'" >
       <Graph/>
     </div>

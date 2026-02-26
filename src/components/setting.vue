@@ -123,6 +123,7 @@ if (param) {
       <input type="button" value="シミュレーション実行" @click="store.page='graph'">
       <input type="button" value="詳細計算設定" @click="store.page='setdetail'">
       <input type="button" value="2画面比較" @click="store.graph.pararel=2;store.page = 'setdetail'">
+      <input type="button" value="3Dボクセルエディタ" @click="store.page='voxel'">
     </div>
 
     <canvas id="mesh" width="600" height="600"></canvas>
