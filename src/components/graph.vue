@@ -492,4 +492,7 @@ td{
   width:40px;
   text-align: center;
 }
+h2{
+  color:white;
+}
 </style>

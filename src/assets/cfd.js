@@ -410,7 +410,7 @@ export class CFD {
   equip_airconditioner = function() {
     var i,j,k;
     var dir = this.dir;
-    var acw = this.ACpower;
+    var acw = this.setval.ACpower;
     var hadj = 1; //出力熱調整
 
     //下方向に温風 壁と反対方向で同じ風速で吸収
@@ -423,7 +423,7 @@ export class CFD {
     } else {
       this.acv = 3;	//強風
     }
-    //暖房能力2.8kWと想定 act温度上昇 
+    //暖房能力想定 act温度上昇 
     if ( this.addair ) {
       this.act = acw / ( this.sh_air * this.rou * 1000 * this.acv * this.conf.ac_width * this.conf.ac_height );
       // console.log(this.act);
@@ -452,7 +452,7 @@ export class CFD {
                 if ( this.ACwind > 0 ) {
                   this.acheatsum += acw * hadj;
                   this.Phi[i][j][k] = ( this.Phi[i][j+1][k] * 4 + this.Phi[i+1][j+1][k] + this.Phi[i-1][j+1][k] + this.Phi[i][j+1][k+1] + this.Phi[i][j+1][k-1] ) / 8;
-                  this.Phi[i][j-1][k] = this.Phi[i][j+1][k] + (this.setval.ACheat ? 1 : -1 ) * this.act * hadj;
+                  this.Phi[i][j-1][k] = this.Phi[i][j][k] + (this.setval.ACheat ? 1 : -1 ) * this.act * hadj;
                   adj = 1;
                 } else {
                   //自動調整
@@ -465,11 +465,11 @@ export class CFD {
                     adj = 1;
                   }
                   this.Phi[i][j][k] = ( this.Phi[i][j+1][k] * 4 + this.Phi[i+1][j+1][k] + this.Phi[i-1][j+1][k] + this.Phi[i][j+1][k+1] + this.Phi[i][j+1][k-1] ) / 8;
-                  this.Phi[i][j-1][k] = this.Phi[i][j+1][k] + (this.setval.ACheat ? 1 : -1 ) * this.act * hadj;
+                  this.Phi[i][j-1][k] = this.Phi[i][j][k] + (this.setval.ACheat ? 1 : -1 ) * this.act * hadj;
                 }
               } else {
                 this.Phi[i][j][k] = ( this.Phi[i][j+1][k] * 4 + this.Phi[i+1][j+1][k] + this.Phi[i-1][j+1][k] + this.Phi[i][j+1][k+1] + this.Phi[i][j+1][k-1] ) / 8;
-                this.Phi[i][j-1][k] = this.Phi[i][j+1][k];
+                this.Phi[i][j-1][k] = this.Phi[i][j][k];
                 if ( this.ACwind > 0 ) {
                   adj = 1;
                 } else {
@@ -477,7 +477,7 @@ export class CFD {
                 }
               }
   
-              //横方向(上下のセルは角度をつけて吸い込む)
+              //横方向成分(上下のセルは角度をつけて吸い込む)
               if ( i == 2 ) {
                 acx = 1;
                 this.Vel[this.conf.x][i][j-1][k] = this.acv * dir * adj;
@@ -504,7 +504,7 @@ export class CFD {
               this.Vel[this.conf.y][i][j-1][k] = -this.acv* Math.sqrt( 1 - dir*dir) * adj;
 
             } else {
-              //横向き
+              //横向きの風
               var dt = 0;
               if( hadj > 0) {
                 if ( this.ACwind > 0 ) {
@@ -559,6 +559,7 @@ export class CFD {
               }
 
             }
+            // console.log(this.Phi[i][j-1][k], this.act, hadj);
             this.acheatcount++;
           }
         }
