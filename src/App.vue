@@ -23,6 +23,10 @@ onMounted(() => {
     try {
       const jsonData = JSON.parse(cfdVoxelData);
       store.paramstore(jsonData);
+      // meshtype を setval2 にもコピー
+      if (jsonData.setval && jsonData.setval.meshtype) {
+        store.setval2.meshtype = jsonData.setval.meshtype;
+      }
       // structureを初期化
       store.structure.init(store.setval);
       store.structure2.init(store.setval2);

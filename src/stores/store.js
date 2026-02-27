@@ -1,11 +1,20 @@
 import { defineStore } from 'pinia'
 
+//メッシュデータの取り扱い
+//  CFD計算処理：cfd.js meshtype
+//      storeの値をもとに作成
+//  ヴォクセル設計：voxel.js meshtype
+//      voxel.jsでの編集内容をstoreに保存 
+//  メイン store.js setval.meshtype / setval2.meshtype
+//      App.vue sessionStorageで保持していた値をstoreに読み込み
+//      graph.vue でstoreに基づいた値から表示
+
 export const Store = defineStore('store', {
   state: () => ({
     //for view
     title: '3D室内空気の流れシミュレーション',
 
-    page: 'setting',
+    page: 'voxel',
 
     viewpoint_x: 0,
     viewpoint_y: 0,
@@ -66,6 +75,7 @@ export const Store = defineStore('store', {
 
       ACwall : 4,
       ACwind : 2,
+      ACpower : 2800, //w
       ACheat : true,
       ACdir : 1,
       CirculatorWind : 0,
@@ -73,6 +83,7 @@ export const Store = defineStore('store', {
       windowKset : 6,
       wallKset : 2.5,
       atrium: false,
+      meshtype: [],
    },
 
     setval2: {},

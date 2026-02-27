@@ -71,8 +71,8 @@ export class CFD {
 
 
     //不使用設定
-    this.Dd = 0.001	;				//拡散係数　m2/s
-    this.nu = 0.000155;				//空気の動粘性係数 m2/s
+    // this.Dd = 0.001	;				//拡散係数　m2/s
+    // this.nu = 0.000155;				//空気の動粘性係数 m2/s
 
     //計算条件
     this.ObsPhi =20;				//障害物の温度
@@ -188,6 +188,10 @@ export class CFD {
           if ( this.meshtype[i][j][k] ==  this.conf.OBSTACLE )
             this.Phi[i][j][k] = this.ObsPhi;
           if ( this.meshtype[i][j][k] ==  this.conf.WINDOW || this.meshtype[i][j][k] ==  this.conf.OUTSIDE )
+            this.Phi[i][j][k] = this.InletPhi;
+          if ( this.meshtype[i][j][k] ==  this.conf.AC )
+            this.Phi[i][j][k] = this.InletPhi;
+          if ( this.meshtype[i][j][k] ==  this.conf.CL )
             this.Phi[i][j][k] = this.InletPhi;
         }
       }
@@ -406,7 +410,7 @@ export class CFD {
   equip_airconditioner = function() {
     var i,j,k;
     var dir = this.dir;
-    var acw = 2800;
+    var acw = this.ACpower;
     var hadj = 1; //出力熱調整
 
     //下方向に温風 壁と反対方向で同じ風速で吸収
@@ -1152,7 +1156,7 @@ export class CFD {
         if( this.delta_t > this.delta_t_max ) {
           this.delta_t = this.delta_t_max;
         }
-        console.log("delta_t: " + maxcoulant + " -> " + this.delta_t);
+        // console.log("delta_t: " + maxcoulant + " -> " + this.delta_t);
       }
     }
   }

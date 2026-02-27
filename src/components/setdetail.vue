@@ -13,8 +13,11 @@ let detaildisp = ref(scenario.detaildisp);
 let detaildisp2 = ref(scenario.detaildisp2);
 let selects = ref(scenario.selects);
 
-store.structure.init(store.setval);
-store.structure2.init(store.setval2);
+// meshtype が存在する場合のみ初期化
+if (store.setval.meshtype && store.setval.meshtype.length > 0) {
+  store.structure.init(store.setval);
+  store.structure2.init(store.setval2);
+}
 
 onMounted(() => {
   const canvas = document.getElementById("mesh");
@@ -72,6 +75,11 @@ function draw2() {
   store.structure2.draw_wall(ctx2);
 }
 
+function goVoxelEditor() {
+  store.saveToSessionStorage();
+  store.page = 'voxel';
+}
+
 </script>
 
 <template>
@@ -103,8 +111,8 @@ function draw2() {
       <p class="clear"></p>
       <input type="button" value="シミュレーション実行" @click="store.page='graph'">
       <input type="button" v-if="store.graph.pararel == 2" value="1画面" @click="store.graph.pararel = 1">
-      <input type="button" v-if="store.graph.pararel == 1" value="2画面比較" @click="store.graph.pararel = 2">
-      <input type="button" value="3Dボクセルエディタ" @click="store.page='voxel'">
+      <input type="button" v-if="store.graph.pararel != 2" value="2画面比較" @click="store.graph.pararel = 2">
+      <input type="button" value="3D設計" @click="goVoxelEditor">
       <input type="button" value="初期化" @click="store.page = 'setting'">
     </div>
 
@@ -120,4 +128,8 @@ function draw2() {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+h2{
+  color:white;
+}
+</style>
