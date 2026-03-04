@@ -20,12 +20,12 @@ if (store.setval.meshtype && store.setval.meshtype.length > 0) {
 }
 
 onMounted(() => {
-  const canvas = document.getElementById("mesh");
-  ctx = canvas.getContext("2d");
-  const canvas2 = document.getElementById("mesh2");
-  ctx2 = canvas2.getContext("2d");
-  draw();
-  draw2();
+  // const canvas = document.getElementById("mesh");
+  // ctx = canvas.getContext("2d");
+  // const canvas2 = document.getElementById("mesh2");
+  // ctx2 = canvas2.getContext("2d");
+  // draw();
+  // draw2();
 });
 
 //file upload(read)=========================
@@ -80,12 +80,18 @@ function goVoxelEditor() {
   store.page = 'voxel';
 }
 
+
+
 </script>
 
 <template>
   <h1>{{ store.title }}</h1>
-  <h2>詳細計算設定</h2>
-  <p><FileUpload @load="onFileLoad" /></p>
+  <h2>パラメータ設定</h2>
+  <p>
+      <input type="button" value="3D設計" @click="goVoxelEditor">
+      <input type="button" value="初期化" @click="store.page = 'setting'">
+    <FileUpload @load="onFileLoad" />
+  </p>
   <div class="wrapper">
     <div class="setting">
 
@@ -107,23 +113,28 @@ function goVoxelEditor() {
           </select>
         </div>
       </template>
-
       <p class="clear"></p>
-      <input type="button" value="シミュレーション実行" @click="store.page='graph'">
-      <input type="button" v-if="store.graph.pararel == 2" value="1画面" @click="store.graph.pararel = 1">
-      <input type="button" v-if="store.graph.pararel != 2" value="2画面比較" @click="store.graph.pararel = 2">
-      <input type="button" value="3D設計" @click="goVoxelEditor">
-      <input type="button" value="初期化" @click="store.page = 'setting'">
+      <p class="clear center mt20">
+        <label>
+          <input type="radio" name="pararel" :value="1" :checked="store.graph.pararel === 1" @change="() => { store.graph.pararel = 1 }">
+          1画面
+        </label>&nbsp;&nbsp;
+        <label>
+          <input type="radio" name="pararel" :value="2" :checked="store.graph.pararel === 2" @change="() => { store.graph.pararel = 2 }">
+          2画面比較
+        </label>&nbsp;&nbsp;
+        <input type="button" value="シミュレーション実行" @click="store.page='graph'">
+      </p>
     </div>
 
-    <canvas id="mesh" width="600" height="600"></canvas>
-    <canvas :style="{ opacity: store.graph.pararel == 2 ? 1 : 0 }" id="mesh2" width="600" height="600"></canvas>
+    <!-- <canvas id="__mesh" width="600" height="600"></canvas>
+    <canvas :style="{ opacity: store.graph.pararel == 2 ? 1 : 0 }" id="__mesh2" width="600" height="600"></canvas> -->
 
-    <p>視点移動：
+    <!-- <p>視点移動：
     <input type="button" value="◀" @click="move(-1, 0)">
     <input type="button" value="▶" @click="move(1, 0)">
     <input type="button" value="▲" @click="move(0, 1)">
-    <input type="button" value="▼" @click="move(0, -1)"></p>
+    <input type="button" value="▼" @click="move(0, -1)"></p> -->
 
   </div>
 </template>
@@ -131,5 +142,11 @@ function goVoxelEditor() {
 <style scoped>
 h2{
   color:white;
+}
+.center{
+  text-align: center;
+}
+.mt20{
+  margin-top: 20px;
 }
 </style>

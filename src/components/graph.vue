@@ -1,10 +1,12 @@
 <script setup>
-import { ref, watch, onMounted } from "vue"
+import { ref, watch, onMounted, onBeforeUnmount } from "vue"
 import { Store } from "@/stores/store"
 import { CFD } from "@/assets/cfd"
 import VueSlider from "vue-3-slider-component";
 import { saveAs } from "file-saver"
 import { Config } from "@/assets/config.js"
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 const store = Store();
 const conf = new Config();
@@ -17,14 +19,20 @@ disp2.value.floor = {};
 
 //画面設定
 store.graph.layerz = Math.floor(store.setval.nMeshZ / 2);
-var arrowheadsize = 3;
 var arrowunit = 20;
 
 //計算用変数
 var timer;
 var timerclose = ref(false);
-var ctx, ctx2,ctx3;
-var canvas, canvas2, canvas3;
+var ctx3;
+
+const canvasRef = ref(null);
+const canvasRef2 = ref(null);
+const colorCanvasRef = ref(null);
+let graphView = null;
+let graphView2 = null;
+let animationId = null;
+let isSyncingView = false;
 
 //流れ表示のための経過ステップ
 var steptime = 0;
@@ -34,17 +42,33 @@ const cfd = new CFD();
 const cfd2 = new CFD();
 
 onMounted(() => {
-  canvas = document.getElementById('myCanvas');
-  ctx = canvas.getContext('2d');
-  canvas2 = document.getElementById('myCanvas2');
-  ctx2 = canvas2.getContext('2d');
-  canvas3 = document.getElementById('colors');
+  const canvas = canvasRef.value;
+  const canvas2 = canvasRef2.value;
+  const canvas3 = colorCanvasRef.value;
+  if (!canvas || !canvas3) return;
+
+  graphView = createGraphView(canvas);
+  if (canvas2) {
+    graphView2 = createGraphView(canvas2);
+  }
   ctx3 = canvas3.getContext('2d');
+  window.addEventListener('resize', resizeAllGraphViews);
 
   structureInit();
   colordisp();
   draw();
+  animateGraph();
   calcStart();
+});
+
+onBeforeUnmount(() => {
+  calcStop();
+  if (animationId) cancelAnimationFrame(animationId);
+  window.removeEventListener('resize', resizeAllGraphViews);
+  disposeGraphView(graphView);
+  disposeGraphView(graphView2);
+  graphView = null;
+  graphView2 = null;
 });
 
 const structureInit = function() {
@@ -78,8 +102,6 @@ const calcStart = function () {
     if (store.graph.pararel == 2) restart &= cfd2.batch_end;
 
     if (restart) {
-      draw();
-
       //display span adjust, between 300 to 500 ms
       nowtime = new Date();
       if (nowtime.getTime() - starttime.getTime() > 500) {
@@ -91,12 +113,14 @@ const calcStart = function () {
         store.setval2.batch_sec *= 1.5;
       }
       starttime = nowtime;
-      steptime++;
+      draw();
     }
 
     //start calculation( skip in case of not restart)
     var endcalc = cfd.calc(restart);
     if (store.graph.pararel == 2) endcalc &= cfd2.calc(restart);
+
+    steptime++;
 
     //時間上限に達したら終了
     if (endcalc) {
@@ -222,6 +246,7 @@ watch(() => store.graph, () => {
 
 //color tempelature =================================
 const colordisp = function(){
+  if (!ctx3) return;
   var colors = [];
   if( store.graph.temperature[1] - store.graph.temperature[0] > 20 ) {
     for (var i = store.graph.temperature[0]; i <= store.graph.temperature[1]; i+=2) {
@@ -242,6 +267,125 @@ const colordisp = function(){
     ctx3.fillText(colors[i], 600 - (colors.length - i) * 20 + 5, 10);
   }
   ctx3.stroke();
+}
+
+function createGraphView(canvas) {
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio || 1);
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0f1115);
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+
+  const light = new THREE.DirectionalLight(0xffffff, 0.9);
+  light.position.set(10, 15, 5);
+  scene.add(light);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+  const staticGroup = new THREE.Group();
+  const flowGroup = new THREE.Group();
+  scene.add(staticGroup, flowGroup);
+
+  const view = { renderer, scene, camera, controls, staticGroup, flowGroup };
+  controls.addEventListener('change', () => {
+    syncOtherView(view);
+  });
+  fitGraphCamera(view);
+  resizeGraphView(view);
+  return view;
+}
+
+function copyViewState(source, target) {
+  if (!source || !target) return;
+  target.camera.position.copy(source.camera.position);
+  target.camera.quaternion.copy(source.camera.quaternion);
+  target.camera.zoom = source.camera.zoom;
+  target.camera.updateProjectionMatrix();
+  target.controls.target.copy(source.controls.target);
+  target.controls.update();
+}
+
+function syncOtherView(source) {
+  if (isSyncingView) return;
+  const target = source === graphView ? graphView2 : graphView;
+  if (!target) return;
+  isSyncingView = true;
+  copyViewState(source, target);
+  isSyncingView = false;
+}
+
+function disposeGroup(group) {
+  while (group.children.length) {
+    const child = group.children.pop();
+    group.remove(child);
+    if (child.geometry) {
+      child.geometry.dispose();
+    }
+    if (child.material) {
+      if (Array.isArray(child.material)) {
+        child.material.forEach((m) => m.dispose());
+      } else {
+        child.material.dispose();
+      }
+    }
+  }
+}
+
+function disposeGraphView(view) {
+  if (!view) return;
+  disposeGroup(view.staticGroup);
+  disposeGroup(view.flowGroup);
+  view.controls?.dispose();
+  view.renderer?.dispose();
+}
+
+function fitGraphCamera(view) {
+  if (!view) return;
+  const center = new THREE.Vector3(nMeshX / 2, nMeshY / 2, nMeshZ / 2);
+  const maxDim = Math.max(nMeshX, nMeshY, nMeshZ);
+  const fov = THREE.MathUtils.degToRad(view.camera.fov);
+  let distance = maxDim / (2 * Math.tan(fov / 2));
+  distance *= 1.4;
+
+  const direction = new THREE.Vector3(1, 0.7, 1).normalize();
+  view.camera.position.copy(center).add(direction.multiplyScalar(distance));
+  view.camera.near = Math.max(0.1, distance / 100);
+  view.camera.far = distance * 10;
+  view.camera.lookAt(center);
+  view.camera.updateProjectionMatrix();
+
+  view.controls.target.copy(center);
+  view.controls.update();
+}
+
+function resizeGraphView(view) {
+  if (!view) return;
+  const canvas = view.renderer.domElement;
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  if (!width || !height) return;
+  view.renderer.setSize(width, height, false);
+  view.camera.aspect = width / height;
+  view.camera.updateProjectionMatrix();
+}
+
+function resizeAllGraphViews() {
+  resizeGraphView(graphView);
+  resizeGraphView(graphView2);
+}
+
+function animateGraph() {
+  animationId = requestAnimationFrame(animateGraph);
+  if (graphView) {
+    graphView.controls.update();
+    graphView.renderer.render(graphView.scene, graphView.camera);
+  }
+  if (graphView2) {
+    graphView2.controls.update();
+    graphView2.renderer.render(graphView2.scene, graphView2.camera);
+  }
 }
 
 //color
@@ -269,54 +413,47 @@ const getColor = function(temp, a) {
 }
 
 
-//view move =============================
-function move(x, y) {
-  store.viewpoint_x += x;
-  store.viewpoint_y += y;
-  draw();
-}
-
 //graph draw ============================
 function draw(){
   arrowunit = 20 * Math.pow(2, store.graph.arrowunit_multi);
   if (cfd.Phi == undefined) return;
   [disp.value.vmax_show, disp.value.tmax_show, disp.value.tmin_show, disp.value.tave ] = calc_maxmin(cfd, store.structure.meshtype);
   disp.value.floor = calc_maxmin_floor(cfd, store.structure.meshtype);
-  drawone(ctx,cfd);
 
   if (store.graph.pararel == 2) {
     //pararel view
     [disp2.value.vmax_show, disp2.value.tmax_show, disp2.value.tmin_show, disp2.value.tave ] = calc_maxmin(cfd2, store.structure2.meshtype);
     disp2.value.floor = calc_maxmin_floor(cfd2, store.structure2.meshtype);
-    if( disp.value.vmax_show > disp2.value.vmax_show ) vmax = disp.value.vmax_show;
-    drawone(ctx2,cfd2);
+    // 両方の最大風速を比較して、大きい方をvmaxとして使用
+    vmax = Math.max(disp.value.vmax_show, disp2.value.vmax_show);
+  } else {
+    vmax = disp.value.vmax_show;
+  }
+  
+  drawone(graphView,cfd);
+  if (store.graph.pararel == 2) {
+    drawone(graphView2,cfd2);
   }
 }
 
 //one graph draw
-function drawone(ctx,cfd) {
-  var startX = 0, startY = 0, endX = 0, endY = 0, dt;
+function drawone(view,cfd) {
+  if (!view || cfd.Phi == undefined) return;
+
+  resizeGraphView(view);
+  disposeGroup(view.staticGroup);
+  disposeGroup(view.flowGroup);
+
+  const box = new THREE.Box3(
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(nMeshX, nMeshY, nMeshZ)
+  );
+  const boxHelper = new THREE.Box3Helper(box, 0x4a5568);
+  view.staticGroup.add(boxHelper);
+
+  var dt;
   var i, j, k;
-  var vx, vy, angle;
-  var centerX, centerY;
-
-  if (cfd.Phi == undefined) return;
-
-  ctx.clearRect(0, 0, 600, 600);
-
-  //display structure
-  store.structure.draw_mesh(ctx);
-  store.structure.draw_wall(ctx);
-
-  //display square cut
-  if (store.graph.showz) {
-    var [x1, y1] = store.posxy(0, 0, store.graph.layerz);
-    var [x2, y2] = store.posxy(nMeshX + 0.5, nMeshY + 0.5, store.graph.layerz);
-    ctx.beginPath();
-    ctx.strokeStyle = "rgba(0,0,0,0.3)";
-    ctx.rect(x1, y1, x2 - x1, y2 - y1);
-    ctx.stroke();
-  }
+  var vx, vy, vz;
 
   for (i = 1; i <= nMeshX; i++) {
     for (j = 1; j <= nMeshY; j++) {
@@ -325,70 +462,75 @@ function drawone(ctx,cfd) {
         //Z方向の間引き
         if (k % 2 == 0 && k != store.graph.layerz && store.graph.showz) continue;
 
-        ctx.beginPath();
-
         //set color and line width
-        if (store.graph.layerz == k || !store.graph.showz) {
-          ctx.strokeStyle = getColor(cfd.Phi[i][j][k], 1);
-          ctx.lineWidth = store.graph.showz ? 2 : 1;
-        } else {
-          ctx.strokeStyle = getColor(cfd.Phi[i][j][k], 0.2);
-          ctx.lineWidth = 1;
-        }
-        ctx.fillStyle = getColor(cfd.Phi[i][j][k], 0.5);
+        const isActiveLayer = store.graph.layerz == k || !store.graph.showz;
+        const alpha = isActiveLayer ? 1 : 0.2;
+        const colorValue = getColor(cfd.Phi[i][j][k], alpha);
 
         vx = cfd.Vel[0][i][j][k];
         vy = cfd.Vel[1][i][j][k];
+        vz = cfd.Vel[2][i][j][k];
 
         //flow move
         //-0.5 to 0.5, 10step
         dt = store.graph.startfix ? 0 : (steptime % 10) / 10 - 0.5;
 
-        //Canvas position
-        [centerX, centerY] = store.posxy(i, j, k);
-        startX = centerX + vx / vmax * dt * 400 / nMeshX;
-        startY = centerY - vy / vmax * dt * 400 / nMeshY;  //座標が逆なので-1をかける
-        endX = startX + vx / vmax * arrowunit;
-        endY = startY - vy / vmax * arrowunit;
+        const center = new THREE.Vector3(i - 0.5, j - 0.5, k - 0.5);
+        const start = new THREE.Vector3(
+          center.x + vx / vmax * dt,
+          center.y + vy / vmax * dt,
+          center.z + vz / vmax * dt,
+        );
+
+        const vec = new THREE.Vector3(
+          vx / vmax * arrowunit * nMeshX / 400,
+          vy / vmax * arrowunit * nMeshY / 400,
+          vz / vmax * arrowunit * nMeshZ / 400,
+        );
+        const len = vec.length();
 
         if (store.graph.onlytemp) {
           //circle graph
-          ctx.ellipse(centerX, centerY, 10, 10, 0, 0, 2 * Math.PI);
-          ctx.fill();
+          const sphereGeo = new THREE.SphereGeometry(0.16, 12, 12);
+          const sphereMat = new THREE.MeshStandardMaterial({
+            color: new THREE.Color(getColor(cfd.Phi[i][j][k], 1)),
+            transparent: true,
+            opacity: isActiveLayer ? 0.7 : 0.25,
+            metalness: 0.05,
+            roughness: 0.5,
+          });
+          const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+          sphere.position.copy(center);
+          view.flowGroup.add(sphere);
 
         } else {
           //arrow graph
-          ctx.moveTo(startX, startY);
-          ctx.lineTo(endX, endY);
-
-          //arrow top
-          if (Math.abs(vx / vmax) * arrowunit / 20 < 0.2 && Math.abs(vy / vmax) * arrowunit / 20 < 0.2) {
-            ctx.fillRect(centerX - 1, centerY - 1, 3, 3);
+          if (Math.abs(vx / vmax) * arrowunit / 20 < 0.2 && Math.abs(vy / vmax) * arrowunit / 20 < 0.2 && Math.abs(vz / vmax) * arrowunit / 20 < 0.2) {
+            const dotGeo = new THREE.SphereGeometry(0.06, 8, 8);
+            const dotMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(colorValue), transparent: true, opacity: alpha });
+            const dot = new THREE.Mesh(dotGeo, dotMat);
+            dot.position.copy(center);
+            view.flowGroup.add(dot);
           } else {
-            angle = Math.atan2(vy, vx);
-            ctx.moveTo(endX, endY);
-            ctx.lineTo(endX + arrowheadsize * Math.cos(angle + 15), endY - arrowheadsize * Math.sin(angle + 15));
-            ctx.moveTo(endX, endY)
-            ctx.lineTo(endX + arrowheadsize * Math.cos(angle - 15), endY - arrowheadsize * Math.sin(angle - 15));
+            const dir = vec.clone().normalize();
+            const arrow = new THREE.ArrowHelper(
+              dir,
+              start,
+              len,
+              new THREE.Color(colorValue),
+              Math.max(0.06, Math.min(0.25, len * 0.35)),
+              Math.max(0.04, Math.min(0.18, len * 0.2)),
+            );
+            arrow.line.material.transparent = true;
+            arrow.line.material.opacity = alpha;
+            arrow.cone.material.transparent = true;
+            arrow.cone.material.opacity = alpha;
+            view.flowGroup.add(arrow);
           }
-          ctx.stroke();
         }
       }
     }
   }
-
-  //arrow length of wind speed 1m/s
-  ctx.font = "12px 'Arial'";
-  ctx.fillStyle = "black";
-  ctx.strokeStyle = "rgba(0,0,0,0.6)";
-  ctx.fillText("1m/s", 10, 590);
-  ctx.beginPath();
-  ctx.moveTo(40, 590);
-  ctx.lineTo(40 + arrowunit/ vmax, 590);
-  ctx.lineTo(40 + arrowunit/ vmax -5, 595);
-  ctx.moveTo(40 + arrowunit/ vmax, 590);
-  ctx.lineTo(40 + arrowunit/ vmax -5, 585);
-  ctx.stroke();
 }
 
 
@@ -410,7 +552,7 @@ const savedata = function(){
     <input type="button" :disabled="!store.fgstop" value="◀▶再度計算" @click="structureInit();calcStart();">
     <input type="button" :disabled="timerclose" :value="store.fgstop ? (disp.sec==0 ? '▶計算開始' : '▶計算再開') : '□一時停止'" @click="store.fgstop = !store.fgstop">
     <input type="button" :disabled="store.fgstop" value="■停止" @click="calcStop();">
-    <input type="button" value="◀詳細計算設定" @click="back(true);">
+    <input type="button" value="◀パラメータ設定" @click="back(true);">
     <input type="button" value="◀3D設計" @click="backTo3DDesign();">
     <input v-if="store.fgstop" type="button" value="●保存" @click="savedata();">
   </p>
@@ -423,7 +565,7 @@ const savedata = function(){
       <p>熱流入出　左：{{ Math.round(disp.leftin) }} W / 奥：{{ Math.round(disp.frontin) }} W </p>
       <p v-if="store.setval.ACwall">エアコン：累積：{{ Math.round(disp.ackwh*1000)}}Wh　{{ Math.round(disp.acheat) }} W</p>
   </template>
-    <canvas id="myCanvas" width="600" height="600"></canvas>
+    <canvas ref="canvasRef" id="myCanvas" width="600" height="600"></canvas>
   </div>
 
   <div class="graph" id="g2" v-show="store.graph.pararel == 2">
@@ -434,18 +576,11 @@ const savedata = function(){
       <p>熱流入出　左：{{ Math.round(disp2.leftin) }} W / 奥：{{ Math.round(disp2.frontin) }} W </p>
       <p v-if="store.setval.ACwall">エアコン：累積{{ Math.round(disp2.ackwh*1000) }}Wh　{{ Math.round(disp2.acheat) }} W</p>
     </template>
-    <canvas id="myCanvas2" width="600" height="600"></canvas>
+    <canvas ref="canvasRef2" id="myCanvas2" width="600" height="600"></canvas>
   </div>
 
-  <p>視点移動：
-    <input type="button" value="◀" @click="move(-1, 0)">
-    <input type="button" value="▶" @click="move(1, 0)">
-    <input type="button" value="▲" @click="move(0, 1)">
-    <input type="button" value="▼" @click="move(0, -1)">
-  </p>
-
   <div class="clear control">
-    <canvas id="colors" width="600" height="40"></canvas>
+    <canvas ref="colorCanvasRef" id="colors" width="600" height="40"></canvas>
 
     <p>温度色範囲：
       <VueSlider v-model="store.graph.temperature" :min="0" :max="35" />

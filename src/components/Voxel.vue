@@ -77,7 +77,7 @@ const state = ref({
   title: "CFD設定",
   floor: 1,
   
-  temperature: [17, 29],
+  temperature: [10, 23],
   colordelete: [false, false],
   arrowunit_multi: 0,
   startfix: false,
@@ -89,7 +89,7 @@ const state = ref({
   frontKey: null,
 });
 
-// JSONデータを生成する共通関数
+// ファイル保存/store用：JSONデータ生成
 function generateJsonData() {
   const realX = (state.value.nMeshX-2) * state.value.unitSize;
   const realY = (state.value.nMeshY-2) * state.value.unitSize;
@@ -196,8 +196,7 @@ async function openSimulation() {
   }
   
   const jsonData = generateJsonData();
-  const jsonString = JSON.stringify(jsonData);
-  
+  const jsonString = JSON.stringify(jsonData);  
   sessionStorage.setItem('cfdVoxelData', jsonString);
   
   // storeにデータを設定（ページ遷移前に設定）
@@ -340,7 +339,7 @@ function loadFromSessionStorage() {
       }
       
       if (jsonData.graph) {
-        state.value.temperature = jsonData.graph.temperature || [17, 29];
+        state.value.temperature = jsonData.graph.temperature || [10, 23];
         state.value.colordelete = jsonData.graph.colordelete || [false, false];
         state.value.arrowunit_multi = jsonData.graph.arrowunit_multi || 0;
         state.value.startfix = jsonData.graph.startfix || false;
