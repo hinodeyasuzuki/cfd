@@ -24,6 +24,11 @@ for( let name in store.setval ){
       <Graph/>
     </div>
   </div>
+  <footer class="fixed-footer">
+    <a href="../">[CFD TOP]</a>　
+    <a href="https://www.hinodeya-ecolife.com">Hinodeya Institute for Ecolife.Co.Ltd</a>
+    　Ver.2.0 2026/2/18
+  </footer>
 </template>
 
 <style>
@@ -59,6 +64,17 @@ input[type="file"]{
 }
 .clear{
     clear:both;
+}
+.fixed-footer{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #f5f5f5;
+    text-align: right;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+    font-size: 0.9em;
 }
 
 </style>
