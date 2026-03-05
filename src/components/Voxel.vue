@@ -399,7 +399,6 @@ function onACTypeChange() {
 // Canvasのハンドラ
 function onUpdateVoxel({ cell, type }) {
   if (!canPlaceVoxel(cell, type)) {
-    console.log('Cannot place voxel at', cell, 'type:', type);
     return;
   }
   if (!state.value.meshtype || state.value.meshtype.length === 0) {
@@ -411,7 +410,9 @@ function onUpdateVoxel({ cell, type }) {
     console.error('Invalid cell coordinates:', cell);
     return;
   }
-  if (prev === type) return;
+  if (prev === type) {
+    return;
+  }
   state.value.history.push({ x: cell.x, y: cell.y, z: cell.z, prev });
   state.value.meshtype[cell.x][cell.y][cell.z] = type;
   updateACheatByState();
@@ -426,7 +427,6 @@ function onUpdateVoxels({ cells, type }) {
   }
   for (const cell of cells) {
     if (!canPlaceVoxel(cell, type)) {
-      console.log('Cannot place voxel at', cell, 'type:', type);
       continue;
     }
     const prev = state.value.meshtype?.[cell.x]?.[cell.y]?.[cell.z];
@@ -444,20 +444,31 @@ function onUpdateVoxels({ cells, type }) {
 }
 
 // 複数セルをクリア
-function onClearVoxels({ cells }) {
+function onClearVoxels({ cells, revertType = VoxelType.INSIDE, includeConnected = false }) {
   if (!state.value.meshtype || state.value.meshtype.length === 0) {
     console.error('meshtype array not initialized');
     return;
   }
-  for (const cell of cells) {
+  
+  let cellsToDelete = cells;
+  
+  // includeConnected が true で単一セルの場合、連結セルをすべて取得
+  if (includeConnected && cells.length === 1) {
+    const targetType = state.value.meshtype[cells[0].x]?.[cells[0].y]?.[cells[0].z];
+    if (targetType !== undefined && targetType !== VoxelType.INSIDE) {
+      cellsToDelete = getConnectedCells(cells[0], targetType);
+    }
+  }
+  
+  for (const cell of cellsToDelete) {
     const prev = state.value.meshtype?.[cell.x]?.[cell.y]?.[cell.z];
     if (prev === undefined) {
       console.error('Invalid cell coordinates:', cell);
       continue;
     }
-    if (prev !== VoxelType.INSIDE) {
+    if (prev !== revertType) {
       state.value.history.push({ x: cell.x, y: cell.y, z: cell.z, prev });
-      state.value.meshtype[cell.x][cell.y][cell.z] = VoxelType.INSIDE;
+      state.value.meshtype[cell.x][cell.y][cell.z] = revertType;
     }
   }
   updateACheatByState();
@@ -508,6 +519,7 @@ function hasAdjacentType(cell, types) {
     [0, 0, 1],
     [0, 0, -1],
   ];
+  const adjacentTypes = [];
   for (const [dx, dy, dz] of deltas) {
     const x = cell.x + dx;
     const y = cell.y + dy;
@@ -515,7 +527,9 @@ function hasAdjacentType(cell, types) {
     if (x < 0 || x >= nMeshX || y < 0 || y >= nMeshY || z < 0 || z >= nMeshZ) {
       continue;
     }
-    if (types.includes(meshtype[x][y][z])) {
+    const adjType = meshtype[x][y][z];
+    adjacentTypes.push(adjType);
+    if (types.includes(adjType)) {
       return true;
     }
   }
@@ -535,10 +549,52 @@ function canPlaceVoxel(cell, type) {
       return isACAllowed(cell);
     case VoxelType.OBSTACLE:
     case VoxelType.CL:
-      return hasAdjacentType(cell, [VoxelType.BOTTOM, VoxelType.OBSTACLE]);
+      // 家具・暖房器具は、BOTTOMまたは壁（OUTSIDE/SIDE）に隣接するINSIDEセルに配置可
+      return hasAdjacentType(cell, [VoxelType.BOTTOM, VoxelType.OUTSIDE, VoxelType.SIDE, VoxelType.OBSTACLE]);
     default:
       return true;
   }
+}
+
+// 指定したセルと同じタイプで接続しているセルをすべて取得（フラッドフィル）
+function getConnectedCells(startCell, targetType) {
+  const { nMeshX, nMeshY, nMeshZ, meshtype } = state.value;
+  const visited = new Set();
+  const cells = [];
+  const queue = [startCell];
+
+  while (queue.length > 0) {
+    const cell = queue.shift();
+    const key = `${cell.x},${cell.y},${cell.z}`;
+    
+    if (visited.has(key)) continue;
+    if (cell.x < 0 || cell.x >= nMeshX || cell.y < 0 || cell.y >= nMeshY || cell.z < 0 || cell.z >= nMeshZ) continue;
+    
+    const currentType = meshtype[cell.x]?.[cell.y]?.[cell.z];
+    if (currentType !== targetType) continue;
+    
+    visited.add(key);
+    cells.push(cell);
+    
+    // 6方向（上下左右前後）の隣接セルをキューに追加
+    const neighbors = [
+      { x: cell.x + 1, y: cell.y, z: cell.z },
+      { x: cell.x - 1, y: cell.y, z: cell.z },
+      { x: cell.x, y: cell.y + 1, z: cell.z },
+      { x: cell.x, y: cell.y - 1, z: cell.z },
+      { x: cell.x, y: cell.y, z: cell.z + 1 },
+      { x: cell.x, y: cell.y, z: cell.z - 1 },
+    ];
+    
+    for (const neighbor of neighbors) {
+      const neighborKey = `${neighbor.x},${neighbor.y},${neighbor.z}`;
+      if (!visited.has(neighborKey)) {
+        queue.push(neighbor);
+      }
+    }
+  }
+  
+  return cells;
 }
 
 // 直前の変更を取り消してボクセルを元に戻す

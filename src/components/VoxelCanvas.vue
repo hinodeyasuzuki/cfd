@@ -137,6 +137,11 @@ function getPickCellForType(type) {
   return canPlaceVoxel(cell, type) ? cell : null;
 }
 
+// 削除用途：配置制約を無視してクリック位置のセルを返す
+function getPickCellForDeletion() {
+  return getPickCell();
+}
+
 // フィールド全体が収まるようカメラを調整する
 function fitCameraToField() {
   const { nMeshX, nMeshY, nMeshZ, unitSize } = props.state;
@@ -523,6 +528,8 @@ function onPointerUp(event) {
     return;
   }
 
+  console.log('Left-click placing type:', props.state.selectedType, 'at cell:', cell);
+
   // エアコンの場合：複数セルを一括配置
   if (props.state.selectedType === props.VoxelType.AC) {
     const cells = getACCellArray(cell, props.state);
@@ -534,13 +541,9 @@ function onPointerUp(event) {
   pointerDownPos = null;
 }
 
-// 右クリック処理：エアコンをクリア
+// 右クリック処理：クリックしたボクセルを削除（タイプに応じて戻す）
 function onContextMenu(event) {
   event.preventDefault();
-
-  if (props.state.selectedType !== props.VoxelType.AC) {
-    return;
-  }
 
   const canvas = canvasRef.value;
   if (!canvas) return;
@@ -548,21 +551,43 @@ function onContextMenu(event) {
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
-  const cell = getPickCellFromRay();
-
+  
+  // 削除用：配置制約なしでクリック位置のセルを取得
+  const cell = getPickCellForDeletion();
   if (!cell || !props.state.meshtype?.[cell.x]?.[cell.y]?.[cell.z]) {
+    console.log('Right-click: No cell found or invalid coordinates');
     return;
   }
 
   const cellType = props.state.meshtype[cell.x][cell.y][cell.z];
-  if (cellType !== props.VoxelType.AC) {
+  console.log('Right-click on cell:', cell, 'type:', cellType);
+  
+  // 空気またはINSIDE以外のボクセルは削除可能
+  if (cellType === props.VoxelType.INSIDE) {
+    console.log('Right-click: Cell is INSIDE, cannot delete');
     return;
   }
 
-  // ダイアログ表示してクリア確認
-  if (confirm('このエアコンを削除しますか？')) {
-    const cells = getACCellArray(cell, props.state);
-    emit('clearVoxels', { cells });
+  // ダイアログ表示して削除確認
+  if (confirm('このボクセルを削除しますか？')) {
+    // タイプに応じて戻すタイプを決定
+    let revertType = props.VoxelType.INSIDE; // デフォルトは空気
+    if (cellType === props.VoxelType.WINDOW) {
+      revertType = props.VoxelType.OUTSIDE; // 窓は外壁に戻す
+    }
+
+    console.log('Deleting with revertType:', revertType);
+
+    // エアコンの場合は複数セル全体を削除
+    if (cellType === props.VoxelType.AC) {
+      const cells = getACCellArray(cell, props.state);
+      console.log('AC cells to delete:', cells);
+      emit('clearVoxels', { cells, revertType });
+    } else {
+      // その他のボクセルは単一セルを削除、かつ連結セルも含める
+      console.log('Single cell to delete:', cell);
+      emit('clearVoxels', { cells: [cell], revertType, includeConnected: true });
+    }
   }
 }
 
