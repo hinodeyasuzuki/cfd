@@ -1,5 +1,5 @@
 <script setup>
-// データ読み込み（ファイル/パラメータ)
+// 基本的に不使用: データ読み込み（ファイル/パラメータ)
 // シナリオ設定
 import { ref, watch, onMounted, nextTick } from "vue"
 import { Store } from "@/stores/store"
@@ -142,6 +142,9 @@ if (param) {
 <style scoped>
 .title {
   margin: 5px;
+}
+h2{
+  color:white;
 }
 
 .item {

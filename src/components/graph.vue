@@ -102,13 +102,13 @@ const calcStart = function () {
     if (store.graph.pararel == 2) restart &= cfd2.batch_end;
 
     if (restart) {
-      //display span adjust, between 300 to 500 ms
+      //display span adjust, between 600 to 1000 ms
       nowtime = new Date();
-      if (nowtime.getTime() - starttime.getTime() > 500) {
+      if (nowtime.getTime() - starttime.getTime() > 1000) {
         store.setval.batch_sec /= 1.5;
         store.setval2.batch_sec /= 1.5;
       }
-      if (nowtime.getTime() - starttime.getTime() < 300) {
+      if (nowtime.getTime() - starttime.getTime() < 600) {
         store.setval.batch_sec *= 1.5;
         store.setval2.batch_sec *= 1.5;
       }
@@ -277,7 +277,7 @@ function createGraphView(canvas) {
   scene.background = new THREE.Color(0x0f1115);
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
   const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
+  controls.enableDamping = false;
 
   const light = new THREE.DirectionalLight(0xffffff, 0.9);
   light.position.set(10, 15, 5);

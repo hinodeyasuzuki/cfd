@@ -9,7 +9,7 @@ const props = defineProps({
   VoxelType: Object,
 });
 
-const emit = defineEmits(['createField', 'setSelectedType', 'onACTypeChange', 'saveFile', 'openSimulation', 'resetField']);
+const emit = defineEmits(['createField', 'setSelectedType', 'onACTypeChange', 'saveFile', 'openSimulation']);
 
 const isVoxelSelected = (type) => props.state.selectedType === type;
 

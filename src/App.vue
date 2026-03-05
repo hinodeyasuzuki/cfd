@@ -7,11 +7,13 @@ import Graph from './components/graph.vue'
 import Voxel from './components/Voxel.vue'
 import { Structure } from "@/assets/structure"
 
+//共通変数の構築
 const store = Store();
 
 store.structure = new Structure();
 store.structure2 = new Structure();
 
+//構造変数の初期化と、setval2へのコピー
 for( let name in store.setval ){
   store.setval2[name] = store.setval[name];
 }
@@ -52,7 +54,7 @@ onMounted(() => {
     </div>
   </div>
   <footer class="fixed-footer">
-    <a href="../">[CFD TOP]</a>　
+    <a href="./index.php">[CFD TOP]</a>　
     <a href="https://www.hinodeya-ecolife.com">Hinodeya Institute for Ecolife.Co.Ltd</a>
     　Ver.3.0 2026/3/5
   </footer>

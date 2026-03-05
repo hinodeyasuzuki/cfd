@@ -504,7 +504,7 @@ export class CFD {
               this.Vel[this.conf.y][i][j-1][k] = -this.acv* Math.sqrt( 1 - dir*dir) * adj;
 
             } else {
-              //横向きの風
+              //横向きの風　this.setval.ACdir == 2
               var dt = 0;
               if( hadj > 0) {
                 if ( this.ACwind > 0 ) {
@@ -533,29 +533,43 @@ export class CFD {
               }
 
               //出口＝横温度を上下させる 横方向、本体横風、上下風
+              let rt2 = Math.sqrt(2)/2;
               if ( i == 2 ) {
-                this.Vel[this.conf.y][i][j+1][k] = -this.acv * adj;
                 this.Vel[this.conf.x][i+1][j][k] = this.acv * adj;
-                this.Vel[this.conf.x][i][j][k] = this.acv * adj;
+                this.Vel[this.conf.x][i][j][k] = this.acv * adj *rt2;
+                this.Vel[this.conf.y][i][j][k] = -this.acv * adj * rt2;
                 this.Phi[i+1][j][k] = this.Phi[i][j+1][k] + dt;
+                //吸い込み
+                // this.Vel[this.conf.x][i+1][j+1][k] = -this.acv * adj;
+                this.Vel[this.conf.x][i][j+1][k] = -this.acv * adj * rt2;
+                this.Vel[this.conf.y][i][j+1][k] = -this.acv * adj * rt2;
               }
               if ( i == this.nMeshX-1 ) {
-                this.Vel[this.conf.y][i][j+1][k] = this.acv * adj;
                 this.Vel[this.conf.x][i-1][j][k] = -this.acv * adj;
-                this.Vel[this.conf.x][i][j][k] = -this.acv * adj;
+                this.Vel[this.conf.x][i][j][k] = -this.acv * adj * rt2;
+                this.Vel[this.conf.y][i][j][k] = -this.acv * adj * rt2;
                 this.Phi[i-1][j][k] = this.Phi[i][j+1][k] + dt;
+                // this.Vel[this.conf.x][i-1][j+1][k] = this.acv * adj;
+                this.Vel[this.conf.x][i][j+1][k] = this.acv * adj * rt2;
+                this.Vel[this.conf.y][i][j+1][k] = -this.acv * adj * rt2;
               }
               if ( k == 2 ) {
-                this.Vel[this.conf.y][i][j+1][k] = -this.acv * adj;
                 this.Vel[this.conf.z][i][j][k+1] = this.acv * adj;
-                this.Vel[this.conf.z][i][j][k] = this.acv * adj;
+                this.Vel[this.conf.z][i][j][k] = this.acv * adj * rt2;
+                this.Vel[this.conf.y][i][j][k] = -this.acv * adj * rt2;
                 this.Phi[i][j][k+1] = this.Phi[i][j+1][k] + dt;
+                // this.Vel[this.conf.z][i][j+1][k+1] = -this.acv * adj;
+                this.Vel[this.conf.z][i][j+1][k] = -this.acv * adj * rt2;
+                this.Vel[this.conf.y][i][j+1][k] = -this.acv * adj * rt2;
               }
               if ( k == this.nMeshZ-1 ) {
-                this.Vel[this.conf.y][i][j+1][k] = -this.acv * adj;
                 this.Vel[this.conf.z][i][j][k-1] = -this.acv * adj;
-                this.Vel[this.conf.z][i][j][k] = -this.acv * adj;
+                this.Vel[this.conf.z][i][j][k] = -this.acv * adj * rt2;
+                this.Vel[this.conf.y][i][j][k] = -this.acv * adj * rt2;
                 this.Phi[i][j][k-1] = this.Phi[i][j+1][k] + dt;
+                // this.Vel[this.conf.z][i][j+1][k-1] = this.acv * adj;
+                this.Vel[this.conf.z][i][j+1][k] = this.acv * adj * rt2;
+                this.Vel[this.conf.y][i][j+1][k] = -this.acv * adj * rt2;
               }
 
             }

@@ -2,6 +2,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { isACAllowedCell } from './voxelPlacementRules';
 
 const props = defineProps({
   state: Object,
@@ -79,18 +80,18 @@ function getPickCellFromLayer(layerOffset) {
 }
 
 // 内壁面との交差位置からセルを探索する
-function getPickCellFromInnerWall() {
+function getPickCellFromInnerWall(offset = 1) {
   const { nMeshX, nMeshY, nMeshZ, unitSize } = props.state;
   const candidates = [];
 
   const planes = [];
-  if (nMeshX >= 3) {
-    planes.push({ axis: "x", index: 1 });
-    planes.push({ axis: "x", index: nMeshX - 2 });
+  if (nMeshX >= offset + 2) {
+    planes.push({ axis: "x", index: offset });
+    planes.push({ axis: "x", index: nMeshX - 1 - offset });
   }
-  if (nMeshZ >= 3) {
-    planes.push({ axis: "z", index: 1 });
-    planes.push({ axis: "z", index: nMeshZ - 2 });
+  if (nMeshZ >= offset + 2) {
+    planes.push({ axis: "z", index: offset });
+    planes.push({ axis: "z", index: nMeshZ - 1 - offset });
   }
 
   for (const planeDef of planes) {
@@ -118,7 +119,10 @@ function getPickCellFromInnerWall() {
 // 選択中のピックモードに応じてセルを取得する
 function getPickCell() {
   const mode = document.getElementById("pickLayer")?.value || 'ray';
-  if (mode === "innerWall") return getPickCellFromInnerWall();
+  if (mode === "innerWall") {
+    const wallOffset = props.state.selectedType === props.VoxelType.AC ? 2 : 1;
+    return getPickCellFromInnerWall(wallOffset);
+  }
   if (mode === "floor1") return getPickCellFromLayer(1);
   if (mode === "floor2") return getPickCellFromLayer(2);
   if (mode === "floor3") return getPickCellFromLayer(3);
@@ -410,6 +414,11 @@ function isTopAllowed(cell) {
   );
 }
 
+// エアコンが配置可能な領域か確認する
+function isACAllowed(cell) {
+  return isACAllowedCell(cell, props.state);
+}
+
 // 隣接セルに指定タイプが存在するか判定する
 function hasAdjacentType(cell, types) {
   const { nMeshX, nMeshY, nMeshZ, meshtype } = props.state;
@@ -446,7 +455,7 @@ function canPlaceVoxel(cell, type) {
     case props.VoxelType.TOP:
       return isTopAllowed(cell);
     case props.VoxelType.AC:
-      return hasAdjacentType(cell, [props.VoxelType.OUTSIDE, props.VoxelType.SIDE, props.VoxelType.TOP]);
+      return isACAllowed(cell);
     case props.VoxelType.OBSTACLE:
     case props.VoxelType.CL:
       return hasAdjacentType(cell, [props.VoxelType.BOTTOM, props.VoxelType.OBSTACLE]);

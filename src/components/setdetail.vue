@@ -20,12 +20,6 @@ if (store.setval.meshtype && store.setval.meshtype.length > 0) {
 }
 
 onMounted(() => {
-  // const canvas = document.getElementById("mesh");
-  // ctx = canvas.getContext("2d");
-  // const canvas2 = document.getElementById("mesh2");
-  // ctx2 = canvas2.getContext("2d");
-  // draw();
-  // draw2();
 });
 
 //file upload(read)=========================
@@ -126,16 +120,6 @@ function goVoxelEditor() {
         <input type="button" value="シミュレーション実行" @click="store.page='graph'">
       </p>
     </div>
-
-    <!-- <canvas id="__mesh" width="600" height="600"></canvas>
-    <canvas :style="{ opacity: store.graph.pararel == 2 ? 1 : 0 }" id="__mesh2" width="600" height="600"></canvas> -->
-
-    <!-- <p>視点移動：
-    <input type="button" value="◀" @click="move(-1, 0)">
-    <input type="button" value="▶" @click="move(1, 0)">
-    <input type="button" value="▲" @click="move(0, 1)">
-    <input type="button" value="▼" @click="move(0, -1)"></p> -->
-
   </div>
 </template>
 

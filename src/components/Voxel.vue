@@ -3,6 +3,7 @@ import { ref, onMounted, watch, nextTick } from 'vue';
 import { Store } from '@/stores/store';
 import VoxelPanel from './VoxelPanel.vue';
 import VoxelCanvas from './VoxelCanvas.vue';
+import { isACAllowedCell } from './voxelPlacementRules';
 
 // state:ボクセル編集画面でのメッシュデータ作成
 
@@ -33,9 +34,10 @@ const VoxelColors = {
 
 const canvasRef = ref(null);
 
+//初期値・voxel設定変数
 const state = ref({
-  nMeshX: 14,
-  nMeshY: 8,
+  nMeshX: 16,
+  nMeshY: 10,
   nMeshZ: 14,
   unitSize: 0.3,
   meshtype: [],
@@ -65,7 +67,7 @@ const state = ref({
   
   ACtype: 2,
   ACwall: 3,
-  ACwind: 1,
+  ACwind: 2,
   ACpower:2800,
   ACheat: false,
   ACdir: 2,
@@ -270,22 +272,6 @@ function updateACheatByState() {
   state.value.ACheat = state.value.ACtype === 2 && !!hasAC;
 }
 
-// フィールド初期化
-function resetField() {
-  if (!confirm('フィールドを初期化しますか？')) return;
-  
-  state.value.nMeshX = 14;
-  state.value.nMeshY = 8;
-  state.value.nMeshZ = 14;
-  state.value.unitSize = 0.3;
-  state.value.history = [];
-  state.value.selectedType = VoxelType.WINDOW;
-  state.value.loadedFromSession = false;
-  state.value.ACheat = false;
-  
-  canvasRef.value?.rebuildScene();
-}
-
 // sessionStorageからシミュレーションデータを読み込む
 function loadFromSessionStorage() {
   const cfdSimulationData = sessionStorage.getItem('cfdSimulationData');
@@ -462,6 +448,10 @@ function isTopAllowed(cell) {
   );
 }
 
+function isACAllowed(cell) {
+  return isACAllowedCell(cell, state.value);
+}
+
 function hasAdjacentType(cell, types) {
   const { nMeshX, nMeshY, nMeshZ, meshtype } = state.value;
   const deltas = [
@@ -496,7 +486,7 @@ function canPlaceVoxel(cell, type) {
     case VoxelType.TOP:
       return isTopAllowed(cell);
     case VoxelType.AC:
-      return hasAdjacentType(cell, [VoxelType.OUTSIDE, VoxelType.SIDE, VoxelType.TOP]);
+      return isACAllowed(cell);
     case VoxelType.OBSTACLE:
     case VoxelType.CL:
       return hasAdjacentType(cell, [VoxelType.BOTTOM, VoxelType.OBSTACLE]);
@@ -550,7 +540,6 @@ watch(
       @onACTypeChange="onACTypeChange"
       @saveFile="saveFile"
       @openSimulation="openSimulation"
-      @resetField="resetField"
     />
     <VoxelCanvas
       ref="canvasRef"
