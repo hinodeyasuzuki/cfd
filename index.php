@@ -30,25 +30,39 @@
   </style>
 </head>
 <body>
-    <h1>空気の流れ3Dシミュレーション</h1>
-    <p class="right">　有限会社ひのでやエコライフ研究所 2026年2月18日</p>
-    <div class="video">
-      <iframe width="640" height="480" src="https://www.youtube.com/embed/IeOZPcOplO4?si=_xlLywIFsVd53mTo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-    </div>
-    <div class="video">
-      <iframe width="640" height="480" src="https://www.youtube.com/embed/jyDNxVD4fVQ?si=U2w_1bYNxS-ZFzKd" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-    </div>
+  <h1>空気の流れ3Dシミュレーション</h1>
+  <p class="right">　有限会社ひのでやエコライフ研究所 2026年3月5日</p>
+  <ul>
+      <li><a href="./index.html">シミュレーションソフト Ver.3 (2026/03/04)</a><br />
+      部屋設計と、結果表示を同じ3D回転座標で操作・閲覧することができます。
+      <br>&nbsp;
+      </li>
+      
+      <li><a href="./cfd2025/index.html">シミュレーションソフト Ver.2</a>　<a href="./cfd2025/voxel/">▶3D部屋構造設定ソフト</a><br />
+      　シミュレーションソフトでも比較条件など、任意の設定ができます。3D部屋構造設定ソフトでマインクラフト風に設計して、ファイルを通じてシミュレーションソフトに読み込むこともできます。計算はリアルタイムでシミュレーション結果がアニメーションで表示されます。
+      <br>&nbsp;
+      </li>
+      <li><a href="./cfd2020">旧版シミュレーションソフト ver1.77以前</a><br>
+      　昔のDOSソフトのような操作性です。何をしているのかはわかりやすく、安定しています。
+      <br>&nbsp;
+    </li>
+  </ul>
 
-    <h2><a href="./index.html">▶シミュレーションソフト</a></h2>
-    <h2><a href="./voxel/">▶3D部屋構造設定ソフト</a></h2>
-    <p>　シミュレーションソフトでも比較条件など、任意の設定ができます。3D部屋構造設定ソフトでマインクラフト風に設計して、ファイルを通じてシミュレーションソフトに読み込むこともできます。計算はリアルタイムでシミュレーション結果がアニメーションで表示されます。</p>
-    <p><a href="./cfd2020">ver1.77以前の旧版</a>は別画面で確認できます。</p>
 
-    <hr>
-    <h1>空気の流れ3Dシミュレーション：設定済みシナリオ</h1>
+  <div class="video">
+    <iframe width="640" height="480" src="https://www.youtube.com/embed/IeOZPcOplO4?si=_xlLywIFsVd53mTo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>
+  <div class="video">
+    <iframe width="640" height="480" src="https://www.youtube.com/embed/jyDNxVD4fVQ?si=U2w_1bYNxS-ZFzKd" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>
+
+
+  <hr>
+  <h1>空気の流れ3Dシミュレーション：設定済みシナリオ(Ver.2での実行)</h1>
+
 <?php
 
-$url = './index.html';
+$url = './cfd2025/index.html';
 
 $params = [
   [
@@ -90,10 +104,12 @@ $params = [
     
 ];
 
+echo '<ul>';
 foreach ($params as $param) {
-  echo '<h2><a href="' . $url .'?param='. urlencode($param['json']) . '">' . $param['name'] . '</a></h2>';
-  echo '<p>' . $param['caption'] . '</p><hr>';
+  echo '<li><a href="' . $url .'?param='. urlencode($param['json']) . '">' . $param['name'] . '</a></li>';
+  echo '<p>' . $param['caption'] . '</p><br></li>';
 }
+echo '</ul>';
 
 ?>
 
