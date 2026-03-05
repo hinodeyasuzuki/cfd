@@ -2,7 +2,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { isACAllowedCell } from './voxelPlacementRules';
+import { isACAllowedCell, getACCellArray } from './voxelPlacementRules';
 
 const props = defineProps({
   state: Object,
@@ -10,7 +10,7 @@ const props = defineProps({
   VoxelColors: Object,
 });
 
-const emit = defineEmits(['updateVoxel', 'updateState']);
+const emit = defineEmits(['updateVoxel', 'updateVoxels', 'clearVoxels', 'updateState']);
 
 const canvasRef = ref(null);
 
@@ -522,9 +522,48 @@ function onPointerUp(event) {
     pointerDownPos = null;
     return;
   }
-  emit('updateVoxel', { cell, type: props.state.selectedType });
+
+  // エアコンの場合：複数セルを一括配置
+  if (props.state.selectedType === props.VoxelType.AC) {
+    const cells = getACCellArray(cell, props.state);
+    emit('updateVoxels', { cells, type: props.state.selectedType });
+  } else {
+    emit('updateVoxel', { cell, type: props.state.selectedType });
+  }
   pendingCell = null;
   pointerDownPos = null;
+}
+
+// 右クリック処理：エアコンをクリア
+function onContextMenu(event) {
+  event.preventDefault();
+
+  if (props.state.selectedType !== props.VoxelType.AC) {
+    return;
+  }
+
+  const canvas = canvasRef.value;
+  if (!canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const cell = getPickCellFromRay();
+
+  if (!cell || !props.state.meshtype?.[cell.x]?.[cell.y]?.[cell.z]) {
+    return;
+  }
+
+  const cellType = props.state.meshtype[cell.x][cell.y][cell.z];
+  if (cellType !== props.VoxelType.AC) {
+    return;
+  }
+
+  // ダイアログ表示してクリア確認
+  if (confirm('このエアコンを削除しますか？')) {
+    const cells = getACCellArray(cell, props.state);
+    emit('clearVoxels', { cells });
+  }
 }
 
 // キーボード入力処理
@@ -582,6 +621,7 @@ onMounted(() => {
   canvas.addEventListener("pointermove", onPointerMove);
   canvas.addEventListener("pointerdown", onPointerDown);
   canvas.addEventListener("pointerup", onPointerUp);
+  canvas.addEventListener("contextmenu", onContextMenu);
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("resize", resizeRenderer);
 
@@ -596,6 +636,7 @@ onBeforeUnmount(() => {
     canvas.removeEventListener("pointermove", onPointerMove);
     canvas.removeEventListener("pointerdown", onPointerDown);
     canvas.removeEventListener("pointerup", onPointerUp);
+    canvas.removeEventListener("contextmenu", onContextMenu);
   }
   window.removeEventListener("keydown", onKeyDown);
   window.removeEventListener("resize", resizeRenderer);

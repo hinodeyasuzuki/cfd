@@ -418,6 +418,52 @@ function onUpdateVoxel({ cell, type }) {
   canvasRef.value?.rebuildScene();
 }
 
+// 複数セルを一括配置
+function onUpdateVoxels({ cells, type }) {
+  if (!state.value.meshtype || state.value.meshtype.length === 0) {
+    console.error('meshtype array not initialized');
+    return;
+  }
+  for (const cell of cells) {
+    if (!canPlaceVoxel(cell, type)) {
+      console.log('Cannot place voxel at', cell, 'type:', type);
+      continue;
+    }
+    const prev = state.value.meshtype?.[cell.x]?.[cell.y]?.[cell.z];
+    if (prev === undefined) {
+      console.error('Invalid cell coordinates:', cell);
+      continue;
+    }
+    if (prev !== type) {
+      state.value.history.push({ x: cell.x, y: cell.y, z: cell.z, prev });
+      state.value.meshtype[cell.x][cell.y][cell.z] = type;
+    }
+  }
+  updateACheatByState();
+  canvasRef.value?.rebuildScene();
+}
+
+// 複数セルをクリア
+function onClearVoxels({ cells }) {
+  if (!state.value.meshtype || state.value.meshtype.length === 0) {
+    console.error('meshtype array not initialized');
+    return;
+  }
+  for (const cell of cells) {
+    const prev = state.value.meshtype?.[cell.x]?.[cell.y]?.[cell.z];
+    if (prev === undefined) {
+      console.error('Invalid cell coordinates:', cell);
+      continue;
+    }
+    if (prev !== VoxelType.INSIDE) {
+      state.value.history.push({ x: cell.x, y: cell.y, z: cell.z, prev });
+      state.value.meshtype[cell.x][cell.y][cell.z] = VoxelType.INSIDE;
+    }
+  }
+  updateACheatByState();
+  canvasRef.value?.rebuildScene();
+}
+
 function onCanvasUpdateState(updates) {
   if (updates.meshtype) state.value.meshtype = updates.meshtype;
   if (updates.pickMap) state.value.pickMap = updates.pickMap;
@@ -547,6 +593,8 @@ watch(
       :VoxelType="VoxelType"
       :VoxelColors="VoxelColors"
       @updateVoxel="onUpdateVoxel"
+      @updateVoxels="onUpdateVoxels"
+      @clearVoxels="onClearVoxels"
       @updateState="onCanvasUpdateState"
     />
   </div>
