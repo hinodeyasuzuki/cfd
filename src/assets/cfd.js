@@ -1152,8 +1152,74 @@ export class CFD {
     this.poisson_update_velocity();
 
     //温度計算
-    return this.poisson_calc_temperature();
+    var result = this.poisson_calc_temperature();
+    
+    //温度計算後にエアコンの強制冷暖房を再度適用
+    //（温度輸送計算でAC温度設定が上書きされるため）
+    this.apply_ac_temperature_forcing();
+
+    return result;
   };
+
+  //温度輸送計算後のエアコン強制冷暖房再適用
+  apply_ac_temperature_forcing = function() {
+    var i,j,k;
+    var hadj = 1; //出力熱調整
+    var acw = this.setval.ACpower;
+
+    for( i=1 ; i<=this.nMeshX ; i++ ) {
+      for ( j=1 ; j<this.nMeshY ; j++ ){
+        for( k=1 ; k<=this.nMeshZ ; k++ ) {
+          //エアコン動作
+          if ( this.meshtype[i][j][k] == this.conf.AC ) {
+
+            if( this.setval.ACheat ) {
+              hadj = Math.min(Math.max(( 22 - this.Phi[i][j+1][k] ) / 3,0),1);
+            } else {
+              hadj = Math.min(Math.max(( this.Phi[i][j+1][k] - 26 ) / 3,0),1);
+            }
+
+            if( this.setval.ACdir == 1 ){ 
+              //下方向
+              if( hadj > 0) {
+                //冷暖房温度加算（出口＝下の温度を変化させる）
+                //AC セルの温度を周辺の平均値に基づいて設定
+                this.Phi[i][j][k] = ( this.Phi[i][j+1][k] * 4 + this.Phi[i+1][j+1][k] + this.Phi[i-1][j+1][k] + this.Phi[i][j+1][k+1] + this.Phi[i][j+1][k-1] ) / 8;
+                //下のセルに冷暖房効果を適用
+                this.Phi[i][j-1][k] = this.Phi[i][j][k] + (this.setval.ACheat ? 1 : -1 ) * this.act * hadj;
+              } else {
+                //hadj = 0 の場合も同じ計算を行う（停止状態）
+                this.Phi[i][j][k] = ( this.Phi[i][j+1][k] * 4 + this.Phi[i+1][j+1][k] + this.Phi[i-1][j+1][k] + this.Phi[i][j+1][k+1] + this.Phi[i][j+1][k-1] ) / 8;
+                this.Phi[i][j-1][k] = this.Phi[i][j][k];
+              }
+
+            } else if( this.setval.ACdir == 2 ){
+              //横向きの風
+              var dt = 0;
+              if( hadj > 0) {
+                dt = (this.setval.ACheat ? 1 : -1 ) * this.act * hadj;
+              } else {
+                dt = 0;
+              }
+
+              if ( i == 2 ) {
+                this.Phi[i+1][j][k] = this.Phi[i][j+1][k] + dt;
+              }
+              if ( i == this.nMeshX-1 ) {
+                this.Phi[i-1][j][k] = this.Phi[i][j+1][k] + dt;
+              }
+              if ( k == 2 ) {
+                this.Phi[i][j][k+1] = this.Phi[i][j+1][k] + dt;
+              }
+              if ( k == this.nMeshZ-1 ) {
+                this.Phi[i][j][k-1] = this.Phi[i][j+1][k] + dt;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 
   //7 時間ステップ補正
   time_step_correction = function(maxcoulant) {

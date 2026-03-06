@@ -274,7 +274,7 @@ function createGraphView(canvas) {
   renderer.setPixelRatio(window.devicePixelRatio || 1);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0f1115);
+  scene.background = new THREE.Color(0xf3f8ff);
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = false;
@@ -412,6 +412,13 @@ const getColor = function(temp, a) {
   return "rgba(" + r + "," + g + "," + b + "," + a + ")";
 }
 
+function shouldHideByTemperatureRange(temp) {
+  const minTemp = store.graph.temperature[0];
+  const maxTemp = store.graph.temperature[1];
+  return (store.graph.colordelete[0] && temp < minTemp) ||
+    (store.graph.colordelete[1] && temp >= maxTemp);
+}
+
 
 //graph draw ============================
 function draw(){
@@ -448,7 +455,7 @@ function drawone(view,cfd) {
     new THREE.Vector3(0, 0, 0),
     new THREE.Vector3(nMeshX, nMeshY, nMeshZ)
   );
-  const boxHelper = new THREE.Box3Helper(box, 0x4a5568);
+  const boxHelper = new THREE.Box3Helper(box, 0x8aa2c5);
   view.staticGroup.add(boxHelper);
 
   var dt;
@@ -465,6 +472,7 @@ function drawone(view,cfd) {
         //set color and line width
         const isActiveLayer = store.graph.layerz == k || !store.graph.showz;
         const alpha = isActiveLayer ? 1 : 0.2;
+        if (shouldHideByTemperatureRange(cfd.Phi[i][j][k])) continue;
         const colorValue = getColor(cfd.Phi[i][j][k], alpha);
 
         vx = cfd.Vel[0][i][j][k];
@@ -628,6 +636,11 @@ td{
   text-align: center;
 }
 h2{
-  color:white;
+  color:#1f2937;
+}
+
+canvas {
+  background: #f3f8ff;
+  border: 1px solid #d4e0f0;
 }
 </style>

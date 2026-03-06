@@ -65,7 +65,7 @@ watch(
           class="voxel-button" 
           :class="{ selected: isVoxelSelected(VoxelType.INSIDE) }"
           @click="emit('setSelectedType', VoxelType.INSIDE)"
-          :style="{ '--voxel-color': '#111827' }"
+          :style="{ '--voxel-color': '#60a5fa' }"
         >空気</button>
         <button 
           type="button" 
@@ -79,7 +79,7 @@ watch(
           class="voxel-button" 
           :class="{ selected: isVoxelSelected(VoxelType.TOP) }"
           @click="emit('setSelectedType', VoxelType.TOP)"
-          :style="{ '--voxel-color': '#4a5568' }"
+          :style="{ '--voxel-color': '#94a3b8' }"
         >天井</button>
         <button 
           type="button" 
@@ -227,10 +227,10 @@ watch(
 
 <style scoped>
 .panel {
-  background: #171a21;
+  background: #f8fbff;
   padding: 16px;
   overflow-y: auto;
-  border-right: 1px solid #2a2f3a;
+  border-right: 1px solid #d6e0ee;
 }
 
 .panel h1 {
@@ -245,23 +245,23 @@ watch(
 .back-button {
   width: 100%;
   margin-top: 8px;
-  background: #4a5568;
-  border: 1px solid #2a2f3a;
+  background: #e2e8f0;
+  border: 1px solid #cbd5e1;
   border-radius: 6px;
   padding: 6px 8px;
-  color: #e6e7ea;
+  color: #334155;
   cursor: pointer;
   font-size: 12px;
 }
 
 .back-button:hover {
-  background: #5a6578;
+  background: #cbd5e1;
 }
 
 .panel h2 {
   font-size: 14px;
   margin: 16px 0 8px;
-  color: #b4b8c6;
+  color: #334155;
 }
 
 .panel .row {
@@ -295,21 +295,22 @@ watch(
 .panel button:not(.back-button),
 .panel textarea {
   border-radius: 6px;
-  border: 1px solid #2a2f3a;
-  background: #0f1115;
-  color: #e6e7ea;
+  border: 1px solid #cdd8e7;
+  background: #ffffff;
+  color: #1f2937;
   padding: 6px 8px;
   font-size: 12px;
 }
 
 .panel button:not(.back-button) {
   cursor: pointer;
-  background: #2b6cb0;
+  background: #2563eb;
   border: none;
+  color: #ffffff;
 }
 
 .panel button:not(.back-button):hover {
-  background: #2f79c5;
+  background: #1d4ed8;
 }
 
 .simulation-btn {
@@ -343,14 +344,14 @@ watch(
 }
 
 .voxel-button {
-  border: 1px solid #2a2f3a;
+  border: 1px solid #d4deec;
   border-radius: 6px;
   padding: 6px 8px;
   font-size: 12px;
-  color: #e6e7ea;
+  color: #1f2937;
   text-align: left;
   cursor: pointer;
-  background: #0f1115;
+  background: #ffffff;
   position: relative;
 }
 
@@ -366,19 +367,19 @@ watch(
 }
 
 .voxel-button.selected {
-  outline: 2px solid #63b3ed;
+  outline: 2px solid #3b82f6;
   border-color: transparent;
 }
 
 .hint {
   font-size: 12px;
-  color: #8890a6;
+  color: #475569;
 }
 
 ul {
   margin: 0;
   padding-left: 16px;
   font-size: 12px;
-  color: #9aa3b8;
+  color: #475569;
 }
 </style>

@@ -18,8 +18,41 @@ for( let name in store.setval ){
   store.setval2[name] = store.setval[name];
 }
 
+const applyGetParamIfExists = () => {
+  const url = new URL(window.location.href);
+  const param = url.searchParams.get('param');
+  if (!param) return false;
+
+  let jsonData = null;
+  try {
+    // URLSearchParams.get already returns decoded text in most cases.
+    jsonData = JSON.parse(param);
+  } catch {
+    try {
+      // Fallback for legacy double-encoded URLs.
+      jsonData = JSON.parse(decodeURIComponent(param));
+    } catch (error) {
+      console.error('Failed to parse param from URL:', error);
+      return false;
+    }
+  }
+
+  store.paramstore(jsonData);
+  store.structure.init(store.setval);
+  store.structure2.init(store.setval2);
+  store.page = 'setdetail';
+
+  // Keep URL clean after loading.
+  history.replaceState(null, '', url.pathname);
+  return true;
+};
+
 // sessionStorageからVoxelデータを読み込む
 onMounted(() => {
+  if (applyGetParamIfExists()) {
+    return;
+  }
+
   const cfdVoxelData = sessionStorage.getItem('cfdVoxelData');
   if (cfdVoxelData) {
     try {

@@ -79,22 +79,6 @@ const onFileLoad = (jsondata) => {
   store.page = 'setdetail';
 }
 
-//Direct set by GET parameters ==============================
-const url = new URL(window.location.href);
-const param = url.searchParams.get('param');
-if (param) {
-  const jsondata = JSON.parse(decodeURIComponent(param));
-  store.paramstore(jsondata);
-
-  // delete query parameters   
-  const url = new URL(window.location.href)
-  history.replaceState(null, '', url.pathname) 
-
-  store.structure.init(store.setval);
-
-  store.page = 'setdetail';
-}
-
 
 </script>
 
@@ -144,7 +128,7 @@ if (param) {
   margin: 5px;
 }
 h2{
-  color:white;
+  color:#1f2937;
 }
 
 .item {

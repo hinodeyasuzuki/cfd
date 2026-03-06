@@ -125,7 +125,7 @@ function goVoxelEditor() {
 
 <style scoped>
 h2{
-  color:white;
+  color:#1f2937;
 }
 .center{
   text-align: center;

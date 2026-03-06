@@ -133,16 +133,22 @@ export const Store = defineStore('store', {
 
     paramstore: function(jsondata) {
       let key;
-      for (key in jsondata.setval) {
-        this.setval[key] = jsondata.setval[key];
-        this.setval.batch_sec_org = jsondata.setval.batch_sec;
+      if (jsondata.setval) {
+        for (key in jsondata.setval) {
+          this.setval[key] = jsondata.setval[key];
+          this.setval.batch_sec_org = jsondata.setval.batch_sec;
+        }
       }
-      for (key in jsondata.setval2) {
-        this.setval2[key] = jsondata.setval2[key];
-        this.setval2.batch_sec_org = jsondata.setval2.batch_sec;
+      if (jsondata.setval2) {
+        for (key in jsondata.setval2) {
+          this.setval2[key] = jsondata.setval2[key];
+          this.setval2.batch_sec_org = jsondata.setval2.batch_sec;
+        }
       }
-      for (key in jsondata.graph) {
-        this.graph[key] = jsondata.graph[key];
+      if (jsondata.graph) {
+        for (key in jsondata.graph) {
+          this.graph[key] = jsondata.graph[key];
+        }
       }
     },
 

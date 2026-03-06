@@ -23,7 +23,7 @@ const VoxelType = {
 
 const VoxelColors = {
   [VoxelType.BOTTOM]: 0x8a5a44,
-  [VoxelType.TOP]: 0x4a5568,
+  [VoxelType.TOP]: 0x94a3b8,
   [VoxelType.WINDOW]: 0xa7d8ff,
   [VoxelType.OUTSIDE]: 0xd1d5db,
   [VoxelType.SIDE]: 0xd1d5db,
@@ -161,6 +161,23 @@ function generateJsonData() {
     graph: graph,
   };
 }
+
+//Direct set by GET parameters ==============================
+const url = new URL(window.location.href);
+const param = url.searchParams.get('param');
+if (param) {
+  const jsondata = JSON.parse(decodeURIComponent(param));
+  console.log('Loading parameters from URL:', jsondata);
+  if (jsondata.graph && jsondata.graph.temperature) {
+    console.log('Setting graph temperature range:', jsondata.graph.temperature);
+  }
+  store.paramstore(jsondata);
+
+  // delete query parameters   
+  const url = new URL(window.location.href)
+  history.replaceState(null, '', url.pathname) 
+}
+
 
 // JSONデータをファイルとして保存する
 function saveFile() {
@@ -665,7 +682,7 @@ watch(
   display: grid;
   grid-template-columns: 320px 1fr;
   height: 100vh;
-  background: #0f1115;
-  color: #e6e7ea;
+  background: #eef4fb;
+  color: #1f2937;
 }
 </style>

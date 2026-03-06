@@ -24,6 +24,7 @@ const mouse = new THREE.Vector2();
 let pendingCell = null;
 let pointerDownPos = null;
 let pointerMoved = false;
+let isShiftPressed = false;
 
 // カメラ位置から見えている境界面インデックスと状態を計算する
 function getFrontPlanes() {
@@ -255,7 +256,7 @@ function buildGridHelpers() {
 
   const sizeX = nMeshX * unitSize;
   const sizeZ = nMeshZ * unitSize;
-  const grid = new THREE.GridHelper(Math.max(sizeX, sizeZ), Math.max(nMeshX, nMeshZ), 0x2d3748, 0x2d3748);
+  const grid = new THREE.GridHelper(Math.max(sizeX, sizeZ), Math.max(nMeshX, nMeshZ), 0xc3d2e8, 0xd5dfed);
   grid.position.set(sizeX / 2, 0, sizeZ / 2);
   gridGroup.add(grid);
 
@@ -263,7 +264,7 @@ function buildGridHelpers() {
     new THREE.Vector3(0, 0, 0),
     new THREE.Vector3(nMeshX * unitSize, nMeshY * unitSize, nMeshZ * unitSize)
   );
-  const boxHelper = new THREE.Box3Helper(box, 0x4a5568);
+  const boxHelper = new THREE.Box3Helper(box, 0x8aa2c5);
   gridGroup.add(boxHelper);
 }
 
@@ -484,36 +485,117 @@ function onPointerMove(event) {
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
-  const cell = getPickCellForType(props.state.selectedType);
-  setHighlightCell(cell);
+  
+  // Shiftキー押下時または窓以外の選択時のみハイライト表示
+  if (event.shiftKey || props.state.selectedType !== props.VoxelType.WINDOW) {
+    const cell = getPickCellForType(props.state.selectedType);
+    setHighlightCell(cell);
+  } else {
+    setHighlightCell(null);
+  }
 }
 
 // ポインタ押下時にセル候補を保持する
 function onPointerDown(event) {
   const canvas = canvasRef.value;
   if (!canvas) return;
-  const rect = canvas.getBoundingClientRect();
-  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-  const cell = getPickCellForType(props.state.selectedType);
-  if (!cell) {
-    pendingCell = null;
-    return;
+  
+  isShiftPressed = event.shiftKey;
+  
+  // Shiftキー押下時かつ窓選択時のみ範囲指定モード
+  if (isShiftPressed && props.state.selectedType === props.VoxelType.WINDOW) {
+    // OrbitControlsを一時停止
+    controls.enabled = false;
+    
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const cell = getPickCellForType(props.state.selectedType);
+    if (!cell) {
+      pendingCell = null;
+      return;
+    }
+    pendingCell = cell;
+    pointerDownPos = { x: event.clientX, y: event.clientY };
+    pointerMoved = false;
+  } else {
+    // 通常モード：回転可能
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const cell = getPickCellForType(props.state.selectedType);
+    if (!cell) {
+      pendingCell = null;
+      return;
+    }
+    pendingCell = cell;
+    pointerDownPos = { x: event.clientX, y: event.clientY };
+    pointerMoved = false;
   }
-  pendingCell = cell;
-  pointerDownPos = { x: event.clientX, y: event.clientY };
-  pointerMoved = false;
+}
+
+// 範囲内のセルを取得する（窓の範囲指定塗りつぶし用）
+function getCellsInRange(startCell, endCell) {
+  const { nMeshX, nMeshY, nMeshZ } = props.state;
+  const cells = [];
+
+  // 開始セルがどの側面にあるかで判定
+  let fixedX = null;
+  let fixedZ = null;
+
+  if (startCell.x === 0 || startCell.x === nMeshX - 1) {
+    fixedX = startCell.x;
+  }
+  if (startCell.z === 0 || startCell.z === nMeshZ - 1) {
+    fixedZ = startCell.z;
+  }
+
+  // 範囲を計算
+  const minX = Math.min(startCell.x, endCell.x);
+  const maxX = Math.max(startCell.x, endCell.x);
+  const minY = Math.min(startCell.y, endCell.y);
+  const maxY = Math.max(startCell.y, endCell.y);
+  const minZ = Math.min(startCell.z, endCell.z);
+  const maxZ = Math.max(startCell.z, endCell.z);
+
+  // X壁（x固定）の場合
+  if (fixedX !== null) {
+    for (let x = minX; x <= maxX; x += 1) {
+      for (let y = minY; y <= maxY; y += 1) {
+        for (let z = minZ; z <= maxZ; z += 1) {
+          if (x === fixedX && canPlaceVoxel({ x, y, z }, props.state.selectedType)) {
+            cells.push({ x, y, z });
+          }
+        }
+      }
+    }
+  }
+  // Z壁（z固定）の場合
+  else if (fixedZ !== null) {
+    for (let x = minX; x <= maxX; x += 1) {
+      for (let y = minY; y <= maxY; y += 1) {
+        for (let z = minZ; z <= maxZ; z += 1) {
+          if (z === fixedZ && canPlaceVoxel({ x, y, z }, props.state.selectedType)) {
+            cells.push({ x, y, z });
+          }
+        }
+      }
+    }
+  }
+
+  return cells;
 }
 
 // ポインタ解放時にボクセル配置を確定する
 function onPointerUp(event) {
-  if (!pendingCell) return;
-  if (pointerMoved) {
-    pendingCell = null;
-    pointerDownPos = null;
-    return;
+  // OrbitControlsを再有効化
+  if (controls) {
+    controls.enabled = true;
   }
+  
+  if (!pendingCell) return;
 
   const canvas = canvasRef.value;
   if (!canvas) return;
@@ -521,24 +603,49 @@ function onPointerUp(event) {
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
-  const cell = getPickCellForType(props.state.selectedType);
-  if (!cell) {
+  const endCell = getPickCellForType(props.state.selectedType);
+  
+  if (!endCell) {
     pendingCell = null;
     pointerDownPos = null;
+    isShiftPressed = false;
     return;
   }
 
-  console.log('Left-click placing type:', props.state.selectedType, 'at cell:', cell);
+  // Shiftキー押下時のドラッグ：範囲指定塗りつぶし（窓のみ対応）
+  if (isShiftPressed && pointerMoved && props.state.selectedType === props.VoxelType.WINDOW) {
+    console.log('Drag-fill window type from cell:', pendingCell, 'to cell:', endCell);
+    const cells = getCellsInRange(pendingCell, endCell);
+    if (cells.length > 0) {
+      emit('updateVoxels', { cells, type: props.state.selectedType });
+    }
+    pendingCell = null;
+    pointerDownPos = null;
+    isShiftPressed = false;
+    return;
+  }
+
+  // 単一クリック（ドラッグなしまたはShiftなしドラッグ）：通常の配置
+  if (pointerMoved && !isShiftPressed) {
+    // Shift押さずにドラッグされた場合は配置しない（回転のみ）
+    pendingCell = null;
+    pointerDownPos = null;
+    isShiftPressed = false;
+    return;
+  }
+
+  console.log('Left-click placing type:', props.state.selectedType, 'at cell:', endCell);
 
   // エアコンの場合：複数セルを一括配置
   if (props.state.selectedType === props.VoxelType.AC) {
-    const cells = getACCellArray(cell, props.state);
+    const cells = getACCellArray(endCell, props.state);
     emit('updateVoxels', { cells, type: props.state.selectedType });
   } else {
-    emit('updateVoxel', { cell, type: props.state.selectedType });
+    emit('updateVoxel', { cell: endCell, type: props.state.selectedType });
   }
   pendingCell = null;
   pointerDownPos = null;
+  isShiftPressed = false;
 }
 
 // 右クリック処理：クリックしたボクセルを削除（タイプに応じて戻す）
@@ -620,7 +727,7 @@ onMounted(() => {
   renderer.setPixelRatio(window.devicePixelRatio);
 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0f1115);
+  scene.background = new THREE.Color(0xf3f8ff);
 
   camera = new THREE.PerspectiveCamera(45, 1, 0.1, 2000);
   camera.position.set(10, 8, 14);
