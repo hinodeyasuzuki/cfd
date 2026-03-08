@@ -104,11 +104,11 @@ const calcStart = function () {
     if (restart) {
       //display span adjust, between 600 to 1000 ms
       nowtime = new Date();
-      if (nowtime.getTime() - starttime.getTime() > 1000) {
+      if (nowtime.getTime() - starttime.getTime() > 2000) {
         store.setval.batch_sec /= 1.5;
         store.setval2.batch_sec /= 1.5;
       }
-      if (nowtime.getTime() - starttime.getTime() < 600) {
+      if (nowtime.getTime() - starttime.getTime() < 1000) {
         store.setval.batch_sec *= 1.5;
         store.setval2.batch_sec *= 1.5;
       }
@@ -142,7 +142,7 @@ const calcStart = function () {
       disp2.value.acheat = cfd2.acheat;
       disp2.value.ackwh += cfd2.acheat * store.setval2.batch_sec / 60 / 60 / 1000;
     }
-  }, 100);		//check by 100ms
+  }, 300);		//check by 300ms
 };
 
 //end and back to setting
