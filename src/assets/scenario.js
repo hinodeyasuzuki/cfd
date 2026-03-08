@@ -461,11 +461,11 @@ export class Scenario {
       windowKset: "窓の断熱性",
       wallKset: "壁の断熱性",
 
-      ACwall : "壁面エアコンの位置",
+      // ACwall : "壁面エアコンの位置",
       ACwind : "エアコン風速(m/s)自動は-1",
       ACdir : "風向 1下、2横",
       CirculatorWind : "サーキュレーター風速(1～2m/s)",
-      atrium : "吹き抜け",
+      // atrium : "吹き抜け",
     },
 
     this.detaildisp2 = {
@@ -475,11 +475,11 @@ export class Scenario {
       windowKset: "窓の断熱性",
       wallKset: "壁の断熱性",
 
-      ACwall : "壁面エアコンの位置",
+      // ACwall : "壁面エアコンの位置",
       ACwind : "エアコン風速(m/s)自動は-1",
       ACdir : "風向 1下、2横",
       CirculatorWind : "サーキュレーター風速(1～2m/s)",
-      atrium : "吹き抜け",
+      // atrium : "吹き抜け",
     }
 
   }

@@ -122,7 +122,7 @@ watch(
           :class="{ selected: isVoxelSelected(VoxelType.CL) }"
           @click="emit('setSelectedType', VoxelType.CL)"
           :style="{ '--voxel-color': '#ef4444' }"
-        >暖房器具</button>
+        >サーキュレータ</button>
       </div>
       <label class="checkbox">
         面の選択

@@ -58,15 +58,15 @@ function move(x, y) {
 
 //draw structure mesh  
 function draw() {
-  ctx.clearRect(0, 0, 600, 600);
-  store.structure.draw_mesh(ctx);
-  store.structure.draw_wall(ctx);
+  // ctx.clearRect(0, 0, 600, 600);
+  // store.structure.draw_mesh(ctx);
+  // store.structure.draw_wall(ctx);
 }
 
 function draw2() {
-  ctx2.clearRect(0, 0, 600, 600);
-  store.structure2.draw_mesh(ctx2);
-  store.structure2.draw_wall(ctx2);
+  // ctx2.clearRect(0, 0, 600, 600);
+  // store.structure2.draw_mesh(ctx2);
+  // store.structure2.draw_wall(ctx2);
 }
 
 function goVoxelEditor() {

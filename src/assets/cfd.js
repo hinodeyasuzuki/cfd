@@ -532,7 +532,7 @@ export class CFD {
                 }
               }
 
-              //出口＝横温度を上下させる 横方向、本体横風、上下風
+              //出口＝横温度を上下させる 吸い込みは下から
               let rt2 = Math.sqrt(2)/2;
               if ( i == 2 ) {
                 this.Vel[this.conf.x][i+1][j][k] = this.acv * adj;
@@ -541,8 +541,7 @@ export class CFD {
                 this.Phi[i+1][j][k] = this.Phi[i][j+1][k] + dt;
                 //吸い込み
                 // this.Vel[this.conf.x][i+1][j+1][k] = -this.acv * adj;
-                this.Vel[this.conf.x][i][j+1][k] = -this.acv * adj * rt2;
-                this.Vel[this.conf.y][i][j+1][k] = -this.acv * adj * rt2;
+                this.Vel[this.conf.y][i][j-1][k] = this.acv * adj;
               }
               if ( i == this.nMeshX-1 ) {
                 this.Vel[this.conf.x][i-1][j][k] = -this.acv * adj;
@@ -550,8 +549,7 @@ export class CFD {
                 this.Vel[this.conf.y][i][j][k] = -this.acv * adj * rt2;
                 this.Phi[i-1][j][k] = this.Phi[i][j+1][k] + dt;
                 // this.Vel[this.conf.x][i-1][j+1][k] = this.acv * adj;
-                this.Vel[this.conf.x][i][j+1][k] = this.acv * adj * rt2;
-                this.Vel[this.conf.y][i][j+1][k] = -this.acv * adj * rt2;
+                this.Vel[this.conf.y][i][j-1][k] = this.acv * adj;
               }
               if ( k == 2 ) {
                 this.Vel[this.conf.z][i][j][k+1] = this.acv * adj;
@@ -559,8 +557,7 @@ export class CFD {
                 this.Vel[this.conf.y][i][j][k] = -this.acv * adj * rt2;
                 this.Phi[i][j][k+1] = this.Phi[i][j+1][k] + dt;
                 // this.Vel[this.conf.z][i][j+1][k+1] = -this.acv * adj;
-                this.Vel[this.conf.z][i][j+1][k] = -this.acv * adj * rt2;
-                this.Vel[this.conf.y][i][j+1][k] = -this.acv * adj * rt2;
+                this.Vel[this.conf.y][i][j-1][k] = this.acv * adj;
               }
               if ( k == this.nMeshZ-1 ) {
                 this.Vel[this.conf.z][i][j][k-1] = -this.acv * adj;
@@ -568,8 +565,7 @@ export class CFD {
                 this.Vel[this.conf.y][i][j][k] = -this.acv * adj * rt2;
                 this.Phi[i][j][k-1] = this.Phi[i][j+1][k] + dt;
                 // this.Vel[this.conf.z][i][j+1][k-1] = this.acv * adj;
-                this.Vel[this.conf.z][i][j+1][k] = this.acv * adj * rt2;
-                this.Vel[this.conf.y][i][j+1][k] = -this.acv * adj * rt2;
+                this.Vel[this.conf.y][i][j-1][k] = this.acv * adj;
               }
 
             }
@@ -583,14 +579,17 @@ export class CFD {
 
   //3b サーキュレータの設定
   equip_circulator = function() {
-    var i=1;
-    var j=1;
-    var k=Math.round(this.nMeshZ/2);
-
-    if ( this.meshtype[i][j][k] == this.conf.CL ) {
-      this.Vel[this.conf.y][i][j][k] = this.CirculatorWind;
+    let j=1;
+    let i,k;
+    for( i=1 ; i<=this.nMeshX ; i++ ) {
+      for( k=1 ; k<=this.nMeshZ ; k++ ) {
+        if ( this.meshtype[i][j][k] == this.conf.CL ) {
+          this.Vel[this.conf.y][i][j+1][k] = this.CirculatorWind;
+        }
+      }
     }
   }
+  
 
   //3c 固定面垂直方向の風速
   wind_block = function() {
@@ -1237,9 +1236,9 @@ export class CFD {
         if( this.delta_t > this.delta_t_max ) {
           this.delta_t = this.delta_t_max;
         }
-        // console.log("delta_t: " + maxcoulant + " -> " + this.delta_t);
       }
     }
+    // console.log("maxcoulant: " + maxcoulant + " -> delta_t:" + this.delta_t);
   }
 
   //空気セル判定
